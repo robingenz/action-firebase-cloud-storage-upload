@@ -41,9 +41,8 @@ jobs:
             firebaseServiceAccountKey: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
             path: 'README.md'
             storageBucket: 'my-bucket.appspot.com'
-      - name: Print output
+      - name: Print download URL
         run: echo ${{ steps.upload-action.outputs.downloadUrl }}
-
 ```
 
 ## License
