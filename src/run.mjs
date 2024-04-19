@@ -17,7 +17,7 @@ export const run = async () => {
   })
 
   initializeApp({
-    credential: cert(firebaseServiceAccountKey),
+    credential: cert(JSON.parse(firebaseServiceAccountKey)),
     storageBucket: storageBucket
   })
 
