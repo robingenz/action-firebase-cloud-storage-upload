@@ -86595,9 +86595,10 @@ const run = async () => {
 
   const bucket = getStorage().bucket()
   core.info(`Upload file...`)
-  await bucket.upload(path, {
+  const uploadResponse = await bucket.upload(path, {
     destination
   })
+  const file = uploadResponse[0]
   core.info(`Get download URL...`)
   const downloadUrl = await getDownloadURL(file)
 
