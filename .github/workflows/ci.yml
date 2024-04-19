@@ -43,6 +43,6 @@ jobs:
           destination: 'test/README.md'
           firebaseServiceAccountKey: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
           path: 'README.md'
-          storageBucket: 'test-bucket'
+          storageBucket: 'fcs-upload-action.appspot.com'
       - name: Print output
         run: echo ${{ steps.test-action.outputs.downloadUrl }}
