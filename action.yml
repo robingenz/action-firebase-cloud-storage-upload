@@ -1,0 +1,26 @@
+name: 'Firebase Cloud Storage Upload'
+description: 'Upload a file to Firebase Cloud Storage.'
+author: 'Robin Genz <mail@robingenz.dev>'
+
+# Define your inputs here.
+inputs:
+  destination:
+    description: 'The destination path for the file.'
+    required: true
+  firebaseServiceAccountKey:
+    description: 'The Firebase service account key in JSON format.'
+    required: true
+  path:
+    description: 'The path to the file to upload.'
+    required: true
+  storageBucket:
+    description: 'The Firebase storage bucket to upload the file to.'
+    required: true
+
+outputs:
+  downloadUrl:
+    description: 'The download URL of the uploaded file.'
+
+runs:
+  using: node20
+  main: dist/index.mjs
