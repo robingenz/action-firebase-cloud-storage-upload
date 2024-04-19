@@ -40,7 +40,7 @@ jobs:
         uses: ./
         id: test-action
         with:
-          destination: 'test/README_2.md'
+          destination: 'test/README.md'
           firebaseServiceAccountKey: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
           path: 'README.md'
           storageBucket: 'fcs-upload-action.appspot.com'
