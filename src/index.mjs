@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { run } from './main.mjs'
+import { run } from './run.mjs'
 
 try {
   await run()
