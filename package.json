@@ -1,6 +1,6 @@
 {
-  "name": "javascript-action",
-  "description": "GitHub Actions JavaScript Template",
+  "name": "action-firebase-cloud-storage-upload",
+  "description": "GitHub Action to upload files to Firebase Cloud Storage.",
   "version": "0.0.0",
   "author": "",
   "private": true,
