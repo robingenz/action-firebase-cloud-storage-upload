@@ -16,8 +16,15 @@ export const run = async () => {
     required: true
   })
 
+  let serviceAccountPathOrObject = firebaseServiceAccountKey
+  try {
+    serviceAccountPathOrObject = JSON.parse(firebaseServiceAccountKey)
+  } catch (e) {
+    // Ignore
+  }
+
   initializeApp({
-    credential: cert(firebaseServiceAccountKey),
+    credential: cert(),
     storageBucket: storageBucket
   })
 
