@@ -86589,7 +86589,7 @@ const run = async () => {
   })
 
   initializeApp({
-    credential: cert(JSON.parse(firebaseServiceAccountKey)),
+    credential: cert(firebaseServiceAccountKey),
     storageBucket: storageBucket
   })
 
