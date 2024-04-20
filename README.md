@@ -1,11 +1,11 @@
-# firebase-cloud-storage-upload-action
+# action-firebase-cloud-storage-upload
 
 GitHub Action to upload a file to [Firebase Cloud Storage](https://firebase.google.com/products/storage).
 
 ## Usage
 
 ```yaml
-- uses: robingenz/firebase-cloud-storage-upload-action@main
+- uses: robingenz/action-firebase-cloud-storage-upload@v1.0.0
   with:
     # The destination path in Firebase Cloud Storage.
     # Required.
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload file to Firebase Cloud Storage
-        uses: robingenz/firebase-cloud-storage-upload-action@main
+        uses: robingenz/action-firebase-cloud-storage-upload@v1.0.0
         id: upload-action
         with:
             destination: 'test/README.md'

@@ -4,13 +4,13 @@
   "version": "0.0.0",
   "author": "",
   "private": true,
-  "homepage": "https://github.com/robingenz/firebase-cloud-storage-upload-action#readme",
+  "homepage": "https://github.com/robingenz/action-firebase-cloud-storage-upload#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/robingenz/firebase-cloud-storage-upload-action.git"
+    "url": "git+https://github.com/robingenz/action-firebase-cloud-storage-upload.git"
   },
   "bugs": {
-    "url": "https://github.com/robingenz/firebase-cloud-storage-upload-action/issues"
+    "url": "https://github.com/robingenz/action-firebase-cloud-storage-upload/issues"
   },
   "keywords": [
     "GitHub",
