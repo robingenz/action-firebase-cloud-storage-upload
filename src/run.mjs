@@ -24,7 +24,7 @@ export const run = async () => {
   }
 
   initializeApp({
-    credential: cert(),
+    credential: cert(serviceAccountPathOrObject),
     storageBucket: storageBucket
   })
 
