@@ -7373,100 +7373,6 @@ module.exports = eos;
 
 /***/ }),
 
-/***/ 5771:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-var punycode = __nccwpck_require__(5477);
-var entities = __nccwpck_require__(2077);
-
-module.exports = decode;
-
-function decode (str) {
-    if (typeof str !== 'string') {
-        throw new TypeError('Expected a String');
-    }
-
-    return str.replace(/&(#?[^;\W]+;?)/g, function (_, match) {
-        var m;
-        if (m = /^#(\d+);?$/.exec(match)) {
-            return punycode.ucs2.encode([ parseInt(m[1], 10) ]);
-        } else if (m = /^#[Xx]([A-Fa-f0-9]+);?/.exec(match)) {
-            return punycode.ucs2.encode([ parseInt(m[1], 16) ]);
-        } else {
-            // named entity
-            var hasSemi = /;$/.test(match);
-            var withoutSemi = hasSemi ? match.replace(/;$/, '') : match;
-            var target = entities[withoutSemi] || (hasSemi && entities[match]);
-
-            if (typeof target === 'number') {
-                return punycode.ucs2.encode([ target ]);
-            } else if (typeof target === 'string') {
-                return target;
-            } else {
-                return '&' + match;
-            }
-        }
-    });
-}
-
-
-/***/ }),
-
-/***/ 6521:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-var punycode = __nccwpck_require__(5477);
-var revEntities = __nccwpck_require__(3123);
-
-module.exports = encode;
-
-function encode (str, opts) {
-    if (typeof str !== 'string') {
-        throw new TypeError('Expected a String');
-    }
-    if (!opts) opts = {};
-
-    var numeric = true;
-    if (opts.named) numeric = false;
-    if (opts.numeric !== undefined) numeric = opts.numeric;
-
-    var special = opts.special || {
-        '"': true, "'": true,
-        '<': true, '>': true,
-        '&': true
-    };
-
-    var codePoints = punycode.ucs2.decode(str);
-    var chars = [];
-    for (var i = 0; i < codePoints.length; i++) {
-        var cc = codePoints[i];
-        var c = punycode.ucs2.encode([ cc ]);
-        var e = revEntities[cc];
-        if (e && (cc >= 127 || special[c]) && !numeric) {
-            chars.push('&' + (/;$/.test(e) ? e : e + ';'));
-        }
-        else if (cc < 32 || cc >= 127 || special[c]) {
-            chars.push('&#' + cc + ';');
-        }
-        else {
-            chars.push(c);
-        }
-    }
-    return chars.join('');
-}
-
-
-/***/ }),
-
-/***/ 1151:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-exports.encode = __nccwpck_require__(6521);
-exports.decode = __nccwpck_require__(5771);
-
-
-/***/ }),
-
 /***/ 4697:
 /***/ ((module, exports) => {
 
@@ -8469,1983 +8375,10 @@ module.exports = function extend() {
 
 /***/ }),
 
-/***/ 2603:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-
-
-const validator = __nccwpck_require__(1739);
-const XMLParser = __nccwpck_require__(2380);
-const XMLBuilder = __nccwpck_require__(660);
-
-module.exports = {
-  XMLParser: XMLParser,
-  XMLValidator: validator,
-  XMLBuilder: XMLBuilder
-}
-
-/***/ }),
-
-/***/ 8280:
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-const nameStartChar = ':A-Za-z_\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD';
-const nameChar = nameStartChar + '\\-.\\d\\u00B7\\u0300-\\u036F\\u203F-\\u2040';
-const nameRegexp = '[' + nameStartChar + '][' + nameChar + ']*'
-const regexName = new RegExp('^' + nameRegexp + '$');
-
-const getAllMatches = function(string, regex) {
-  const matches = [];
-  let match = regex.exec(string);
-  while (match) {
-    const allmatches = [];
-    allmatches.startIndex = regex.lastIndex - match[0].length;
-    const len = match.length;
-    for (let index = 0; index < len; index++) {
-      allmatches.push(match[index]);
-    }
-    matches.push(allmatches);
-    match = regex.exec(string);
-  }
-  return matches;
-};
-
-const isName = function(string) {
-  const match = regexName.exec(string);
-  return !(match === null || typeof match === 'undefined');
-};
-
-exports.isExist = function(v) {
-  return typeof v !== 'undefined';
-};
-
-exports.isEmptyObject = function(obj) {
-  return Object.keys(obj).length === 0;
-};
-
-/**
- * Copy all the properties of a into b.
- * @param {*} target
- * @param {*} a
- */
-exports.merge = function(target, a, arrayMode) {
-  if (a) {
-    const keys = Object.keys(a); // will return an array of own properties
-    const len = keys.length; //don't make it inline
-    for (let i = 0; i < len; i++) {
-      if (arrayMode === 'strict') {
-        target[keys[i]] = [ a[keys[i]] ];
-      } else {
-        target[keys[i]] = a[keys[i]];
-      }
-    }
-  }
-};
-/* exports.merge =function (b,a){
-  return Object.assign(b,a);
-} */
-
-exports.getValue = function(v) {
-  if (exports.isExist(v)) {
-    return v;
-  } else {
-    return '';
-  }
-};
-
-// const fakeCall = function(a) {return a;};
-// const fakeCallNoReturn = function() {};
-
-exports.isName = isName;
-exports.getAllMatches = getAllMatches;
-exports.nameRegexp = nameRegexp;
-
-
-/***/ }),
-
-/***/ 1739:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-
-
-const util = __nccwpck_require__(8280);
-
-const defaultOptions = {
-  allowBooleanAttributes: false, //A tag can have attributes without any value
-  unpairedTags: []
-};
-
-//const tagsPattern = new RegExp("<\\/?([\\w:\\-_\.]+)\\s*\/?>","g");
-exports.validate = function (xmlData, options) {
-  options = Object.assign({}, defaultOptions, options);
-
-  //xmlData = xmlData.replace(/(\r\n|\n|\r)/gm,"");//make it single line
-  //xmlData = xmlData.replace(/(^\s*<\?xml.*?\?>)/g,"");//Remove XML starting tag
-  //xmlData = xmlData.replace(/(<!DOCTYPE[\s\w\"\.\/\-\:]+(\[.*\])*\s*>)/g,"");//Remove DOCTYPE
-  const tags = [];
-  let tagFound = false;
-
-  //indicates that the root tag has been closed (aka. depth 0 has been reached)
-  let reachedRoot = false;
-
-  if (xmlData[0] === '\ufeff') {
-    // check for byte order mark (BOM)
-    xmlData = xmlData.substr(1);
-  }
-  
-  for (let i = 0; i < xmlData.length; i++) {
-
-    if (xmlData[i] === '<' && xmlData[i+1] === '?') {
-      i+=2;
-      i = readPI(xmlData,i);
-      if (i.err) return i;
-    }else if (xmlData[i] === '<') {
-      //starting of tag
-      //read until you reach to '>' avoiding any '>' in attribute value
-      let tagStartPos = i;
-      i++;
-      
-      if (xmlData[i] === '!') {
-        i = readCommentAndCDATA(xmlData, i);
-        continue;
-      } else {
-        let closingTag = false;
-        if (xmlData[i] === '/') {
-          //closing tag
-          closingTag = true;
-          i++;
-        }
-        //read tagname
-        let tagName = '';
-        for (; i < xmlData.length &&
-          xmlData[i] !== '>' &&
-          xmlData[i] !== ' ' &&
-          xmlData[i] !== '\t' &&
-          xmlData[i] !== '\n' &&
-          xmlData[i] !== '\r'; i++
-        ) {
-          tagName += xmlData[i];
-        }
-        tagName = tagName.trim();
-        //console.log(tagName);
-
-        if (tagName[tagName.length - 1] === '/') {
-          //self closing tag without attributes
-          tagName = tagName.substring(0, tagName.length - 1);
-          //continue;
-          i--;
-        }
-        if (!validateTagName(tagName)) {
-          let msg;
-          if (tagName.trim().length === 0) {
-            msg = "Invalid space after '<'.";
-          } else {
-            msg = "Tag '"+tagName+"' is an invalid name.";
-          }
-          return getErrorObject('InvalidTag', msg, getLineNumberForPosition(xmlData, i));
-        }
-
-        const result = readAttributeStr(xmlData, i);
-        if (result === false) {
-          return getErrorObject('InvalidAttr', "Attributes for '"+tagName+"' have open quote.", getLineNumberForPosition(xmlData, i));
-        }
-        let attrStr = result.value;
-        i = result.index;
-
-        if (attrStr[attrStr.length - 1] === '/') {
-          //self closing tag
-          const attrStrStart = i - attrStr.length;
-          attrStr = attrStr.substring(0, attrStr.length - 1);
-          const isValid = validateAttributeString(attrStr, options);
-          if (isValid === true) {
-            tagFound = true;
-            //continue; //text may presents after self closing tag
-          } else {
-            //the result from the nested function returns the position of the error within the attribute
-            //in order to get the 'true' error line, we need to calculate the position where the attribute begins (i - attrStr.length) and then add the position within the attribute
-            //this gives us the absolute index in the entire xml, which we can use to find the line at last
-            return getErrorObject(isValid.err.code, isValid.err.msg, getLineNumberForPosition(xmlData, attrStrStart + isValid.err.line));
-          }
-        } else if (closingTag) {
-          if (!result.tagClosed) {
-            return getErrorObject('InvalidTag', "Closing tag '"+tagName+"' doesn't have proper closing.", getLineNumberForPosition(xmlData, i));
-          } else if (attrStr.trim().length > 0) {
-            return getErrorObject('InvalidTag', "Closing tag '"+tagName+"' can't have attributes or invalid starting.", getLineNumberForPosition(xmlData, tagStartPos));
-          } else {
-            const otg = tags.pop();
-            if (tagName !== otg.tagName) {
-              let openPos = getLineNumberForPosition(xmlData, otg.tagStartPos);
-              return getErrorObject('InvalidTag',
-                "Expected closing tag '"+otg.tagName+"' (opened in line "+openPos.line+", col "+openPos.col+") instead of closing tag '"+tagName+"'.",
-                getLineNumberForPosition(xmlData, tagStartPos));
-            }
-
-            //when there are no more tags, we reached the root level.
-            if (tags.length == 0) {
-              reachedRoot = true;
-            }
-          }
-        } else {
-          const isValid = validateAttributeString(attrStr, options);
-          if (isValid !== true) {
-            //the result from the nested function returns the position of the error within the attribute
-            //in order to get the 'true' error line, we need to calculate the position where the attribute begins (i - attrStr.length) and then add the position within the attribute
-            //this gives us the absolute index in the entire xml, which we can use to find the line at last
-            return getErrorObject(isValid.err.code, isValid.err.msg, getLineNumberForPosition(xmlData, i - attrStr.length + isValid.err.line));
-          }
-
-          //if the root level has been reached before ...
-          if (reachedRoot === true) {
-            return getErrorObject('InvalidXml', 'Multiple possible root nodes found.', getLineNumberForPosition(xmlData, i));
-          } else if(options.unpairedTags.indexOf(tagName) !== -1){
-            //don't push into stack
-          } else {
-            tags.push({tagName, tagStartPos});
-          }
-          tagFound = true;
-        }
-
-        //skip tag text value
-        //It may include comments and CDATA value
-        for (i++; i < xmlData.length; i++) {
-          if (xmlData[i] === '<') {
-            if (xmlData[i + 1] === '!') {
-              //comment or CADATA
-              i++;
-              i = readCommentAndCDATA(xmlData, i);
-              continue;
-            } else if (xmlData[i+1] === '?') {
-              i = readPI(xmlData, ++i);
-              if (i.err) return i;
-            } else{
-              break;
-            }
-          } else if (xmlData[i] === '&') {
-            const afterAmp = validateAmpersand(xmlData, i);
-            if (afterAmp == -1)
-              return getErrorObject('InvalidChar', "char '&' is not expected.", getLineNumberForPosition(xmlData, i));
-            i = afterAmp;
-          }else{
-            if (reachedRoot === true && !isWhiteSpace(xmlData[i])) {
-              return getErrorObject('InvalidXml', "Extra text at the end", getLineNumberForPosition(xmlData, i));
-            }
-          }
-        } //end of reading tag text value
-        if (xmlData[i] === '<') {
-          i--;
-        }
-      }
-    } else {
-      if ( isWhiteSpace(xmlData[i])) {
-        continue;
-      }
-      return getErrorObject('InvalidChar', "char '"+xmlData[i]+"' is not expected.", getLineNumberForPosition(xmlData, i));
-    }
-  }
-
-  if (!tagFound) {
-    return getErrorObject('InvalidXml', 'Start tag expected.', 1);
-  }else if (tags.length == 1) {
-      return getErrorObject('InvalidTag', "Unclosed tag '"+tags[0].tagName+"'.", getLineNumberForPosition(xmlData, tags[0].tagStartPos));
-  }else if (tags.length > 0) {
-      return getErrorObject('InvalidXml', "Invalid '"+
-          JSON.stringify(tags.map(t => t.tagName), null, 4).replace(/\r?\n/g, '')+
-          "' found.", {line: 1, col: 1});
-  }
-
-  return true;
-};
-
-function isWhiteSpace(char){
-  return char === ' ' || char === '\t' || char === '\n'  || char === '\r';
-}
-/**
- * Read Processing insstructions and skip
- * @param {*} xmlData
- * @param {*} i
- */
-function readPI(xmlData, i) {
-  const start = i;
-  for (; i < xmlData.length; i++) {
-    if (xmlData[i] == '?' || xmlData[i] == ' ') {
-      //tagname
-      const tagname = xmlData.substr(start, i - start);
-      if (i > 5 && tagname === 'xml') {
-        return getErrorObject('InvalidXml', 'XML declaration allowed only at the start of the document.', getLineNumberForPosition(xmlData, i));
-      } else if (xmlData[i] == '?' && xmlData[i + 1] == '>') {
-        //check if valid attribut string
-        i++;
-        break;
-      } else {
-        continue;
-      }
-    }
-  }
-  return i;
-}
-
-function readCommentAndCDATA(xmlData, i) {
-  if (xmlData.length > i + 5 && xmlData[i + 1] === '-' && xmlData[i + 2] === '-') {
-    //comment
-    for (i += 3; i < xmlData.length; i++) {
-      if (xmlData[i] === '-' && xmlData[i + 1] === '-' && xmlData[i + 2] === '>') {
-        i += 2;
-        break;
-      }
-    }
-  } else if (
-    xmlData.length > i + 8 &&
-    xmlData[i + 1] === 'D' &&
-    xmlData[i + 2] === 'O' &&
-    xmlData[i + 3] === 'C' &&
-    xmlData[i + 4] === 'T' &&
-    xmlData[i + 5] === 'Y' &&
-    xmlData[i + 6] === 'P' &&
-    xmlData[i + 7] === 'E'
-  ) {
-    let angleBracketsCount = 1;
-    for (i += 8; i < xmlData.length; i++) {
-      if (xmlData[i] === '<') {
-        angleBracketsCount++;
-      } else if (xmlData[i] === '>') {
-        angleBracketsCount--;
-        if (angleBracketsCount === 0) {
-          break;
-        }
-      }
-    }
-  } else if (
-    xmlData.length > i + 9 &&
-    xmlData[i + 1] === '[' &&
-    xmlData[i + 2] === 'C' &&
-    xmlData[i + 3] === 'D' &&
-    xmlData[i + 4] === 'A' &&
-    xmlData[i + 5] === 'T' &&
-    xmlData[i + 6] === 'A' &&
-    xmlData[i + 7] === '['
-  ) {
-    for (i += 8; i < xmlData.length; i++) {
-      if (xmlData[i] === ']' && xmlData[i + 1] === ']' && xmlData[i + 2] === '>') {
-        i += 2;
-        break;
-      }
-    }
-  }
-
-  return i;
-}
-
-const doubleQuote = '"';
-const singleQuote = "'";
-
-/**
- * Keep reading xmlData until '<' is found outside the attribute value.
- * @param {string} xmlData
- * @param {number} i
- */
-function readAttributeStr(xmlData, i) {
-  let attrStr = '';
-  let startChar = '';
-  let tagClosed = false;
-  for (; i < xmlData.length; i++) {
-    if (xmlData[i] === doubleQuote || xmlData[i] === singleQuote) {
-      if (startChar === '') {
-        startChar = xmlData[i];
-      } else if (startChar !== xmlData[i]) {
-        //if vaue is enclosed with double quote then single quotes are allowed inside the value and vice versa
-      } else {
-        startChar = '';
-      }
-    } else if (xmlData[i] === '>') {
-      if (startChar === '') {
-        tagClosed = true;
-        break;
-      }
-    }
-    attrStr += xmlData[i];
-  }
-  if (startChar !== '') {
-    return false;
-  }
-
-  return {
-    value: attrStr,
-    index: i,
-    tagClosed: tagClosed
-  };
-}
-
-/**
- * Select all the attributes whether valid or invalid.
- */
-const validAttrStrRegxp = new RegExp('(\\s*)([^\\s=]+)(\\s*=)?(\\s*([\'"])(([\\s\\S])*?)\\5)?', 'g');
-
-//attr, ="sd", a="amit's", a="sd"b="saf", ab  cd=""
-
-function validateAttributeString(attrStr, options) {
-  //console.log("start:"+attrStr+":end");
-
-  //if(attrStr.trim().length === 0) return true; //empty string
-
-  const matches = util.getAllMatches(attrStr, validAttrStrRegxp);
-  const attrNames = {};
-
-  for (let i = 0; i < matches.length; i++) {
-    if (matches[i][1].length === 0) {
-      //nospace before attribute name: a="sd"b="saf"
-      return getErrorObject('InvalidAttr', "Attribute '"+matches[i][2]+"' has no space in starting.", getPositionFromMatch(matches[i]))
-    } else if (matches[i][3] !== undefined && matches[i][4] === undefined) {
-      return getErrorObject('InvalidAttr', "Attribute '"+matches[i][2]+"' is without value.", getPositionFromMatch(matches[i]));
-    } else if (matches[i][3] === undefined && !options.allowBooleanAttributes) {
-      //independent attribute: ab
-      return getErrorObject('InvalidAttr', "boolean attribute '"+matches[i][2]+"' is not allowed.", getPositionFromMatch(matches[i]));
-    }
-    /* else if(matches[i][6] === undefined){//attribute without value: ab=
-                    return { err: { code:"InvalidAttr",msg:"attribute " + matches[i][2] + " has no value assigned."}};
-                } */
-    const attrName = matches[i][2];
-    if (!validateAttrName(attrName)) {
-      return getErrorObject('InvalidAttr', "Attribute '"+attrName+"' is an invalid name.", getPositionFromMatch(matches[i]));
-    }
-    if (!attrNames.hasOwnProperty(attrName)) {
-      //check for duplicate attribute.
-      attrNames[attrName] = 1;
-    } else {
-      return getErrorObject('InvalidAttr', "Attribute '"+attrName+"' is repeated.", getPositionFromMatch(matches[i]));
-    }
-  }
-
-  return true;
-}
-
-function validateNumberAmpersand(xmlData, i) {
-  let re = /\d/;
-  if (xmlData[i] === 'x') {
-    i++;
-    re = /[\da-fA-F]/;
-  }
-  for (; i < xmlData.length; i++) {
-    if (xmlData[i] === ';')
-      return i;
-    if (!xmlData[i].match(re))
-      break;
-  }
-  return -1;
-}
-
-function validateAmpersand(xmlData, i) {
-  // https://www.w3.org/TR/xml/#dt-charref
-  i++;
-  if (xmlData[i] === ';')
-    return -1;
-  if (xmlData[i] === '#') {
-    i++;
-    return validateNumberAmpersand(xmlData, i);
-  }
-  let count = 0;
-  for (; i < xmlData.length; i++, count++) {
-    if (xmlData[i].match(/\w/) && count < 20)
-      continue;
-    if (xmlData[i] === ';')
-      break;
-    return -1;
-  }
-  return i;
-}
-
-function getErrorObject(code, message, lineNumber) {
-  return {
-    err: {
-      code: code,
-      msg: message,
-      line: lineNumber.line || lineNumber,
-      col: lineNumber.col,
-    },
-  };
-}
-
-function validateAttrName(attrName) {
-  return util.isName(attrName);
-}
-
-// const startsWithXML = /^xml/i;
-
-function validateTagName(tagname) {
-  return util.isName(tagname) /* && !tagname.match(startsWithXML) */;
-}
-
-//this function returns the line number for the character at the given index
-function getLineNumberForPosition(xmlData, index) {
-  const lines = xmlData.substring(0, index).split(/\r?\n/);
-  return {
-    line: lines.length,
-
-    // column number is last line's length + 1, because column numbering starts at 1:
-    col: lines[lines.length - 1].length + 1
-  };
-}
-
-//this function returns the position of the first character of match within attrStr
-function getPositionFromMatch(match) {
-  return match.startIndex + match[1].length;
-}
-
-
-/***/ }),
-
-/***/ 660:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-
-//parse Empty Node as self closing node
-const buildFromOrderedJs = __nccwpck_require__(2462);
-
-const defaultOptions = {
-  attributeNamePrefix: '@_',
-  attributesGroupName: false,
-  textNodeName: '#text',
-  ignoreAttributes: true,
-  cdataPropName: false,
-  format: false,
-  indentBy: '  ',
-  suppressEmptyNode: false,
-  suppressUnpairedNode: true,
-  suppressBooleanAttributes: true,
-  tagValueProcessor: function(key, a) {
-    return a;
-  },
-  attributeValueProcessor: function(attrName, a) {
-    return a;
-  },
-  preserveOrder: false,
-  commentPropName: false,
-  unpairedTags: [],
-  entities: [
-    { regex: new RegExp("&", "g"), val: "&amp;" },//it must be on top
-    { regex: new RegExp(">", "g"), val: "&gt;" },
-    { regex: new RegExp("<", "g"), val: "&lt;" },
-    { regex: new RegExp("\'", "g"), val: "&apos;" },
-    { regex: new RegExp("\"", "g"), val: "&quot;" }
-  ],
-  processEntities: true,
-  stopNodes: [],
-  // transformTagName: false,
-  // transformAttributeName: false,
-  oneListGroup: false
-};
-
-function Builder(options) {
-  this.options = Object.assign({}, defaultOptions, options);
-  if (this.options.ignoreAttributes || this.options.attributesGroupName) {
-    this.isAttribute = function(/*a*/) {
-      return false;
-    };
-  } else {
-    this.attrPrefixLen = this.options.attributeNamePrefix.length;
-    this.isAttribute = isAttribute;
-  }
-
-  this.processTextOrObjNode = processTextOrObjNode
-
-  if (this.options.format) {
-    this.indentate = indentate;
-    this.tagEndChar = '>\n';
-    this.newLine = '\n';
-  } else {
-    this.indentate = function() {
-      return '';
-    };
-    this.tagEndChar = '>';
-    this.newLine = '';
-  }
-}
-
-Builder.prototype.build = function(jObj) {
-  if(this.options.preserveOrder){
-    return buildFromOrderedJs(jObj, this.options);
-  }else {
-    if(Array.isArray(jObj) && this.options.arrayNodeName && this.options.arrayNodeName.length > 1){
-      jObj = {
-        [this.options.arrayNodeName] : jObj
-      }
-    }
-    return this.j2x(jObj, 0).val;
-  }
-};
-
-Builder.prototype.j2x = function(jObj, level) {
-  let attrStr = '';
-  let val = '';
-  for (let key in jObj) {
-    if(!Object.prototype.hasOwnProperty.call(jObj, key)) continue;
-    if (typeof jObj[key] === 'undefined') {
-      // supress undefined node only if it is not an attribute
-      if (this.isAttribute(key)) {
-        val += '';
-      }
-    } else if (jObj[key] === null) {
-      // null attribute should be ignored by the attribute list, but should not cause the tag closing
-      if (this.isAttribute(key)) {
-        val += '';
-      } else if (key[0] === '?') {
-        val += this.indentate(level) + '<' + key + '?' + this.tagEndChar;
-      } else {
-        val += this.indentate(level) + '<' + key + '/' + this.tagEndChar;
-      }
-      // val += this.indentate(level) + '<' + key + '/' + this.tagEndChar;
-    } else if (jObj[key] instanceof Date) {
-      val += this.buildTextValNode(jObj[key], key, '', level);
-    } else if (typeof jObj[key] !== 'object') {
-      //premitive type
-      const attr = this.isAttribute(key);
-      if (attr) {
-        attrStr += this.buildAttrPairStr(attr, '' + jObj[key]);
-      }else {
-        //tag value
-        if (key === this.options.textNodeName) {
-          let newval = this.options.tagValueProcessor(key, '' + jObj[key]);
-          val += this.replaceEntitiesValue(newval);
-        } else {
-          val += this.buildTextValNode(jObj[key], key, '', level);
-        }
-      }
-    } else if (Array.isArray(jObj[key])) {
-      //repeated nodes
-      const arrLen = jObj[key].length;
-      let listTagVal = "";
-      for (let j = 0; j < arrLen; j++) {
-        const item = jObj[key][j];
-        if (typeof item === 'undefined') {
-          // supress undefined node
-        } else if (item === null) {
-          if(key[0] === "?") val += this.indentate(level) + '<' + key + '?' + this.tagEndChar;
-          else val += this.indentate(level) + '<' + key + '/' + this.tagEndChar;
-          // val += this.indentate(level) + '<' + key + '/' + this.tagEndChar;
-        } else if (typeof item === 'object') {
-          if(this.options.oneListGroup ){
-            listTagVal += this.j2x(item, level + 1).val;
-          }else{
-            listTagVal += this.processTextOrObjNode(item, key, level)
-          }
-        } else {
-          listTagVal += this.buildTextValNode(item, key, '', level);
-        }
-      }
-      if(this.options.oneListGroup){
-        listTagVal = this.buildObjectNode(listTagVal, key, '', level);
-      }
-      val += listTagVal;
-    } else {
-      //nested node
-      if (this.options.attributesGroupName && key === this.options.attributesGroupName) {
-        const Ks = Object.keys(jObj[key]);
-        const L = Ks.length;
-        for (let j = 0; j < L; j++) {
-          attrStr += this.buildAttrPairStr(Ks[j], '' + jObj[key][Ks[j]]);
-        }
-      } else {
-        val += this.processTextOrObjNode(jObj[key], key, level)
-      }
-    }
-  }
-  return {attrStr: attrStr, val: val};
-};
-
-Builder.prototype.buildAttrPairStr = function(attrName, val){
-  val = this.options.attributeValueProcessor(attrName, '' + val);
-  val = this.replaceEntitiesValue(val);
-  if (this.options.suppressBooleanAttributes && val === "true") {
-    return ' ' + attrName;
-  } else return ' ' + attrName + '="' + val + '"';
-}
-
-function processTextOrObjNode (object, key, level) {
-  const result = this.j2x(object, level + 1);
-  if (object[this.options.textNodeName] !== undefined && Object.keys(object).length === 1) {
-    return this.buildTextValNode(object[this.options.textNodeName], key, result.attrStr, level);
-  } else {
-    return this.buildObjectNode(result.val, key, result.attrStr, level);
-  }
-}
-
-Builder.prototype.buildObjectNode = function(val, key, attrStr, level) {
-  if(val === ""){
-    if(key[0] === "?") return  this.indentate(level) + '<' + key + attrStr+ '?' + this.tagEndChar;
-    else {
-      return this.indentate(level) + '<' + key + attrStr + this.closeTag(key) + this.tagEndChar;
-    }
-  }else{
-
-    let tagEndExp = '</' + key + this.tagEndChar;
-    let piClosingChar = "";
-    
-    if(key[0] === "?") {
-      piClosingChar = "?";
-      tagEndExp = "";
-    }
-  
-    // attrStr is an empty string in case the attribute came as undefined or null
-    if ((attrStr || attrStr === '') && val.indexOf('<') === -1) {
-      return ( this.indentate(level) + '<' +  key + attrStr + piClosingChar + '>' + val + tagEndExp );
-    } else if (this.options.commentPropName !== false && key === this.options.commentPropName && piClosingChar.length === 0) {
-      return this.indentate(level) + `<!--${val}-->` + this.newLine;
-    }else {
-      return (
-        this.indentate(level) + '<' + key + attrStr + piClosingChar + this.tagEndChar +
-        val +
-        this.indentate(level) + tagEndExp    );
-    }
-  }
-}
-
-Builder.prototype.closeTag = function(key){
-  let closeTag = "";
-  if(this.options.unpairedTags.indexOf(key) !== -1){ //unpaired
-    if(!this.options.suppressUnpairedNode) closeTag = "/"
-  }else if(this.options.suppressEmptyNode){ //empty
-    closeTag = "/";
-  }else{
-    closeTag = `></${key}`
-  }
-  return closeTag;
-}
-
-function buildEmptyObjNode(val, key, attrStr, level) {
-  if (val !== '') {
-    return this.buildObjectNode(val, key, attrStr, level);
-  } else {
-    if(key[0] === "?") return  this.indentate(level) + '<' + key + attrStr+ '?' + this.tagEndChar;
-    else {
-      return  this.indentate(level) + '<' + key + attrStr + '/' + this.tagEndChar;
-      // return this.buildTagStr(level,key, attrStr);
-    }
-  }
-}
-
-Builder.prototype.buildTextValNode = function(val, key, attrStr, level) {
-  if (this.options.cdataPropName !== false && key === this.options.cdataPropName) {
-    return this.indentate(level) + `<![CDATA[${val}]]>` +  this.newLine;
-  }else if (this.options.commentPropName !== false && key === this.options.commentPropName) {
-    return this.indentate(level) + `<!--${val}-->` +  this.newLine;
-  }else if(key[0] === "?") {//PI tag
-    return  this.indentate(level) + '<' + key + attrStr+ '?' + this.tagEndChar; 
-  }else{
-    let textValue = this.options.tagValueProcessor(key, val);
-    textValue = this.replaceEntitiesValue(textValue);
-  
-    if( textValue === ''){
-      return this.indentate(level) + '<' + key + attrStr + this.closeTag(key) + this.tagEndChar;
-    }else{
-      return this.indentate(level) + '<' + key + attrStr + '>' +
-         textValue +
-        '</' + key + this.tagEndChar;
-    }
-  }
-}
-
-Builder.prototype.replaceEntitiesValue = function(textValue){
-  if(textValue && textValue.length > 0 && this.options.processEntities){
-    for (let i=0; i<this.options.entities.length; i++) {
-      const entity = this.options.entities[i];
-      textValue = textValue.replace(entity.regex, entity.val);
-    }
-  }
-  return textValue;
-}
-
-function indentate(level) {
-  return this.options.indentBy.repeat(level);
-}
-
-function isAttribute(name /*, options*/) {
-  if (name.startsWith(this.options.attributeNamePrefix) && name !== this.options.textNodeName) {
-    return name.substr(this.attrPrefixLen);
-  } else {
-    return false;
-  }
-}
-
-module.exports = Builder;
-
-
-/***/ }),
-
-/***/ 2462:
-/***/ ((module) => {
-
-const EOL = "\n";
-
-/**
- * 
- * @param {array} jArray 
- * @param {any} options 
- * @returns 
- */
-function toXml(jArray, options) {
-    let indentation = "";
-    if (options.format && options.indentBy.length > 0) {
-        indentation = EOL;
-    }
-    return arrToStr(jArray, options, "", indentation);
-}
-
-function arrToStr(arr, options, jPath, indentation) {
-    let xmlStr = "";
-    let isPreviousElementTag = false;
-
-    for (let i = 0; i < arr.length; i++) {
-        const tagObj = arr[i];
-        const tagName = propName(tagObj);
-        if(tagName === undefined) continue;
-
-        let newJPath = "";
-        if (jPath.length === 0) newJPath = tagName
-        else newJPath = `${jPath}.${tagName}`;
-
-        if (tagName === options.textNodeName) {
-            let tagText = tagObj[tagName];
-            if (!isStopNode(newJPath, options)) {
-                tagText = options.tagValueProcessor(tagName, tagText);
-                tagText = replaceEntitiesValue(tagText, options);
-            }
-            if (isPreviousElementTag) {
-                xmlStr += indentation;
-            }
-            xmlStr += tagText;
-            isPreviousElementTag = false;
-            continue;
-        } else if (tagName === options.cdataPropName) {
-            if (isPreviousElementTag) {
-                xmlStr += indentation;
-            }
-            xmlStr += `<![CDATA[${tagObj[tagName][0][options.textNodeName]}]]>`;
-            isPreviousElementTag = false;
-            continue;
-        } else if (tagName === options.commentPropName) {
-            xmlStr += indentation + `<!--${tagObj[tagName][0][options.textNodeName]}-->`;
-            isPreviousElementTag = true;
-            continue;
-        } else if (tagName[0] === "?") {
-            const attStr = attr_to_str(tagObj[":@"], options);
-            const tempInd = tagName === "?xml" ? "" : indentation;
-            let piTextNodeName = tagObj[tagName][0][options.textNodeName];
-            piTextNodeName = piTextNodeName.length !== 0 ? " " + piTextNodeName : ""; //remove extra spacing
-            xmlStr += tempInd + `<${tagName}${piTextNodeName}${attStr}?>`;
-            isPreviousElementTag = true;
-            continue;
-        }
-        let newIdentation = indentation;
-        if (newIdentation !== "") {
-            newIdentation += options.indentBy;
-        }
-        const attStr = attr_to_str(tagObj[":@"], options);
-        const tagStart = indentation + `<${tagName}${attStr}`;
-        const tagValue = arrToStr(tagObj[tagName], options, newJPath, newIdentation);
-        if (options.unpairedTags.indexOf(tagName) !== -1) {
-            if (options.suppressUnpairedNode) xmlStr += tagStart + ">";
-            else xmlStr += tagStart + "/>";
-        } else if ((!tagValue || tagValue.length === 0) && options.suppressEmptyNode) {
-            xmlStr += tagStart + "/>";
-        } else if (tagValue && tagValue.endsWith(">")) {
-            xmlStr += tagStart + `>${tagValue}${indentation}</${tagName}>`;
-        } else {
-            xmlStr += tagStart + ">";
-            if (tagValue && indentation !== "" && (tagValue.includes("/>") || tagValue.includes("</"))) {
-                xmlStr += indentation + options.indentBy + tagValue + indentation;
-            } else {
-                xmlStr += tagValue;
-            }
-            xmlStr += `</${tagName}>`;
-        }
-        isPreviousElementTag = true;
-    }
-
-    return xmlStr;
-}
-
-function propName(obj) {
-    const keys = Object.keys(obj);
-    for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
-        if(!obj.hasOwnProperty(key)) continue;
-        if (key !== ":@") return key;
-    }
-}
-
-function attr_to_str(attrMap, options) {
-    let attrStr = "";
-    if (attrMap && !options.ignoreAttributes) {
-        for (let attr in attrMap) {
-            if(!attrMap.hasOwnProperty(attr)) continue;
-            let attrVal = options.attributeValueProcessor(attr, attrMap[attr]);
-            attrVal = replaceEntitiesValue(attrVal, options);
-            if (attrVal === true && options.suppressBooleanAttributes) {
-                attrStr += ` ${attr.substr(options.attributeNamePrefix.length)}`;
-            } else {
-                attrStr += ` ${attr.substr(options.attributeNamePrefix.length)}="${attrVal}"`;
-            }
-        }
-    }
-    return attrStr;
-}
-
-function isStopNode(jPath, options) {
-    jPath = jPath.substr(0, jPath.length - options.textNodeName.length - 1);
-    let tagName = jPath.substr(jPath.lastIndexOf(".") + 1);
-    for (let index in options.stopNodes) {
-        if (options.stopNodes[index] === jPath || options.stopNodes[index] === "*." + tagName) return true;
-    }
-    return false;
-}
-
-function replaceEntitiesValue(textValue, options) {
-    if (textValue && textValue.length > 0 && options.processEntities) {
-        for (let i = 0; i < options.entities.length; i++) {
-            const entity = options.entities[i];
-            textValue = textValue.replace(entity.regex, entity.val);
-        }
-    }
-    return textValue;
-}
-module.exports = toXml;
-
-
-/***/ }),
-
-/***/ 6072:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const util = __nccwpck_require__(8280);
-
-//TODO: handle comments
-function readDocType(xmlData, i){
-    
-    const entities = {};
-    if( xmlData[i + 3] === 'O' &&
-         xmlData[i + 4] === 'C' &&
-         xmlData[i + 5] === 'T' &&
-         xmlData[i + 6] === 'Y' &&
-         xmlData[i + 7] === 'P' &&
-         xmlData[i + 8] === 'E')
-    {    
-        i = i+9;
-        let angleBracketsCount = 1;
-        let hasBody = false, comment = false;
-        let exp = "";
-        for(;i<xmlData.length;i++){
-            if (xmlData[i] === '<' && !comment) { //Determine the tag type
-                if( hasBody && isEntity(xmlData, i)){
-                    i += 7; 
-                    [entityName, val,i] = readEntityExp(xmlData,i+1);
-                    if(val.indexOf("&") === -1) //Parameter entities are not supported
-                        entities[ validateEntityName(entityName) ] = {
-                            regx : RegExp( `&${entityName};`,"g"),
-                            val: val
-                        };
-                }
-                else if( hasBody && isElement(xmlData, i))  i += 8;//Not supported
-                else if( hasBody && isAttlist(xmlData, i))  i += 8;//Not supported
-                else if( hasBody && isNotation(xmlData, i)) i += 9;//Not supported
-                else if( isComment)                         comment = true;
-                else                                        throw new Error("Invalid DOCTYPE");
-
-                angleBracketsCount++;
-                exp = "";
-            } else if (xmlData[i] === '>') { //Read tag content
-                if(comment){
-                    if( xmlData[i - 1] === "-" && xmlData[i - 2] === "-"){
-                        comment = false;
-                        angleBracketsCount--;
-                    }
-                }else{
-                    angleBracketsCount--;
-                }
-                if (angleBracketsCount === 0) {
-                  break;
-                }
-            }else if( xmlData[i] === '['){
-                hasBody = true;
-            }else{
-                exp += xmlData[i];
-            }
-        }
-        if(angleBracketsCount !== 0){
-            throw new Error(`Unclosed DOCTYPE`);
-        }
-    }else{
-        throw new Error(`Invalid Tag instead of DOCTYPE`);
-    }
-    return {entities, i};
-}
-
-function readEntityExp(xmlData,i){
-    //External entities are not supported
-    //    <!ENTITY ext SYSTEM "http://normal-website.com" >
-
-    //Parameter entities are not supported
-    //    <!ENTITY entityname "&anotherElement;">
-
-    //Internal entities are supported
-    //    <!ENTITY entityname "replacement text">
-    
-    //read EntityName
-    let entityName = "";
-    for (; i < xmlData.length && (xmlData[i] !== "'" && xmlData[i] !== '"' ); i++) {
-        // if(xmlData[i] === " ") continue;
-        // else 
-        entityName += xmlData[i];
-    }
-    entityName = entityName.trim();
-    if(entityName.indexOf(" ") !== -1) throw new Error("External entites are not supported");
-
-    //read Entity Value
-    const startChar = xmlData[i++];
-    let val = ""
-    for (; i < xmlData.length && xmlData[i] !== startChar ; i++) {
-        val += xmlData[i];
-    }
-    return [entityName, val, i];
-}
-
-function isComment(xmlData, i){
-    if(xmlData[i+1] === '!' &&
-    xmlData[i+2] === '-' &&
-    xmlData[i+3] === '-') return true
-    return false
-}
-function isEntity(xmlData, i){
-    if(xmlData[i+1] === '!' &&
-    xmlData[i+2] === 'E' &&
-    xmlData[i+3] === 'N' &&
-    xmlData[i+4] === 'T' &&
-    xmlData[i+5] === 'I' &&
-    xmlData[i+6] === 'T' &&
-    xmlData[i+7] === 'Y') return true
-    return false
-}
-function isElement(xmlData, i){
-    if(xmlData[i+1] === '!' &&
-    xmlData[i+2] === 'E' &&
-    xmlData[i+3] === 'L' &&
-    xmlData[i+4] === 'E' &&
-    xmlData[i+5] === 'M' &&
-    xmlData[i+6] === 'E' &&
-    xmlData[i+7] === 'N' &&
-    xmlData[i+8] === 'T') return true
-    return false
-}
-
-function isAttlist(xmlData, i){
-    if(xmlData[i+1] === '!' &&
-    xmlData[i+2] === 'A' &&
-    xmlData[i+3] === 'T' &&
-    xmlData[i+4] === 'T' &&
-    xmlData[i+5] === 'L' &&
-    xmlData[i+6] === 'I' &&
-    xmlData[i+7] === 'S' &&
-    xmlData[i+8] === 'T') return true
-    return false
-}
-function isNotation(xmlData, i){
-    if(xmlData[i+1] === '!' &&
-    xmlData[i+2] === 'N' &&
-    xmlData[i+3] === 'O' &&
-    xmlData[i+4] === 'T' &&
-    xmlData[i+5] === 'A' &&
-    xmlData[i+6] === 'T' &&
-    xmlData[i+7] === 'I' &&
-    xmlData[i+8] === 'O' &&
-    xmlData[i+9] === 'N') return true
-    return false
-}
-
-function validateEntityName(name){
-    if (util.isName(name))
-	return name;
-    else
-        throw new Error(`Invalid entity name ${name}`);
-}
-
-module.exports = readDocType;
-
-
-/***/ }),
-
-/***/ 2821:
-/***/ ((__unused_webpack_module, exports) => {
-
-
-const defaultOptions = {
-    preserveOrder: false,
-    attributeNamePrefix: '@_',
-    attributesGroupName: false,
-    textNodeName: '#text',
-    ignoreAttributes: true,
-    removeNSPrefix: false, // remove NS from tag name or attribute name if true
-    allowBooleanAttributes: false, //a tag can have attributes without any value
-    //ignoreRootElement : false,
-    parseTagValue: true,
-    parseAttributeValue: false,
-    trimValues: true, //Trim string values of tag and attributes
-    cdataPropName: false,
-    numberParseOptions: {
-      hex: true,
-      leadingZeros: true,
-      eNotation: true
-    },
-    tagValueProcessor: function(tagName, val) {
-      return val;
-    },
-    attributeValueProcessor: function(attrName, val) {
-      return val;
-    },
-    stopNodes: [], //nested tags will not be parsed even for errors
-    alwaysCreateTextNode: false,
-    isArray: () => false,
-    commentPropName: false,
-    unpairedTags: [],
-    processEntities: true,
-    htmlEntities: false,
-    ignoreDeclaration: false,
-    ignorePiTags: false,
-    transformTagName: false,
-    transformAttributeName: false,
-    updateTag: function(tagName, jPath, attrs){
-      return tagName
-    },
-    // skipEmptyListItem: false
-};
-   
-const buildOptions = function(options) {
-    return Object.assign({}, defaultOptions, options);
-};
-
-exports.buildOptions = buildOptions;
-exports.defaultOptions = defaultOptions;
-
-/***/ }),
-
-/***/ 5832:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-
-///@ts-check
-
-const util = __nccwpck_require__(8280);
-const xmlNode = __nccwpck_require__(7462);
-const readDocType = __nccwpck_require__(6072);
-const toNumber = __nccwpck_require__(4526);
-
-// const regx =
-//   '<((!\\[CDATA\\[([\\s\\S]*?)(]]>))|((NAME:)?(NAME))([^>]*)>|((\\/)(NAME)\\s*>))([^<]*)'
-//   .replace(/NAME/g, util.nameRegexp);
-
-//const tagsRegx = new RegExp("<(\\/?[\\w:\\-\._]+)([^>]*)>(\\s*"+cdataRegx+")*([^<]+)?","g");
-//const tagsRegx = new RegExp("<(\\/?)((\\w*:)?([\\w:\\-\._]+))([^>]*)>([^<]*)("+cdataRegx+"([^<]*))*([^<]+)?","g");
-
-class OrderedObjParser{
-  constructor(options){
-    this.options = options;
-    this.currentNode = null;
-    this.tagsNodeStack = [];
-    this.docTypeEntities = {};
-    this.lastEntities = {
-      "apos" : { regex: /&(apos|#39|#x27);/g, val : "'"},
-      "gt" : { regex: /&(gt|#62|#x3E);/g, val : ">"},
-      "lt" : { regex: /&(lt|#60|#x3C);/g, val : "<"},
-      "quot" : { regex: /&(quot|#34|#x22);/g, val : "\""},
-    };
-    this.ampEntity = { regex: /&(amp|#38|#x26);/g, val : "&"};
-    this.htmlEntities = {
-      "space": { regex: /&(nbsp|#160);/g, val: " " },
-      // "lt" : { regex: /&(lt|#60);/g, val: "<" },
-      // "gt" : { regex: /&(gt|#62);/g, val: ">" },
-      // "amp" : { regex: /&(amp|#38);/g, val: "&" },
-      // "quot" : { regex: /&(quot|#34);/g, val: "\"" },
-      // "apos" : { regex: /&(apos|#39);/g, val: "'" },
-      "cent" : { regex: /&(cent|#162);/g, val: "¢" },
-      "pound" : { regex: /&(pound|#163);/g, val: "£" },
-      "yen" : { regex: /&(yen|#165);/g, val: "¥" },
-      "euro" : { regex: /&(euro|#8364);/g, val: "€" },
-      "copyright" : { regex: /&(copy|#169);/g, val: "©" },
-      "reg" : { regex: /&(reg|#174);/g, val: "®" },
-      "inr" : { regex: /&(inr|#8377);/g, val: "₹" },
-      "num_dec": { regex: /&#([0-9]{1,7});/g, val : (_, str) => String.fromCharCode(Number.parseInt(str, 10)) },
-      "num_hex": { regex: /&#x([0-9a-fA-F]{1,6});/g, val : (_, str) => String.fromCharCode(Number.parseInt(str, 16)) },
-    };
-    this.addExternalEntities = addExternalEntities;
-    this.parseXml = parseXml;
-    this.parseTextData = parseTextData;
-    this.resolveNameSpace = resolveNameSpace;
-    this.buildAttributesMap = buildAttributesMap;
-    this.isItStopNode = isItStopNode;
-    this.replaceEntitiesValue = replaceEntitiesValue;
-    this.readStopNodeData = readStopNodeData;
-    this.saveTextToParentTag = saveTextToParentTag;
-    this.addChild = addChild;
-  }
-
-}
-
-function addExternalEntities(externalEntities){
-  const entKeys = Object.keys(externalEntities);
-  for (let i = 0; i < entKeys.length; i++) {
-    const ent = entKeys[i];
-    this.lastEntities[ent] = {
-       regex: new RegExp("&"+ent+";","g"),
-       val : externalEntities[ent]
-    }
-  }
-}
-
-/**
- * @param {string} val
- * @param {string} tagName
- * @param {string} jPath
- * @param {boolean} dontTrim
- * @param {boolean} hasAttributes
- * @param {boolean} isLeafNode
- * @param {boolean} escapeEntities
- */
-function parseTextData(val, tagName, jPath, dontTrim, hasAttributes, isLeafNode, escapeEntities) {
-  if (val !== undefined) {
-    if (this.options.trimValues && !dontTrim) {
-      val = val.trim();
-    }
-    if(val.length > 0){
-      if(!escapeEntities) val = this.replaceEntitiesValue(val);
-      
-      const newval = this.options.tagValueProcessor(tagName, val, jPath, hasAttributes, isLeafNode);
-      if(newval === null || newval === undefined){
-        //don't parse
-        return val;
-      }else if(typeof newval !== typeof val || newval !== val){
-        //overwrite
-        return newval;
-      }else if(this.options.trimValues){
-        return parseValue(val, this.options.parseTagValue, this.options.numberParseOptions);
-      }else{
-        const trimmedVal = val.trim();
-        if(trimmedVal === val){
-          return parseValue(val, this.options.parseTagValue, this.options.numberParseOptions);
-        }else{
-          return val;
-        }
-      }
-    }
-  }
-}
-
-function resolveNameSpace(tagname) {
-  if (this.options.removeNSPrefix) {
-    const tags = tagname.split(':');
-    const prefix = tagname.charAt(0) === '/' ? '/' : '';
-    if (tags[0] === 'xmlns') {
-      return '';
-    }
-    if (tags.length === 2) {
-      tagname = prefix + tags[1];
-    }
-  }
-  return tagname;
-}
-
-//TODO: change regex to capture NS
-//const attrsRegx = new RegExp("([\\w\\-\\.\\:]+)\\s*=\\s*(['\"])((.|\n)*?)\\2","gm");
-const attrsRegx = new RegExp('([^\\s=]+)\\s*(=\\s*([\'"])([\\s\\S]*?)\\3)?', 'gm');
-
-function buildAttributesMap(attrStr, jPath, tagName) {
-  if (!this.options.ignoreAttributes && typeof attrStr === 'string') {
-    // attrStr = attrStr.replace(/\r?\n/g, ' ');
-    //attrStr = attrStr || attrStr.trim();
-
-    const matches = util.getAllMatches(attrStr, attrsRegx);
-    const len = matches.length; //don't make it inline
-    const attrs = {};
-    for (let i = 0; i < len; i++) {
-      const attrName = this.resolveNameSpace(matches[i][1]);
-      let oldVal = matches[i][4];
-      let aName = this.options.attributeNamePrefix + attrName;
-      if (attrName.length) {
-        if (this.options.transformAttributeName) {
-          aName = this.options.transformAttributeName(aName);
-        }
-        if(aName === "__proto__") aName  = "#__proto__";
-        if (oldVal !== undefined) {
-          if (this.options.trimValues) {
-            oldVal = oldVal.trim();
-          }
-          oldVal = this.replaceEntitiesValue(oldVal);
-          const newVal = this.options.attributeValueProcessor(attrName, oldVal, jPath);
-          if(newVal === null || newVal === undefined){
-            //don't parse
-            attrs[aName] = oldVal;
-          }else if(typeof newVal !== typeof oldVal || newVal !== oldVal){
-            //overwrite
-            attrs[aName] = newVal;
-          }else{
-            //parse
-            attrs[aName] = parseValue(
-              oldVal,
-              this.options.parseAttributeValue,
-              this.options.numberParseOptions
-            );
-          }
-        } else if (this.options.allowBooleanAttributes) {
-          attrs[aName] = true;
-        }
-      }
-    }
-    if (!Object.keys(attrs).length) {
-      return;
-    }
-    if (this.options.attributesGroupName) {
-      const attrCollection = {};
-      attrCollection[this.options.attributesGroupName] = attrs;
-      return attrCollection;
-    }
-    return attrs
-  }
-}
-
-const parseXml = function(xmlData) {
-  xmlData = xmlData.replace(/\r\n?/g, "\n"); //TODO: remove this line
-  const xmlObj = new xmlNode('!xml');
-  let currentNode = xmlObj;
-  let textData = "";
-  let jPath = "";
-  for(let i=0; i< xmlData.length; i++){//for each char in XML data
-    const ch = xmlData[i];
-    if(ch === '<'){
-      // const nextIndex = i+1;
-      // const _2ndChar = xmlData[nextIndex];
-      if( xmlData[i+1] === '/') {//Closing Tag
-        const closeIndex = findClosingIndex(xmlData, ">", i, "Closing Tag is not closed.")
-        let tagName = xmlData.substring(i+2,closeIndex).trim();
-
-        if(this.options.removeNSPrefix){
-          const colonIndex = tagName.indexOf(":");
-          if(colonIndex !== -1){
-            tagName = tagName.substr(colonIndex+1);
-          }
-        }
-
-        if(this.options.transformTagName) {
-          tagName = this.options.transformTagName(tagName);
-        }
-
-        if(currentNode){
-          textData = this.saveTextToParentTag(textData, currentNode, jPath);
-        }
-
-        //check if last tag of nested tag was unpaired tag
-        const lastTagName = jPath.substring(jPath.lastIndexOf(".")+1);
-        if(tagName && this.options.unpairedTags.indexOf(tagName) !== -1 ){
-          throw new Error(`Unpaired tag can not be used as closing tag: </${tagName}>`);
-        }
-        let propIndex = 0
-        if(lastTagName && this.options.unpairedTags.indexOf(lastTagName) !== -1 ){
-          propIndex = jPath.lastIndexOf('.', jPath.lastIndexOf('.')-1)
-          this.tagsNodeStack.pop();
-        }else{
-          propIndex = jPath.lastIndexOf(".");
-        }
-        jPath = jPath.substring(0, propIndex);
-
-        currentNode = this.tagsNodeStack.pop();//avoid recursion, set the parent tag scope
-        textData = "";
-        i = closeIndex;
-      } else if( xmlData[i+1] === '?') {
-
-        let tagData = readTagExp(xmlData,i, false, "?>");
-        if(!tagData) throw new Error("Pi Tag is not closed.");
-
-        textData = this.saveTextToParentTag(textData, currentNode, jPath);
-        if( (this.options.ignoreDeclaration && tagData.tagName === "?xml") || this.options.ignorePiTags){
-
-        }else{
-  
-          const childNode = new xmlNode(tagData.tagName);
-          childNode.add(this.options.textNodeName, "");
-          
-          if(tagData.tagName !== tagData.tagExp && tagData.attrExpPresent){
-            childNode[":@"] = this.buildAttributesMap(tagData.tagExp, jPath, tagData.tagName);
-          }
-          this.addChild(currentNode, childNode, jPath)
-
-        }
-
-
-        i = tagData.closeIndex + 1;
-      } else if(xmlData.substr(i + 1, 3) === '!--') {
-        const endIndex = findClosingIndex(xmlData, "-->", i+4, "Comment is not closed.")
-        if(this.options.commentPropName){
-          const comment = xmlData.substring(i + 4, endIndex - 2);
-
-          textData = this.saveTextToParentTag(textData, currentNode, jPath);
-
-          currentNode.add(this.options.commentPropName, [ { [this.options.textNodeName] : comment } ]);
-        }
-        i = endIndex;
-      } else if( xmlData.substr(i + 1, 2) === '!D') {
-        const result = readDocType(xmlData, i);
-        this.docTypeEntities = result.entities;
-        i = result.i;
-      }else if(xmlData.substr(i + 1, 2) === '![') {
-        const closeIndex = findClosingIndex(xmlData, "]]>", i, "CDATA is not closed.") - 2;
-        const tagExp = xmlData.substring(i + 9,closeIndex);
-
-        textData = this.saveTextToParentTag(textData, currentNode, jPath);
-
-        let val = this.parseTextData(tagExp, currentNode.tagname, jPath, true, false, true, true);
-        if(val == undefined) val = "";
-
-        //cdata should be set even if it is 0 length string
-        if(this.options.cdataPropName){
-          currentNode.add(this.options.cdataPropName, [ { [this.options.textNodeName] : tagExp } ]);
-        }else{
-          currentNode.add(this.options.textNodeName, val);
-        }
-        
-        i = closeIndex + 2;
-      }else {//Opening tag
-        let result = readTagExp(xmlData,i, this.options.removeNSPrefix);
-        let tagName= result.tagName;
-        const rawTagName = result.rawTagName;
-        let tagExp = result.tagExp;
-        let attrExpPresent = result.attrExpPresent;
-        let closeIndex = result.closeIndex;
-
-        if (this.options.transformTagName) {
-          tagName = this.options.transformTagName(tagName);
-        }
-        
-        //save text as child node
-        if (currentNode && textData) {
-          if(currentNode.tagname !== '!xml'){
-            //when nested tag is found
-            textData = this.saveTextToParentTag(textData, currentNode, jPath, false);
-          }
-        }
-
-        //check if last tag was unpaired tag
-        const lastTag = currentNode;
-        if(lastTag && this.options.unpairedTags.indexOf(lastTag.tagname) !== -1 ){
-          currentNode = this.tagsNodeStack.pop();
-          jPath = jPath.substring(0, jPath.lastIndexOf("."));
-        }
-        if(tagName !== xmlObj.tagname){
-          jPath += jPath ? "." + tagName : tagName;
-        }
-        if (this.isItStopNode(this.options.stopNodes, jPath, tagName)) {
-          let tagContent = "";
-          //self-closing tag
-          if(tagExp.length > 0 && tagExp.lastIndexOf("/") === tagExp.length - 1){
-            i = result.closeIndex;
-          }
-          //unpaired tag
-          else if(this.options.unpairedTags.indexOf(tagName) !== -1){
-            i = result.closeIndex;
-          }
-          //normal tag
-          else{
-            //read until closing tag is found
-            const result = this.readStopNodeData(xmlData, rawTagName, closeIndex + 1);
-            if(!result) throw new Error(`Unexpected end of ${rawTagName}`);
-            i = result.i;
-            tagContent = result.tagContent;
-          }
-
-          const childNode = new xmlNode(tagName);
-          if(tagName !== tagExp && attrExpPresent){
-            childNode[":@"] = this.buildAttributesMap(tagExp, jPath, tagName);
-          }
-          if(tagContent) {
-            tagContent = this.parseTextData(tagContent, tagName, jPath, true, attrExpPresent, true, true);
-          }
-          
-          jPath = jPath.substr(0, jPath.lastIndexOf("."));
-          childNode.add(this.options.textNodeName, tagContent);
-          
-          this.addChild(currentNode, childNode, jPath)
-        }else{
-  //selfClosing tag
-          if(tagExp.length > 0 && tagExp.lastIndexOf("/") === tagExp.length - 1){
-            if(tagName[tagName.length - 1] === "/"){ //remove trailing '/'
-              tagName = tagName.substr(0, tagName.length - 1);
-              jPath = jPath.substr(0, jPath.length - 1);
-              tagExp = tagName;
-            }else{
-              tagExp = tagExp.substr(0, tagExp.length - 1);
-            }
-            
-            if(this.options.transformTagName) {
-              tagName = this.options.transformTagName(tagName);
-            }
-
-            const childNode = new xmlNode(tagName);
-            if(tagName !== tagExp && attrExpPresent){
-              childNode[":@"] = this.buildAttributesMap(tagExp, jPath, tagName);
-            }
-            this.addChild(currentNode, childNode, jPath)
-            jPath = jPath.substr(0, jPath.lastIndexOf("."));
-          }
-    //opening tag
-          else{
-            const childNode = new xmlNode( tagName);
-            this.tagsNodeStack.push(currentNode);
-            
-            if(tagName !== tagExp && attrExpPresent){
-              childNode[":@"] = this.buildAttributesMap(tagExp, jPath, tagName);
-            }
-            this.addChild(currentNode, childNode, jPath)
-            currentNode = childNode;
-          }
-          textData = "";
-          i = closeIndex;
-        }
-      }
-    }else{
-      textData += xmlData[i];
-    }
-  }
-  return xmlObj.child;
-}
-
-function addChild(currentNode, childNode, jPath){
-  const result = this.options.updateTag(childNode.tagname, jPath, childNode[":@"])
-  if(result === false){
-  }else if(typeof result === "string"){
-    childNode.tagname = result
-    currentNode.addChild(childNode);
-  }else{
-    currentNode.addChild(childNode);
-  }
-}
-
-const replaceEntitiesValue = function(val){
-
-  if(this.options.processEntities){
-    for(let entityName in this.docTypeEntities){
-      const entity = this.docTypeEntities[entityName];
-      val = val.replace( entity.regx, entity.val);
-    }
-    for(let entityName in this.lastEntities){
-      const entity = this.lastEntities[entityName];
-      val = val.replace( entity.regex, entity.val);
-    }
-    if(this.options.htmlEntities){
-      for(let entityName in this.htmlEntities){
-        const entity = this.htmlEntities[entityName];
-        val = val.replace( entity.regex, entity.val);
-      }
-    }
-    val = val.replace( this.ampEntity.regex, this.ampEntity.val);
-  }
-  return val;
-}
-function saveTextToParentTag(textData, currentNode, jPath, isLeafNode) {
-  if (textData) { //store previously collected data as textNode
-    if(isLeafNode === undefined) isLeafNode = Object.keys(currentNode.child).length === 0
-    
-    textData = this.parseTextData(textData,
-      currentNode.tagname,
-      jPath,
-      false,
-      currentNode[":@"] ? Object.keys(currentNode[":@"]).length !== 0 : false,
-      isLeafNode);
-
-    if (textData !== undefined && textData !== "")
-      currentNode.add(this.options.textNodeName, textData);
-    textData = "";
-  }
-  return textData;
-}
-
-//TODO: use jPath to simplify the logic
-/**
- * 
- * @param {string[]} stopNodes 
- * @param {string} jPath
- * @param {string} currentTagName 
- */
-function isItStopNode(stopNodes, jPath, currentTagName){
-  const allNodesExp = "*." + currentTagName;
-  for (const stopNodePath in stopNodes) {
-    const stopNodeExp = stopNodes[stopNodePath];
-    if( allNodesExp === stopNodeExp || jPath === stopNodeExp  ) return true;
-  }
-  return false;
-}
-
-/**
- * Returns the tag Expression and where it is ending handling single-double quotes situation
- * @param {string} xmlData 
- * @param {number} i starting index
- * @returns 
- */
-function tagExpWithClosingIndex(xmlData, i, closingChar = ">"){
-  let attrBoundary;
-  let tagExp = "";
-  for (let index = i; index < xmlData.length; index++) {
-    let ch = xmlData[index];
-    if (attrBoundary) {
-        if (ch === attrBoundary) attrBoundary = "";//reset
-    } else if (ch === '"' || ch === "'") {
-        attrBoundary = ch;
-    } else if (ch === closingChar[0]) {
-      if(closingChar[1]){
-        if(xmlData[index + 1] === closingChar[1]){
-          return {
-            data: tagExp,
-            index: index
-          }
-        }
-      }else{
-        return {
-          data: tagExp,
-          index: index
-        }
-      }
-    } else if (ch === '\t') {
-      ch = " "
-    }
-    tagExp += ch;
-  }
-}
-
-function findClosingIndex(xmlData, str, i, errMsg){
-  const closingIndex = xmlData.indexOf(str, i);
-  if(closingIndex === -1){
-    throw new Error(errMsg)
-  }else{
-    return closingIndex + str.length - 1;
-  }
-}
-
-function readTagExp(xmlData,i, removeNSPrefix, closingChar = ">"){
-  const result = tagExpWithClosingIndex(xmlData, i+1, closingChar);
-  if(!result) return;
-  let tagExp = result.data;
-  const closeIndex = result.index;
-  const separatorIndex = tagExp.search(/\s/);
-  let tagName = tagExp;
-  let attrExpPresent = true;
-  if(separatorIndex !== -1){//separate tag name and attributes expression
-    tagName = tagExp.substring(0, separatorIndex);
-    tagExp = tagExp.substring(separatorIndex + 1).trimStart();
-  }
-
-  const rawTagName = tagName;
-  if(removeNSPrefix){
-    const colonIndex = tagName.indexOf(":");
-    if(colonIndex !== -1){
-      tagName = tagName.substr(colonIndex+1);
-      attrExpPresent = tagName !== result.data.substr(colonIndex + 1);
-    }
-  }
-
-  return {
-    tagName: tagName,
-    tagExp: tagExp,
-    closeIndex: closeIndex,
-    attrExpPresent: attrExpPresent,
-    rawTagName: rawTagName,
-  }
-}
-/**
- * find paired tag for a stop node
- * @param {string} xmlData 
- * @param {string} tagName 
- * @param {number} i 
- */
-function readStopNodeData(xmlData, tagName, i){
-  const startIndex = i;
-  // Starting at 1 since we already have an open tag
-  let openTagCount = 1;
-
-  for (; i < xmlData.length; i++) {
-    if( xmlData[i] === "<"){ 
-      if (xmlData[i+1] === "/") {//close tag
-          const closeIndex = findClosingIndex(xmlData, ">", i, `${tagName} is not closed`);
-          let closeTagName = xmlData.substring(i+2,closeIndex).trim();
-          if(closeTagName === tagName){
-            openTagCount--;
-            if (openTagCount === 0) {
-              return {
-                tagContent: xmlData.substring(startIndex, i),
-                i : closeIndex
-              }
-            }
-          }
-          i=closeIndex;
-        } else if(xmlData[i+1] === '?') { 
-          const closeIndex = findClosingIndex(xmlData, "?>", i+1, "StopNode is not closed.")
-          i=closeIndex;
-        } else if(xmlData.substr(i + 1, 3) === '!--') { 
-          const closeIndex = findClosingIndex(xmlData, "-->", i+3, "StopNode is not closed.")
-          i=closeIndex;
-        } else if(xmlData.substr(i + 1, 2) === '![') { 
-          const closeIndex = findClosingIndex(xmlData, "]]>", i, "StopNode is not closed.") - 2;
-          i=closeIndex;
-        } else {
-          const tagData = readTagExp(xmlData, i, '>')
-
-          if (tagData) {
-            const openTagName = tagData && tagData.tagName;
-            if (openTagName === tagName && tagData.tagExp[tagData.tagExp.length-1] !== "/") {
-              openTagCount++;
-            }
-            i=tagData.closeIndex;
-          }
-        }
-      }
-  }//end for loop
-}
-
-function parseValue(val, shouldParse, options) {
-  if (shouldParse && typeof val === 'string') {
-    //console.log(options)
-    const newval = val.trim();
-    if(newval === 'true' ) return true;
-    else if(newval === 'false' ) return false;
-    else return toNumber(val, options);
-  } else {
-    if (util.isExist(val)) {
-      return val;
-    } else {
-      return '';
-    }
-  }
-}
-
-
-module.exports = OrderedObjParser;
-
-
-/***/ }),
-
-/***/ 2380:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const { buildOptions} = __nccwpck_require__(2821);
-const OrderedObjParser = __nccwpck_require__(5832);
-const { prettify} = __nccwpck_require__(2882);
-const validator = __nccwpck_require__(1739);
-
-class XMLParser{
-    
-    constructor(options){
-        this.externalEntities = {};
-        this.options = buildOptions(options);
-        
-    }
-    /**
-     * Parse XML dats to JS object 
-     * @param {string|Buffer} xmlData 
-     * @param {boolean|Object} validationOption 
-     */
-    parse(xmlData,validationOption){
-        if(typeof xmlData === "string"){
-        }else if( xmlData.toString){
-            xmlData = xmlData.toString();
-        }else{
-            throw new Error("XML data is accepted in String or Bytes[] form.")
-        }
-        if( validationOption){
-            if(validationOption === true) validationOption = {}; //validate with default options
-            
-            const result = validator.validate(xmlData, validationOption);
-            if (result !== true) {
-              throw Error( `${result.err.msg}:${result.err.line}:${result.err.col}` )
-            }
-          }
-        const orderedObjParser = new OrderedObjParser(this.options);
-        orderedObjParser.addExternalEntities(this.externalEntities);
-        const orderedResult = orderedObjParser.parseXml(xmlData);
-        if(this.options.preserveOrder || orderedResult === undefined) return orderedResult;
-        else return prettify(orderedResult, this.options);
-    }
-
-    /**
-     * Add Entity which is not by default supported by this library
-     * @param {string} key 
-     * @param {string} value 
-     */
-    addEntity(key, value){
-        if(value.indexOf("&") !== -1){
-            throw new Error("Entity value can't have '&'")
-        }else if(key.indexOf("&") !== -1 || key.indexOf(";") !== -1){
-            throw new Error("An entity must be set without '&' and ';'. Eg. use '#xD' for '&#xD;'")
-        }else if(value === "&"){
-            throw new Error("An entity with value '&' is not permitted");
-        }else{
-            this.externalEntities[key] = value;
-        }
-    }
-}
-
-module.exports = XMLParser;
-
-/***/ }),
-
-/***/ 2882:
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-/**
- * 
- * @param {array} node 
- * @param {any} options 
- * @returns 
- */
-function prettify(node, options){
-  return compress( node, options);
-}
-
-/**
- * 
- * @param {array} arr 
- * @param {object} options 
- * @param {string} jPath 
- * @returns object
- */
-function compress(arr, options, jPath){
-  let text;
-  const compressedObj = {};
-  for (let i = 0; i < arr.length; i++) {
-    const tagObj = arr[i];
-    const property = propName(tagObj);
-    let newJpath = "";
-    if(jPath === undefined) newJpath = property;
-    else newJpath = jPath + "." + property;
-
-    if(property === options.textNodeName){
-      if(text === undefined) text = tagObj[property];
-      else text += "" + tagObj[property];
-    }else if(property === undefined){
-      continue;
-    }else if(tagObj[property]){
-      
-      let val = compress(tagObj[property], options, newJpath);
-      const isLeaf = isLeafTag(val, options);
-
-      if(tagObj[":@"]){
-        assignAttributes( val, tagObj[":@"], newJpath, options);
-      }else if(Object.keys(val).length === 1 && val[options.textNodeName] !== undefined && !options.alwaysCreateTextNode){
-        val = val[options.textNodeName];
-      }else if(Object.keys(val).length === 0){
-        if(options.alwaysCreateTextNode) val[options.textNodeName] = "";
-        else val = "";
-      }
-
-      if(compressedObj[property] !== undefined && compressedObj.hasOwnProperty(property)) {
-        if(!Array.isArray(compressedObj[property])) {
-            compressedObj[property] = [ compressedObj[property] ];
-        }
-        compressedObj[property].push(val);
-      }else{
-        //TODO: if a node is not an array, then check if it should be an array
-        //also determine if it is a leaf node
-        if (options.isArray(property, newJpath, isLeaf )) {
-          compressedObj[property] = [val];
-        }else{
-          compressedObj[property] = val;
-        }
-      }
-    }
-    
-  }
-  // if(text && text.length > 0) compressedObj[options.textNodeName] = text;
-  if(typeof text === "string"){
-    if(text.length > 0) compressedObj[options.textNodeName] = text;
-  }else if(text !== undefined) compressedObj[options.textNodeName] = text;
-  return compressedObj;
-}
-
-function propName(obj){
-  const keys = Object.keys(obj);
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-    if(key !== ":@") return key;
-  }
-}
-
-function assignAttributes(obj, attrMap, jpath, options){
-  if (attrMap) {
-    const keys = Object.keys(attrMap);
-    const len = keys.length; //don't make it inline
-    for (let i = 0; i < len; i++) {
-      const atrrName = keys[i];
-      if (options.isArray(atrrName, jpath + "." + atrrName, true, true)) {
-        obj[atrrName] = [ attrMap[atrrName] ];
-      } else {
-        obj[atrrName] = attrMap[atrrName];
-      }
-    }
-  }
-}
-
-function isLeafTag(obj, options){
-  const { textNodeName } = options;
-  const propCount = Object.keys(obj).length;
-  
-  if (propCount === 0) {
-    return true;
-  }
-
-  if (
-    propCount === 1 &&
-    (obj[textNodeName] || typeof obj[textNodeName] === "boolean" || obj[textNodeName] === 0)
-  ) {
-    return true;
-  }
-
-  return false;
-}
-exports.prettify = prettify;
-
-
-/***/ }),
-
-/***/ 7462:
-/***/ ((module) => {
-
-
-
-class XmlNode{
-  constructor(tagname) {
-    this.tagname = tagname;
-    this.child = []; //nested tags, text, cdata, comments in order
-    this[":@"] = {}; //attributes map
-  }
-  add(key,val){
-    // this.child.push( {name : key, val: val, isCdata: isCdata });
-    if(key === "__proto__") key = "#__proto__";
-    this.child.push( {[key]: val });
-  }
-  addChild(node) {
-    if(node.tagname === "__proto__") node.tagname = "#__proto__";
-    if(node[":@"] && Object.keys(node[":@"]).length > 0){
-      this.child.push( { [node.tagname]: node.child, [":@"]: node[":@"] });
-    }else{
-      this.child.push( { [node.tagname]: node.child });
-    }
-  };
-};
-
-
-module.exports = XmlNode;
-
-/***/ }),
-
 /***/ 7387:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-/*! firebase-admin v12.1.0 */
+/*! firebase-admin v12.7.0 */
 
 /*!
  * @license
@@ -10602,7 +8535,7 @@ exports.clearGlobalAppDefaultCred = clearGlobalAppDefaultCred;
 /***/ 5218:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-/*! firebase-admin v12.1.0 */
+/*! firebase-admin v12.7.0 */
 
 /*!
  * @license
@@ -10792,7 +8725,7 @@ class ComputeEngineCredential {
             return this.projectId;
         })
             .catch((err) => {
-            const detail = (err instanceof api_request_1.HttpError) ? getDetailFromResponse(err.response) : err.message;
+            const detail = (err instanceof api_request_1.RequestResponseError) ? getDetailFromResponse(err.response) : err.message;
             throw new error_1.FirebaseAppError(error_1.AppErrorCodes.INVALID_CREDENTIAL, `Failed to determine project ID: ${detail}`);
         });
     }
@@ -10807,7 +8740,7 @@ class ComputeEngineCredential {
             return this.accountId;
         })
             .catch((err) => {
-            const detail = (err instanceof api_request_1.HttpError) ? getDetailFromResponse(err.response) : err.message;
+            const detail = (err instanceof api_request_1.RequestResponseError) ? getDetailFromResponse(err.response) : err.message;
             throw new error_1.FirebaseAppError(error_1.AppErrorCodes.INVALID_CREDENTIAL, `Failed to determine service account email: ${detail}`);
         });
     }
@@ -11061,7 +8994,7 @@ function requestIDToken(client, request) {
  * Constructs a human-readable error message from the given Error.
  */
 function getErrorMessage(err) {
-    const detail = (err instanceof api_request_1.HttpError) ? getDetailFromResponse(err.response) : err.message;
+    const detail = (err instanceof api_request_1.RequestResponseError) ? getDetailFromResponse(err.response) : err.message;
     return `Error fetching access token: ${detail}`;
 }
 /**
@@ -11124,7 +9057,7 @@ function readCredentialFile(filePath, ignoreMissing) {
 /***/ 7502:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-/*! firebase-admin v12.1.0 */
+/*! firebase-admin v12.7.0 */
 
 /*!
  * @license
@@ -11157,17 +9090,19 @@ class FirebaseAppInternals {
     constructor(credential_) {
         this.credential_ = credential_;
         this.tokenListeners_ = [];
+        this.isRefreshing = false;
     }
     getToken(forceRefresh = false) {
         if (forceRefresh || this.shouldRefresh()) {
-            return this.refreshToken();
+            this.promiseToCachedToken_ = this.refreshToken();
         }
-        return Promise.resolve(this.cachedToken_);
+        return this.promiseToCachedToken_;
     }
     getCachedToken() {
         return this.cachedToken_ || null;
     }
     refreshToken() {
+        this.isRefreshing = true;
         return Promise.resolve(this.credential_.getAccessToken())
             .then((result) => {
             // Since the developer can provide the credential implementation, we want to weakly verify
@@ -11209,10 +9144,14 @@ class FirebaseAppInternals {
                     'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
             }
             throw new error_1.FirebaseAppError(error_1.AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
+        })
+            .finally(() => {
+            this.isRefreshing = false;
         });
     }
     shouldRefresh() {
-        return !this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_EXPIRY_THRESHOLD_MILLIS;
+        return (!this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_EXPIRY_THRESHOLD_MILLIS)
+            && !this.isRefreshing;
     }
     /**
      * Adds a listener that is called each time a token changes.
@@ -11338,7 +9277,7 @@ function isStateful(service) {
 /***/ 6498:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-/*! firebase-admin v12.1.0 */
+/*! firebase-admin v12.7.0 */
 
 /*!
  * @license
@@ -11357,7 +9296,7 @@ function isStateful(service) {
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SDK_VERSION = exports.refreshToken = exports.cert = exports.applicationDefault = exports.deleteApp = exports.getApps = exports.getApp = exports.initializeApp = void 0;
+exports.SDK_VERSION = exports.AppErrorCodes = exports.FirebaseAppError = exports.refreshToken = exports.cert = exports.applicationDefault = exports.deleteApp = exports.getApps = exports.getApp = exports.initializeApp = void 0;
 const utils_1 = __nccwpck_require__(8325);
 var lifecycle_1 = __nccwpck_require__(1951);
 Object.defineProperty(exports, "initializeApp", ({ enumerable: true, get: function () { return lifecycle_1.initializeApp; } }));
@@ -11368,6 +9307,9 @@ var credential_factory_1 = __nccwpck_require__(7387);
 Object.defineProperty(exports, "applicationDefault", ({ enumerable: true, get: function () { return credential_factory_1.applicationDefault; } }));
 Object.defineProperty(exports, "cert", ({ enumerable: true, get: function () { return credential_factory_1.cert; } }));
 Object.defineProperty(exports, "refreshToken", ({ enumerable: true, get: function () { return credential_factory_1.refreshToken; } }));
+var error_1 = __nccwpck_require__(7149);
+Object.defineProperty(exports, "FirebaseAppError", ({ enumerable: true, get: function () { return error_1.FirebaseAppError; } }));
+Object.defineProperty(exports, "AppErrorCodes", ({ enumerable: true, get: function () { return error_1.AppErrorCodes; } }));
 exports.SDK_VERSION = (0, utils_1.getSdkVersion)();
 
 
@@ -11376,7 +9318,7 @@ exports.SDK_VERSION = (0, utils_1.getSdkVersion)();
 /***/ 1951:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-/*! firebase-admin v12.1.0 */
+/*! firebase-admin v12.7.0 */
 
 /*!
  * @license
@@ -11543,7 +9485,7 @@ function loadOptionsFromEnvVar() {
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 var __webpack_unused_export__;
-/*! firebase-admin v12.1.0 */
+/*! firebase-admin v12.7.0 */
 
 /*!
  * Copyright 2020 Google Inc.
@@ -11627,7 +9569,7 @@ exports.Jt = getDownloadURL;
 /***/ 5641:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-/*! firebase-admin v12.1.0 */
+/*! firebase-admin v12.7.0 */
 
 /*!
  * @license
@@ -11755,7 +9697,7 @@ exports.Storage = Storage;
 /***/ 7956:
 /***/ ((__unused_webpack_module, exports) => {
 
-/*! firebase-admin v12.1.0 */
+/*! firebase-admin v12.7.0 */
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getFirebaseMetadata = void 0;
@@ -11783,7 +9725,7 @@ exports.getFirebaseMetadata = getFirebaseMetadata;
 /***/ 1625:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-/*! firebase-admin v12.1.0 */
+/*! firebase-admin v12.7.0 */
 
 /*!
  * @license
@@ -11802,16 +9744,17 @@ exports.getFirebaseMetadata = getFirebaseMetadata;
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ExponentialBackoffPoller = exports.ApiSettings = exports.AuthorizedHttpClient = exports.parseHttpResponse = exports.HttpClient = exports.defaultRetryConfig = exports.HttpError = void 0;
+exports.Http2SessionHandler = exports.ExponentialBackoffPoller = exports.ApiSettings = exports.AuthorizedHttp2Client = exports.AuthorizedHttpClient = exports.parseHttpResponse = exports.Http2Client = exports.HttpClient = exports.RequestClient = exports.defaultRetryConfig = exports.RequestResponseError = void 0;
 const error_1 = __nccwpck_require__(7149);
 const validator = __nccwpck_require__(6300);
 const http = __nccwpck_require__(3685);
 const https = __nccwpck_require__(5687);
+const http2 = __nccwpck_require__(5158);
 const url = __nccwpck_require__(7310);
 const events_1 = __nccwpck_require__(2361);
-class DefaultHttpResponse {
+class DefaultRequestResponse {
     /**
-     * Constructs a new HttpResponse from the given LowLevelResponse.
+     * Constructs a new `RequestResponse` from the given `LowLevelResponse`.
      */
     constructor(resp) {
         this.status = resp.status;
@@ -11842,10 +9785,10 @@ class DefaultHttpResponse {
     }
 }
 /**
- * Represents a multipart HTTP response. Parts that constitute the response body can be accessed
+ * Represents a multipart HTTP or HTTP/2 response. Parts that constitute the response body can be accessed
  * via the multipart getter. Getters for text and data throw errors.
  */
-class MultipartHttpResponse {
+class MultipartRequestResponse {
     constructor(resp) {
         this.status = resp.status;
         this.headers = resp.headers;
@@ -11861,19 +9804,19 @@ class MultipartHttpResponse {
         return false;
     }
 }
-class HttpError extends Error {
+class RequestResponseError extends Error {
     constructor(response) {
         super(`Server responded with status ${response.status}.`);
         this.response = response;
         // Set the prototype so that instanceof checks will work correctly.
         // See: https://github.com/Microsoft/TypeScript/issues/13965
-        Object.setPrototypeOf(this, HttpError.prototype);
+        Object.setPrototypeOf(this, RequestResponseError.prototype);
     }
 }
-exports.HttpError = HttpError;
+exports.RequestResponseError = RequestResponseError;
 /**
- * Default retry configuration for HTTP requests. Retries up to 4 times on connection reset and timeout errors
- * as well as HTTP 503 errors. Exposed as a function to ensure that every HttpClient gets its own RetryConfig
+ * Default retry configuration for HTTP and HTTP/2 requests. Retries up to 4 times on connection reset and timeout
+ * errors as well as 503 errors. Exposed as a function to ensure that every `RequestClient` gets its own `RetryConfig`
  * instance.
  */
 function defaultRetryConfig() {
@@ -11887,7 +9830,7 @@ function defaultRetryConfig() {
 }
 exports.defaultRetryConfig = defaultRetryConfig;
 /**
- * Ensures that the given RetryConfig object is valid.
+ * Ensures that the given `RetryConfig` object is valid.
  *
  * @param retry - The configuration to be validated.
  */
@@ -11910,64 +9853,18 @@ function validateRetryConfig(retry) {
         throw new error_1.FirebaseAppError(error_1.AppErrorCodes.INVALID_ARGUMENT, 'ioErrorCodes must be an array');
     }
 }
-class HttpClient {
+class RequestClient {
     constructor(retry = defaultRetryConfig()) {
-        this.retry = retry;
-        if (this.retry) {
+        if (retry) {
+            this.retry = retry;
             validateRetryConfig(this.retry);
         }
     }
-    /**
-     * Sends an HTTP request to a remote server. If the server responds with a successful response (2xx), the returned
-     * promise resolves with an HttpResponse. If the server responds with an error (3xx, 4xx, 5xx), the promise rejects
-     * with an HttpError. In case of all other errors, the promise rejects with a FirebaseAppError. If a request fails
-     * due to a low-level network error, transparently retries the request once before rejecting the promise.
-     *
-     * If the request data is specified as an object, it will be serialized into a JSON string. The application/json
-     * content-type header will also be automatically set in this case. For all other payload types, the content-type
-     * header should be explicitly set by the caller. To send a JSON leaf value (e.g. "foo", 5), parse it into JSON,
-     * and pass as a string or a Buffer along with the appropriate content-type header.
-     *
-     * @param config - HTTP request to be sent.
-     * @returns A promise that resolves with the response details.
-     */
-    send(config) {
-        return this.sendWithRetry(config);
-    }
-    /**
-     * Sends an HTTP request. In the event of an error, retries the HTTP request according to the
-     * RetryConfig set on the HttpClient.
-     *
-     * @param config - HTTP request to be sent.
-     * @param retryAttempts - Number of retries performed up to now.
-     * @returns A promise that resolves with the response details.
-     */
-    sendWithRetry(config, retryAttempts = 0) {
-        return AsyncHttpCall.invoke(config)
-            .then((resp) => {
-            return this.createHttpResponse(resp);
-        })
-            .catch((err) => {
-            const [delayMillis, canRetry] = this.getRetryDelayMillis(retryAttempts, err);
-            if (canRetry && this.retry && delayMillis <= this.retry.maxDelayInMillis) {
-                return this.waitForRetry(delayMillis).then(() => {
-                    return this.sendWithRetry(config, retryAttempts + 1);
-                });
-            }
-            if (err.response) {
-                throw new HttpError(this.createHttpResponse(err.response));
-            }
-            if (err.code === 'ETIMEDOUT') {
-                throw new error_1.FirebaseAppError(error_1.AppErrorCodes.NETWORK_TIMEOUT, `Error while making request: ${err.message}.`);
-            }
-            throw new error_1.FirebaseAppError(error_1.AppErrorCodes.NETWORK_ERROR, `Error while making request: ${err.message}. Error code: ${err.code}`);
-        });
-    }
-    createHttpResponse(resp) {
+    createRequestResponse(resp) {
         if (resp.multipart) {
-            return new MultipartHttpResponse(resp);
+            return new MultipartRequestResponse(resp);
         }
-        return new DefaultHttpResponse(resp);
+        return new DefaultRequestResponse(resp);
     }
     waitForRetry(delayMillis) {
         if (delayMillis > 0) {
@@ -12016,8 +9913,8 @@ class HttpClient {
         }
         return false;
     }
-    /**
-     * Parses the Retry-After HTTP header as a milliseconds value. Return value is negative if the Retry-After header
+    /**???
+     * Parses the Retry-After header as a milliseconds value. Return value is negative if the Retry-After header
      * contains an expired timestamp or otherwise malformed.
      */
     parseRetryAfterIntoMillis(retryAfter) {
@@ -12043,13 +9940,119 @@ class HttpClient {
         return Math.min(delayInSeconds * 1000, this.retry.maxDelayInMillis);
     }
 }
+exports.RequestClient = RequestClient;
+class HttpClient extends RequestClient {
+    constructor(retry) {
+        super(retry);
+    }
+    /**
+     * Sends an HTTP request to a remote server. If the server responds with a successful response (2xx), the returned
+     * promise resolves with an `RequestResponse`. If the server responds with an error (3xx, 4xx, 5xx), the promise
+     * rejects with an `RequestResponseError`. In case of all other errors, the promise rejects with a `FirebaseAppError`.
+     * If a request fails due to a low-level network error, the client transparently retries the request once before
+     * rejecting the promise.
+     *
+     * If the request data is specified as an object, it will be serialized into a JSON string. The application/json
+     * content-type header will also be automatically set in this case. For all other payload types, the content-type
+     * header should be explicitly set by the caller. To send a JSON leaf value (e.g. "foo", 5), parse it into JSON,
+     * and pass as a string or a Buffer along with the appropriate content-type header.
+     *
+     * @param config - HTTP request to be sent.
+     * @returns A promise that resolves with the response details.
+     */
+    send(config) {
+        return this.sendWithRetry(config);
+    }
+    /**
+     * Sends an HTTP request. In the event of an error, retries the HTTP request according to the
+     * `RetryConfig` set on the `HttpClient`.
+     *
+     * @param config - HTTP request to be sent.
+     * @param retryAttempts - Number of retries performed up to now.
+     * @returns A promise that resolves with the response details.
+     */
+    sendWithRetry(config, retryAttempts = 0) {
+        return AsyncHttpCall.invoke(config)
+            .then((resp) => {
+            return this.createRequestResponse(resp);
+        })
+            .catch((err) => {
+            const [delayMillis, canRetry] = this.getRetryDelayMillis(retryAttempts, err);
+            if (canRetry && this.retry && delayMillis <= this.retry.maxDelayInMillis) {
+                return this.waitForRetry(delayMillis).then(() => {
+                    return this.sendWithRetry(config, retryAttempts + 1);
+                });
+            }
+            if (err.response) {
+                throw new RequestResponseError(this.createRequestResponse(err.response));
+            }
+            if (err.code === 'ETIMEDOUT') {
+                throw new error_1.FirebaseAppError(error_1.AppErrorCodes.NETWORK_TIMEOUT, `Error while making request: ${err.message}.`);
+            }
+            throw new error_1.FirebaseAppError(error_1.AppErrorCodes.NETWORK_ERROR, `Error while making request: ${err.message}. Error code: ${err.code}`);
+        });
+    }
+}
 exports.HttpClient = HttpClient;
+class Http2Client extends RequestClient {
+    constructor(retry = defaultRetryConfig()) {
+        super(retry);
+    }
+    /**
+     * Sends an HTTP/2 request to a remote server. If the server responds with a successful response (2xx), the returned
+     * promise resolves with an `RequestResponse`. If the server responds with an error (3xx, 4xx, 5xx), the promise
+     * rejects with an `RequestResponseError`. In case of all other errors, the promise rejects with a `FirebaseAppError`.
+     * If a request fails due to a low-level network error, the client transparently retries the request once before
+     * rejecting the promise.
+     *
+     * If the request data is specified as an object, it will be serialized into a JSON string. The application/json
+     * content-type header will also be automatically set in this case. For all other payload types, the content-type
+     * header should be explicitly set by the caller. To send a JSON leaf value (e.g. "foo", 5), parse it into JSON,
+     * and pass as a string or a Buffer along with the appropriate content-type header.
+     *
+     * @param config - HTTP/2 request to be sent.
+     * @returns A promise that resolves with the response details.
+     */
+    send(config) {
+        return this.sendWithRetry(config);
+    }
+    /**
+     * Sends an HTTP/2 request. In the event of an error, retries the HTTP/2 request according to the
+     * `RetryConfig` set on the `Http2Client`.
+     *
+     * @param config - HTTP/2 request to be sent.
+     * @param retryAttempts - Number of retries performed up to now.
+     * @returns A promise that resolves with the response details.
+     */
+    sendWithRetry(config, retryAttempts = 0) {
+        return AsyncHttp2Call.invoke(config)
+            .then((resp) => {
+            return this.createRequestResponse(resp);
+        })
+            .catch((err) => {
+            const [delayMillis, canRetry] = this.getRetryDelayMillis(retryAttempts, err);
+            if (canRetry && this.retry && delayMillis <= this.retry.maxDelayInMillis) {
+                return this.waitForRetry(delayMillis).then(() => {
+                    return this.sendWithRetry(config, retryAttempts + 1);
+                });
+            }
+            if (err.response) {
+                throw new RequestResponseError(this.createRequestResponse(err.response));
+            }
+            if (err.code === 'ETIMEDOUT') {
+                throw new error_1.FirebaseAppError(error_1.AppErrorCodes.NETWORK_TIMEOUT, `Error while making request: ${err.message}.`);
+            }
+            throw new error_1.FirebaseAppError(error_1.AppErrorCodes.NETWORK_ERROR, `Error while making request: ${err.message}. Error code: ${err.code}`);
+        });
+    }
+}
+exports.Http2Client = Http2Client;
 /**
- * Parses a full HTTP response message containing both a header and a body.
+ * Parses a full HTTP or HTTP/2 response message containing both a header and a body.
  *
- * @param response - The HTTP response to be parsed.
- * @param config - The request configuration that resulted in the HTTP response.
- * @returns An object containing the parsed HTTP status, headers and the body.
+ * @param response - The HTTP or HTTP/2 response to be parsed.
+ * @param config - The request configuration that resulted in the HTTP or HTTP/2 response.
+ * @returns An object containing the response's parsed status, headers and the body.
  */
 function parseHttpResponse(response, config) {
     const responseText = validator.isBuffer(response) ?
@@ -12082,82 +10085,16 @@ function parseHttpResponse(response, config) {
     if (!validator.isNumber(lowLevelResponse.status)) {
         throw new error_1.FirebaseAppError(error_1.AppErrorCodes.INTERNAL_ERROR, 'Malformed HTTP status line.');
     }
-    return new DefaultHttpResponse(lowLevelResponse);
+    return new DefaultRequestResponse(lowLevelResponse);
 }
 exports.parseHttpResponse = parseHttpResponse;
 /**
- * A helper class for sending HTTP requests over the wire. This is a wrapper around the standard
- * http and https packages of Node.js, providing content processing, timeouts and error handling.
+ * A helper class for common functionality needed to send requests over the wire.
  * It also wraps the callback API of the Node.js standard library in a more flexible Promise API.
  */
-class AsyncHttpCall {
-    /**
-     * Sends an HTTP request based on the provided configuration.
-     */
-    static invoke(config) {
-        return new AsyncHttpCall(config).promise;
-    }
-    constructor(config) {
-        try {
-            this.config = new HttpRequestConfigImpl(config);
-            this.options = this.config.buildRequestOptions();
-            this.entity = this.config.buildEntity(this.options.headers);
-            this.promise = new Promise((resolve, reject) => {
-                this.resolve = resolve;
-                this.reject = reject;
-                this.execute();
-            });
-        }
-        catch (err) {
-            this.promise = Promise.reject(this.enhanceError(err, null));
-        }
-    }
-    execute() {
-        const transport = this.options.protocol === 'https:' ? https : http;
-        const req = transport.request(this.options, (res) => {
-            this.handleResponse(res, req);
-        });
-        // Handle errors
-        req.on('error', (err) => {
-            if (req.aborted) {
-                return;
-            }
-            this.enhanceAndReject(err, null, req);
-        });
-        const timeout = this.config.timeout;
-        const timeoutCallback = () => {
-            req.abort();
-            this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
-        };
-        if (timeout) {
-            // Listen to timeouts and throw an error.
-            req.setTimeout(timeout, timeoutCallback);
-        }
-        // Send the request
-        req.end(this.entity);
-    }
-    handleResponse(res, req) {
-        if (req.aborted) {
-            return;
-        }
-        if (!res.statusCode) {
-            throw new error_1.FirebaseAppError(error_1.AppErrorCodes.INTERNAL_ERROR, 'Expected a statusCode on the response from a ClientRequest');
-        }
-        const response = {
-            status: res.statusCode,
-            headers: res.headers,
-            request: req,
-            data: undefined,
-            config: this.config,
-        };
-        const boundary = this.getMultipartBoundary(res.headers);
-        const respStream = this.uncompressResponse(res);
-        if (boundary) {
-            this.handleMultipartResponse(response, respStream, boundary);
-        }
-        else {
-            this.handleRegularResponse(response, respStream);
-        }
+class AsyncRequestCall {
+    constructor(configImpl) {
+        this.configImpl = configImpl;
     }
     /**
      * Extracts multipart boundary from the HTTP header. The content-type header of a multipart
@@ -12186,19 +10123,6 @@ class AsyncHttpCall {
         }, emptyObject);
         return headerParams.boundary;
     }
-    uncompressResponse(res) {
-        // Uncompress the response body transparently if required.
-        let respStream = res;
-        const encodings = ['gzip', 'compress', 'deflate'];
-        if (res.headers['content-encoding'] && encodings.indexOf(res.headers['content-encoding']) !== -1) {
-            // Add the unzipper to the body stream processing pipeline.
-            const zlib = __nccwpck_require__(9796); // eslint-disable-line @typescript-eslint/no-var-requires
-            respStream = respStream.pipe(zlib.createUnzip());
-            // Remove the content-encoding in order to not confuse downstream operations.
-            delete res.headers['content-encoding'];
-        }
-        return respStream;
-    }
     handleMultipartResponse(response, respStream, boundary) {
         const busboy = __nccwpck_require__(727); // eslint-disable-line @typescript-eslint/no-var-requires
         const multipartParser = new busboy.Dicer({ boundary });
@@ -12226,7 +10150,7 @@ class AsyncHttpCall {
         });
         respStream.on('error', (err) => {
             const req = response.request;
-            if (req && req.aborted) {
+            if (req && req.destroyed) {
                 return;
             }
             this.enhanceAndReject(err, null, req);
@@ -12237,7 +10161,7 @@ class AsyncHttpCall {
         });
     }
     /**
-     * Finalizes the current HTTP call in-flight by either resolving or rejecting the associated
+     * Finalizes the current request call in-flight by either resolving or rejecting the associated
      * promise. In the event of an error, adds additional useful information to the returned error.
      */
     finalizeResponse(response) {
@@ -12250,7 +10174,7 @@ class AsyncHttpCall {
     }
     /**
      * Creates a new error from the given message, and enhances it with other information available.
-     * Then the promise associated with this HTTP call is rejected with the resulting error.
+     * Then the promise associated with this request call is rejected with the resulting error.
      */
     rejectWithError(message, code, request, response) {
         const error = new Error(message);
@@ -12260,11 +10184,11 @@ class AsyncHttpCall {
         this.reject(this.enhanceError(error, code, request, response));
     }
     /**
-     * Enhances the given error by adding more information to it. Specifically, the HttpRequestConfig,
+     * Enhances the given error by adding more information to it. Specifically, the request config,
      * the underlying request and response will be attached to the error.
      */
     enhanceError(error, code, request, response) {
-        error.config = this.config;
+        error.config = this.configImpl;
         if (code) {
             error.code = code;
         }
@@ -12274,10 +10198,190 @@ class AsyncHttpCall {
     }
 }
 /**
- * An adapter class for extracting options and entity data from an HttpRequestConfig.
+ * A helper class for sending HTTP requests over the wire. This is a wrapper around the standard
+ * http and https packages of Node.js, providing content processing, timeouts and error handling.
+ * It also wraps the callback API of the Node.js standard library in a more flexible Promise API.
  */
-class HttpRequestConfigImpl {
+class AsyncHttpCall extends AsyncRequestCall {
+    /**
+     * Sends an HTTP request based on the provided configuration.
+     */
+    static invoke(config) {
+        return new AsyncHttpCall(config).promise;
+    }
     constructor(config) {
+        const httpConfigImpl = new HttpRequestConfigImpl(config);
+        super(httpConfigImpl);
+        try {
+            this.httpConfigImpl = httpConfigImpl;
+            this.options = this.httpConfigImpl.buildRequestOptions();
+            this.entity = this.httpConfigImpl.buildEntity(this.options.headers);
+            this.promise = new Promise((resolve, reject) => {
+                this.resolve = resolve;
+                this.reject = reject;
+                this.execute();
+            });
+        }
+        catch (err) {
+            this.promise = Promise.reject(this.enhanceError(err, null));
+        }
+    }
+    execute() {
+        const transport = this.options.protocol === 'https:' ? https : http;
+        const req = transport.request(this.options, (res) => {
+            this.handleResponse(res, req);
+        });
+        // Handle errors
+        req.on('error', (err) => {
+            if (req.aborted) {
+                return;
+            }
+            this.enhanceAndReject(err, null, req);
+        });
+        const timeout = this.httpConfigImpl.timeout;
+        const timeoutCallback = () => {
+            req.destroy();
+            this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
+        };
+        if (timeout) {
+            // Listen to timeouts and throw an error.
+            req.setTimeout(timeout, timeoutCallback);
+        }
+        // Send the request
+        req.end(this.entity);
+    }
+    handleResponse(res, req) {
+        if (req.aborted) {
+            return;
+        }
+        if (!res.statusCode) {
+            throw new error_1.FirebaseAppError(error_1.AppErrorCodes.INTERNAL_ERROR, 'Expected a statusCode on the response from a ClientRequest');
+        }
+        const response = {
+            status: res.statusCode,
+            headers: res.headers,
+            request: req,
+            data: undefined,
+            config: this.httpConfigImpl,
+        };
+        const boundary = this.getMultipartBoundary(res.headers);
+        const respStream = this.uncompressResponse(res);
+        if (boundary) {
+            this.handleMultipartResponse(response, respStream, boundary);
+        }
+        else {
+            this.handleRegularResponse(response, respStream);
+        }
+    }
+    uncompressResponse(res) {
+        // Uncompress the response body transparently if required.
+        let respStream = res;
+        const encodings = ['gzip', 'compress', 'deflate'];
+        if (res.headers['content-encoding'] && encodings.indexOf(res.headers['content-encoding']) !== -1) {
+            // Add the unzipper to the body stream processing pipeline.
+            const zlib = __nccwpck_require__(9796); // eslint-disable-line @typescript-eslint/no-var-requires
+            respStream = respStream.pipe(zlib.createUnzip());
+            // Remove the content-encoding in order to not confuse downstream operations.
+            delete res.headers['content-encoding'];
+        }
+        return respStream;
+    }
+}
+class AsyncHttp2Call extends AsyncRequestCall {
+    /**
+     * Sends an HTTP2 request based on the provided configuration.
+     */
+    static invoke(config) {
+        return new AsyncHttp2Call(config).promise;
+    }
+    constructor(config) {
+        const http2ConfigImpl = new Http2RequestConfigImpl(config);
+        super(http2ConfigImpl);
+        try {
+            this.http2ConfigImpl = http2ConfigImpl;
+            this.options = this.http2ConfigImpl.buildRequestOptions();
+            this.entity = this.http2ConfigImpl.buildEntity(this.options.headers);
+            this.promise = new Promise((resolve, reject) => {
+                this.resolve = resolve;
+                this.reject = reject;
+                this.execute();
+            });
+        }
+        catch (err) {
+            this.promise = Promise.reject(this.enhanceError(err, null));
+        }
+    }
+    execute() {
+        const req = this.http2ConfigImpl.http2SessionHandler.session.request({
+            ':method': this.options.method,
+            ':scheme': this.options.protocol,
+            ':path': this.options.path,
+            ...this.options.headers
+        });
+        req.on('response', (headers) => {
+            this.handleHttp2Response(headers, req);
+        });
+        // Handle errors
+        req.on('error', (err) => {
+            if (req.aborted) {
+                return;
+            }
+            this.enhanceAndReject(err, null, req);
+        });
+        const timeout = this.http2ConfigImpl.timeout;
+        const timeoutCallback = () => {
+            req.destroy();
+            this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
+        };
+        if (timeout) {
+            // Listen to timeouts and throw an error.
+            req.setTimeout(timeout, timeoutCallback);
+        }
+        req.end(this.entity);
+    }
+    handleHttp2Response(headers, stream) {
+        if (stream.aborted) {
+            return;
+        }
+        if (!headers[':status']) {
+            throw new error_1.FirebaseAppError(error_1.AppErrorCodes.INTERNAL_ERROR, 'Expected a statusCode on the response from a ClientRequest');
+        }
+        const response = {
+            status: headers[':status'],
+            headers: headers,
+            request: stream,
+            data: undefined,
+            config: this.http2ConfigImpl,
+        };
+        const boundary = this.getMultipartBoundary(headers);
+        const respStream = this.uncompressResponse(headers, stream);
+        if (boundary) {
+            this.handleMultipartResponse(response, respStream, boundary);
+        }
+        else {
+            this.handleRegularResponse(response, respStream);
+        }
+    }
+    uncompressResponse(headers, stream) {
+        // Uncompress the response body transparently if required.
+        let respStream = stream;
+        const encodings = ['gzip', 'compress', 'deflate'];
+        if (headers['content-encoding'] && encodings.indexOf(headers['content-encoding']) !== -1) {
+            // Add the unzipper to the body stream processing pipeline.
+            const zlib = __nccwpck_require__(9796); // eslint-disable-line @typescript-eslint/no-var-requires
+            respStream = respStream.pipe(zlib.createUnzip());
+            // Remove the content-encoding in order to not confuse downstream operations.
+            delete headers['content-encoding'];
+        }
+        return respStream;
+    }
+}
+/**
+ * An adapter class with common functionality needed to extract options and entity data from a `RequestConfig`.
+ */
+class BaseRequestConfigImpl {
+    constructor(config) {
+        this.config = config;
         this.config = config;
     }
     get method() {
@@ -12294,27 +10398,6 @@ class HttpRequestConfigImpl {
     }
     get timeout() {
         return this.config.timeout;
-    }
-    get httpAgent() {
-        return this.config.httpAgent;
-    }
-    buildRequestOptions() {
-        const parsed = this.buildUrl();
-        const protocol = parsed.protocol;
-        let port = parsed.port;
-        if (!port) {
-            const isHttps = protocol === 'https:';
-            port = isHttps ? '443' : '80';
-        }
-        return {
-            protocol,
-            hostname: parsed.hostname,
-            port,
-            path: parsed.path,
-            method: this.method,
-            agent: this.httpAgent,
-            headers: Object.assign({}, this.headers),
-        };
     }
     buildEntity(headers) {
         let data;
@@ -12373,6 +10456,58 @@ class HttpRequestConfigImpl {
         return this.method !== 'GET' && this.method !== 'HEAD';
     }
 }
+/**
+ * An adapter class for extracting options and entity data from an `HttpRequestConfig`.
+ */
+class HttpRequestConfigImpl extends BaseRequestConfigImpl {
+    constructor(httpConfig) {
+        super(httpConfig);
+        this.httpConfig = httpConfig;
+    }
+    get httpAgent() {
+        return this.httpConfig.httpAgent;
+    }
+    buildRequestOptions() {
+        const parsed = this.buildUrl();
+        const protocol = parsed.protocol;
+        let port = parsed.port;
+        if (!port) {
+            const isHttps = protocol === 'https:';
+            port = isHttps ? '443' : '80';
+        }
+        return {
+            protocol,
+            hostname: parsed.hostname,
+            port,
+            path: parsed.path,
+            method: this.method,
+            agent: this.httpAgent,
+            headers: Object.assign({}, this.headers),
+        };
+    }
+}
+/**
+ * An adapter class for extracting options and entity data from an `Http2RequestConfig`.
+ */
+class Http2RequestConfigImpl extends BaseRequestConfigImpl {
+    constructor(http2Config) {
+        super(http2Config);
+        this.http2Config = http2Config;
+    }
+    get http2SessionHandler() {
+        return this.http2Config.http2SessionHandler;
+    }
+    buildRequestOptions() {
+        const parsed = this.buildUrl();
+        const protocol = parsed.protocol;
+        return {
+            protocol,
+            path: parsed.path,
+            method: this.method,
+            headers: Object.assign({}, this.headers),
+        };
+    }
+}
 class AuthorizedHttpClient extends HttpClient {
     constructor(app) {
         super();
@@ -12384,6 +10519,11 @@ class AuthorizedHttpClient extends HttpClient {
             requestCopy.headers = Object.assign({}, request.headers);
             const authHeader = 'Authorization';
             requestCopy.headers[authHeader] = `Bearer ${token}`;
+            // Fix issue where firebase-admin does not specify quota project that is
+            // necessary for use when utilizing human account with ADC (RSDF)
+            if (!requestCopy.headers['x-goog-user-project'] && this.app.options.projectId) {
+                requestCopy.headers['x-goog-user-project'] = this.app.options.projectId;
+            }
             if (!requestCopy.httpAgent && this.app.options.httpAgent) {
                 requestCopy.httpAgent = this.app.options.httpAgent;
             }
@@ -12392,17 +10532,35 @@ class AuthorizedHttpClient extends HttpClient {
     }
     getToken() {
         return this.app.INTERNAL.getToken()
-            .then((accessTokenObj) => {
-            return accessTokenObj.accessToken;
-        });
+            .then((accessTokenObj) => accessTokenObj.accessToken);
     }
 }
 exports.AuthorizedHttpClient = AuthorizedHttpClient;
+class AuthorizedHttp2Client extends Http2Client {
+    constructor(app) {
+        super();
+        this.app = app;
+    }
+    send(request) {
+        return this.getToken().then((token) => {
+            const requestCopy = Object.assign({}, request);
+            requestCopy.headers = Object.assign({}, request.headers);
+            const authHeader = 'Authorization';
+            requestCopy.headers[authHeader] = `Bearer ${token}`;
+            return super.send(requestCopy);
+        });
+    }
+    getToken() {
+        return this.app.INTERNAL.getToken()
+            .then((accessTokenObj) => accessTokenObj.accessToken);
+    }
+}
+exports.AuthorizedHttp2Client = AuthorizedHttp2Client;
 /**
  * Class that defines all the settings for the backend API endpoint.
  *
  * @param endpoint - The Firebase Auth backend endpoint.
- * @param httpMethod - The http method for that endpoint.
+ * @param httpMethod - The HTTP method for that endpoint.
  * @constructor
  */
 class ApiSettings {
@@ -12547,6 +10705,39 @@ class ExponentialBackoffPoller extends events_1.EventEmitter {
     }
 }
 exports.ExponentialBackoffPoller = ExponentialBackoffPoller;
+class Http2SessionHandler {
+    constructor(url) {
+        this.http2Session = this.createSession(url);
+    }
+    createSession(url) {
+        if (!this.http2Session || this.isClosed) {
+            const opts = {
+                // Set local max concurrent stream limit to respect backend limit
+                peerMaxConcurrentStreams: 100,
+                ALPNProtocols: ['h2']
+            };
+            const http2Session = http2.connect(url, opts);
+            http2Session.on('goaway', (errorCode, _, opaqueData) => {
+                throw new error_1.FirebaseAppError(error_1.AppErrorCodes.NETWORK_ERROR, `Error while making requests: GOAWAY - ${opaqueData.toString()}, Error code: ${errorCode}`);
+            });
+            http2Session.on('error', (error) => {
+                throw new error_1.FirebaseAppError(error_1.AppErrorCodes.NETWORK_ERROR, `Error while making requests: ${error}`);
+            });
+            return http2Session;
+        }
+        return this.http2Session;
+    }
+    get session() {
+        return this.http2Session;
+    }
+    get isClosed() {
+        return this.http2Session.closed;
+    }
+    close() {
+        this.http2Session.close();
+    }
+}
+exports.Http2SessionHandler = Http2SessionHandler;
 
 
 /***/ }),
@@ -12554,7 +10745,7 @@ exports.ExponentialBackoffPoller = ExponentialBackoffPoller;
 /***/ 1918:
 /***/ ((__unused_webpack_module, exports) => {
 
-/*! firebase-admin v12.1.0 */
+/*! firebase-admin v12.7.0 */
 
 /*!
  * @license
@@ -12639,7 +10830,7 @@ exports.deepExtend = deepExtend;
 /***/ 7149:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-/*! firebase-admin v12.1.0 */
+/*! firebase-admin v12.7.0 */
 
 /*!
  * @license
@@ -12662,11 +10853,13 @@ exports.InstanceIdClientErrorCode = exports.InstallationsClientErrorCode = expor
 const deep_copy_1 = __nccwpck_require__(1918);
 /**
  * Firebase error code structure. This extends Error.
- *
- * @param errorInfo - The error information (code and message).
- * @constructor
  */
 class FirebaseError extends Error {
+    /**
+     * @param errorInfo - The error information (code and message).
+     * @constructor
+     * @internal
+     */
     constructor(errorInfo) {
         super(errorInfo.message);
         this.errorInfo = errorInfo;
@@ -12678,11 +10871,11 @@ class FirebaseError extends Error {
     }
     /** @returns The error code. */
     get code() {
-        return this.errorInfo.code;
+        return this.errorInfo?.code;
     }
     /** @returns The error message. */
     get message() {
-        return this.errorInfo.message;
+        return this.errorInfo?.message;
     }
     /** @returns The object representation of the error. */
     toJSON() {
@@ -12695,13 +10888,15 @@ class FirebaseError extends Error {
 exports.FirebaseError = FirebaseError;
 /**
  * A FirebaseError with a prefix in front of the error code.
- *
- * @param codePrefix - The prefix to apply to the error code.
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
  */
 class PrefixedFirebaseError extends FirebaseError {
+    /**
+     * @param codePrefix - The prefix to apply to the error code.
+     * @param code - The error code.
+     * @param message - The error message.
+     * @constructor
+     * @internal
+     */
     constructor(codePrefix, code, message) {
         super({
             code: `${codePrefix}/${code}`,
@@ -12728,12 +10923,14 @@ class PrefixedFirebaseError extends FirebaseError {
 exports.PrefixedFirebaseError = PrefixedFirebaseError;
 /**
  * Firebase App error code structure. This extends PrefixedFirebaseError.
- *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
  */
 class FirebaseAppError extends PrefixedFirebaseError {
+    /**
+     * @param code - The error code.
+     * @param message - The error message.
+     * @constructor
+     * @internal
+     */
     constructor(code, message) {
         super('app', code, message);
         /* tslint:disable:max-line-length */
@@ -12746,11 +10943,6 @@ class FirebaseAppError extends PrefixedFirebaseError {
 exports.FirebaseAppError = FirebaseAppError;
 /**
  * Firebase Auth error code structure. This extends PrefixedFirebaseError.
- *
- * @param info - The error code info.
- * @param [message] The error message. This will override the default
- *     message if provided.
- * @constructor
  */
 class FirebaseAuthError extends PrefixedFirebaseError {
     /**
@@ -12761,6 +10953,7 @@ class FirebaseAuthError extends PrefixedFirebaseError {
      *     if not provided.
      * @param [rawServerResponse] The error's raw server response.
      * @returns The corresponding developer-facing error.
+     * @internal
      */
     static fromServerError(serverErrorCode, message, rawServerResponse) {
         // serverErrorCode could contain additional details:
@@ -12786,6 +10979,12 @@ class FirebaseAuthError extends PrefixedFirebaseError {
         }
         return new FirebaseAuthError(error);
     }
+    /**
+     * @param info - The error code info.
+     * @param message - The error message. This will override the default message if provided.
+     * @constructor
+     * @internal
+     */
     constructor(info, message) {
         // Override default message if custom message provided.
         super('auth', info.code, message || info.message);
@@ -12799,13 +10998,15 @@ class FirebaseAuthError extends PrefixedFirebaseError {
 exports.FirebaseAuthError = FirebaseAuthError;
 /**
  * Firebase Database error code structure. This extends FirebaseError.
- *
- * @param info - The error code info.
- * @param [message] The error message. This will override the default
- *     message if provided.
- * @constructor
  */
 class FirebaseDatabaseError extends FirebaseError {
+    /**
+     * @param info - The error code info.
+     * @param message - The error message. This will override the default
+     *     message if provided.
+     * @constructor
+     * @internal
+     */
     constructor(info, message) {
         // Override default message if custom message provided.
         super({ code: 'database/' + info.code, message: message || info.message });
@@ -12814,13 +11015,15 @@ class FirebaseDatabaseError extends FirebaseError {
 exports.FirebaseDatabaseError = FirebaseDatabaseError;
 /**
  * Firebase Firestore error code structure. This extends FirebaseError.
- *
- * @param info - The error code info.
- * @param [message] The error message. This will override the default
- *     message if provided.
- * @constructor
  */
 class FirebaseFirestoreError extends FirebaseError {
+    /**
+     * @param info - The error code info.
+     * @param message - The error message. This will override the default
+     *     message if provided.
+     * @constructor
+     * @internal
+     */
     constructor(info, message) {
         // Override default message if custom message provided.
         super({ code: 'firestore/' + info.code, message: message || info.message });
@@ -12829,13 +11032,16 @@ class FirebaseFirestoreError extends FirebaseError {
 exports.FirebaseFirestoreError = FirebaseFirestoreError;
 /**
  * Firebase instance ID error code structure. This extends FirebaseError.
- *
- * @param info - The error code info.
- * @param [message] The error message. This will override the default
- *     message if provided.
- * @constructor
  */
 class FirebaseInstanceIdError extends FirebaseError {
+    /**
+     *
+     * @param info - The error code info.
+     * @param message - The error message. This will override the default
+     *     message if provided.
+     * @constructor
+     * @internal
+     */
     constructor(info, message) {
         // Override default message if custom message provided.
         super({ code: 'instance-id/' + info.code, message: message || info.message });
@@ -12845,13 +11051,16 @@ class FirebaseInstanceIdError extends FirebaseError {
 exports.FirebaseInstanceIdError = FirebaseInstanceIdError;
 /**
  * Firebase Installations service error code structure. This extends `FirebaseError`.
- *
- * @param info - The error code info.
- * @param message - The error message. This will override the default
- *     message if provided.
- * @constructor
  */
 class FirebaseInstallationsError extends FirebaseError {
+    /**
+     *
+     * @param info - The error code info.
+     * @param message - The error message. This will override the default
+     *     message if provided.
+     * @constructor
+     * @internal
+     */
     constructor(info, message) {
         // Override default message if custom message provided.
         super({ code: 'installations/' + info.code, message: message || info.message });
@@ -12861,10 +11070,6 @@ class FirebaseInstallationsError extends FirebaseError {
 exports.FirebaseInstallationsError = FirebaseInstallationsError;
 /**
  * Firebase Messaging error code structure. This extends PrefixedFirebaseError.
- *
- * @param info - The error code info.
- * @param [message] The error message. This will override the default message if provided.
- * @constructor
  */
 class FirebaseMessagingError extends PrefixedFirebaseError {
     /**
@@ -12875,6 +11080,7 @@ class FirebaseMessagingError extends PrefixedFirebaseError {
      *     if not provided.
      * @param [rawServerResponse] The error's raw server response.
      * @returns The corresponding developer-facing error.
+     * @internal
      */
     static fromServerError(serverErrorCode, message, rawServerResponse) {
         // If not found, default to unknown error.
@@ -12894,6 +11100,9 @@ class FirebaseMessagingError extends PrefixedFirebaseError {
         }
         return new FirebaseMessagingError(error);
     }
+    /**
+     * @internal
+     */
     static fromTopicManagementServerError(serverErrorCode, message, rawServerResponse) {
         // If not found, default to unknown error.
         const clientCodeKey = TOPIC_MGT_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'UNKNOWN_ERROR';
@@ -12909,6 +11118,13 @@ class FirebaseMessagingError extends PrefixedFirebaseError {
         }
         return new FirebaseMessagingError(error);
     }
+    /**
+     *
+     * @param info - The error code info.
+     * @param message - The error message. This will override the default message if provided.
+     * @constructor
+     * @internal
+     */
     constructor(info, message) {
         // Override default message if custom message provided.
         super('messaging', info.code, message || info.message);
@@ -12922,12 +11138,14 @@ class FirebaseMessagingError extends PrefixedFirebaseError {
 exports.FirebaseMessagingError = FirebaseMessagingError;
 /**
  * Firebase project management error code structure. This extends PrefixedFirebaseError.
- *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
  */
 class FirebaseProjectManagementError extends PrefixedFirebaseError {
+    /**
+     * @param code - The error code.
+     * @param message - The error message.
+     * @constructor
+     * @internal
+     */
     constructor(code, message) {
         super('project-management', code, message);
         /* tslint:disable:max-line-length */
@@ -13669,7 +11887,7 @@ const TOPIC_MGT_SERVER_TO_CLIENT_CODE = {
 /***/ 8325:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-/*! firebase-admin v12.1.0 */
+/*! firebase-admin v12.7.0 */
 
 /*!
  * @license
@@ -13959,7 +12177,7 @@ exports.parseResourceName = parseResourceName;
 /***/ 6300:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-/*! firebase-admin v12.1.0 */
+/*! firebase-admin v12.7.0 */
 
 /*!
  * @license
@@ -24614,7 +22832,6 @@ module.exports = function(algorithm, key) {
 /***/ 2321:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-var bufferEqual = __nccwpck_require__(9239);
 var Buffer = (__nccwpck_require__(1867).Buffer);
 var crypto = __nccwpck_require__(6113);
 var formatEcdsa = __nccwpck_require__(1728);
@@ -24751,10 +22968,25 @@ function createHmacSigner(bits) {
   }
 }
 
+var bufferEqual;
+var timingSafeEqual = 'timingSafeEqual' in crypto ? function timingSafeEqual(a, b) {
+  if (a.byteLength !== b.byteLength) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(a, b)
+} : function timingSafeEqual(a, b) {
+  if (!bufferEqual) {
+    bufferEqual = __nccwpck_require__(9239);
+  }
+
+  return bufferEqual(a, b)
+}
+
 function createHmacVerifier(bits) {
   return function verify(thing, signature, secret) {
     var computedSig = createHmacSigner(bits)(thing, secret);
-    return bufferEqual(Buffer.from(signature), Buffer.from(computedSig));
+    return timingSafeEqual(Buffer.from(signature), Buffer.from(computedSig));
   }
 }
 
@@ -25000,7 +23232,12 @@ function jwsSign(opts) {
 }
 
 function SignStream(opts) {
-  var secret = opts.secret||opts.privateKey||opts.key;
+  var secret = opts.secret;
+  secret = secret == null ? opts.privateKey : secret;
+  secret = secret == null ? opts.key : secret;
+  if (/^hs/i.test(opts.header.alg) === true && secret == null) {
+    throw new TypeError('secret must be a string or buffer or a KeyObject')
+  }
   var secretStream = new DataStream(secret);
   this.readable = true;
   this.header = opts.header;
@@ -25147,7 +23384,12 @@ function jwsDecode(jwsSig, opts) {
 
 function VerifyStream(opts) {
   opts = opts || {};
-  var secretOrKey = opts.secret||opts.publicKey||opts.key;
+  var secretOrKey = opts.secret;
+  secretOrKey = secretOrKey == null ? opts.publicKey : secretOrKey;
+  secretOrKey = secretOrKey == null ? opts.key : secretOrKey;
+  if (/^hs/i.test(opts.algorithm) === true && secretOrKey == null) {
+    throw new TypeError('secret must be a string or buffer or a KeyObject')
+  }
   var secretStream = new DataStream(secretOrKey);
   this.readable = true;
   this.algorithm = opts.algorithm;
@@ -28999,7 +27241,6 @@ module.exports = function (jwtString, secretOrPublicKey, options, callback) {
 /***/ 6010:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-var bufferEqual = __nccwpck_require__(9239);
 var Buffer = (__nccwpck_require__(1867).Buffer);
 var crypto = __nccwpck_require__(6113);
 var formatEcdsa = __nccwpck_require__(1728);
@@ -29136,10 +27377,25 @@ function createHmacSigner(bits) {
   }
 }
 
+var bufferEqual;
+var timingSafeEqual = 'timingSafeEqual' in crypto ? function timingSafeEqual(a, b) {
+  if (a.byteLength !== b.byteLength) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(a, b)
+} : function timingSafeEqual(a, b) {
+  if (!bufferEqual) {
+    bufferEqual = __nccwpck_require__(9239);
+  }
+
+  return bufferEqual(a, b)
+}
+
 function createHmacVerifier(bits) {
   return function verify(thing, signature, secret) {
     var computedSig = createHmacSigner(bits)(thing, secret);
-    return bufferEqual(Buffer.from(signature), Buffer.from(computedSig));
+    return timingSafeEqual(Buffer.from(signature), Buffer.from(computedSig));
   }
 }
 
@@ -29385,7 +27641,12 @@ function jwsSign(opts) {
 }
 
 function SignStream(opts) {
-  var secret = opts.secret||opts.privateKey||opts.key;
+  var secret = opts.secret;
+  secret = secret == null ? opts.privateKey : secret;
+  secret = secret == null ? opts.key : secret;
+  if (/^hs/i.test(opts.header.alg) === true && secret == null) {
+    throw new TypeError('secret must be a string or buffer or a KeyObject')
+  }
   var secretStream = new DataStream(secret);
   this.readable = true;
   this.header = opts.header;
@@ -29532,7 +27793,12 @@ function jwsDecode(jwsSig, opts) {
 
 function VerifyStream(opts) {
   opts = opts || {};
-  var secretOrKey = opts.secret||opts.publicKey||opts.key;
+  var secretOrKey = opts.secret;
+  secretOrKey = secretOrKey == null ? opts.publicKey : secretOrKey;
+  secretOrKey = secretOrKey == null ? opts.key : secretOrKey;
+  if (/^hs/i.test(opts.algorithm) === true && secretOrKey == null) {
+    throw new TypeError('secret must be a string or buffer or a KeyObject')
+  }
   var secretStream = new DataStream(secretOrKey);
   this.readable = true;
   this.algorithm = opts.algorithm;
@@ -33733,7 +31999,7 @@ var imix;         // inverse mix-columns table
  * The word [a0, a1, a2, a3] is a polynomial a3x^3 + a2x^2 + a1x + a0.
  *
  * Addition is performed by XOR'ing like powers of x. Multiplication
- * is performed in two steps, the first is an algebriac expansion as
+ * is performed in two steps, the first is an algebraic expansion as
  * you would do normally (where addition is XOR). But the result is
  * a polynomial larger than 3 degrees and thus it cannot fit in a word. So
  * next the result is modularly reduced by an AES-specific polynomial of
@@ -35072,6 +33338,11 @@ asn1.Type = {
 };
 
 /**
+ * Sets the default maximum recursion depth when parsing ASN.1 structures.
+ */
+asn1.maxDepth = 256;
+
+/**
  * Creates a new asn1 object.
  *
  * @param tagClass the tag class for the object.
@@ -35312,6 +33583,8 @@ var _getValueLength = function(bytes, remaining) {
  *            erroneously decode values that happen to be valid ASN.1. This
  *            flag will be deprecated or removed as soon as schema support is
  *            available. (default: true)
+ *          [maxDepth] override asn1.maxDepth recursion limit
+ *            (default: asn1.maxDepth)
  *
  * @throws Will throw an error for various malformed input conditions.
  *
@@ -35341,6 +33614,9 @@ asn1.fromDer = function(bytes, options) {
   if(!('decodeBitStrings' in options)) {
     options.decodeBitStrings = true;
   }
+  if(!('maxDepth' in options)) {
+    options.maxDepth = asn1.maxDepth;
+  }
 
   // wrap in buffer if needed
   if(typeof bytes === 'string') {
@@ -35369,6 +33645,12 @@ asn1.fromDer = function(bytes, options) {
  * @return the parsed asn1 object.
  */
 function _fromDer(bytes, remaining, depth, options) {
+
+  // check depth limit
+  if(depth >= options.maxDepth) {
+    throw new Error('ASN.1 parsing error: Max depth exceeded.');
+  }
+
   // temporary storage for consumption calculations
   var start;
 
@@ -35666,6 +33948,10 @@ asn1.oidToDer = function(oid) {
     last = true;
     valueBytes = [];
     value = parseInt(values[i], 10);
+    // TODO: Change bitwise logic to allow larger values.
+    if(value > 0xffffffff) {
+      throw new Error('OID value too large; max is 32-bits.');
+    }
     do {
       b = value & 0x7F;
       value = value >>> 7;
@@ -35711,8 +33997,13 @@ asn1.derToOid = function(bytes) {
   // the last byte for each value
   var value = 0;
   while(bytes.length() > 0) {
+    // error if 7b shift would exceed Number.MAX_SAFE_INTEGER
+    // (Number.MAX_SAFE_INTEGER / 128)
+    if(value > 0x3fffffffffff) {
+      throw new Error('OID value too large; max is 53-bits.');
+    }
     b = bytes.getByte();
-    value = value << 7;
+    value = value * 128;
     // not the last byte for the value
     if(b & 0x80) {
       value += b & 0x7F;
@@ -36058,22 +34349,65 @@ asn1.validate = function(obj, v, capture, errors) {
       if(v.value && forge.util.isArray(v.value)) {
         var j = 0;
         for(var i = 0; rval && i < v.value.length; ++i) {
-          rval = v.value[i].optional || false;
-          if(obj.value[j]) {
-            rval = asn1.validate(obj.value[j], v.value[i], capture, errors);
-            if(rval) {
-              ++j;
-            } else if(v.value[i].optional) {
+          var schemaItem = v.value[i];
+          rval = !!schemaItem.optional;
+
+          // current child in the object
+          var objChild = obj.value[j];
+
+          // if there is no child left to match
+          if(!objChild) {
+            // if optional, ok (rval already true), else fail below
+            if(!schemaItem.optional) {
+              rval = false;
+              if(errors) {
+                errors.push('[' + v.name + '] ' +
+                  'Missing required element. Expected tag class "' +
+                  schemaItem.tagClass + '", type "' + schemaItem.type + '"');
+              }
+            }
+            continue;
+          }
+
+          // If schema explicitly specifies tagClass/type, do a quick structural check
+          // to avoid unnecessary recursion/side-effects when tags clearly don't match.
+          var schemaHasTag = (typeof schemaItem.tagClass !== 'undefined' &&
+            typeof schemaItem.type !== 'undefined');
+
+          if(schemaHasTag &&
+            (objChild.tagClass !== schemaItem.tagClass || objChild.type !== schemaItem.type)) {
+            // Tags do not match.
+            if(schemaItem.optional) {
+              // Skip this schema element (don't consume objChild; don't call recursive validate).
               rval = true;
+              continue;
+            } else {
+              // Required schema item mismatched - fail.
+              rval = false;
+              if(errors) {
+                errors.push('[' + v.name + '] ' +
+                  'Tag mismatch. Expected (' +
+                  schemaItem.tagClass + ',' + schemaItem.type + '), got (' +
+                  objChild.tagClass + ',' + objChild.type + ')');
+              }
+              break;
             }
           }
-          if(!rval && errors) {
-            errors.push(
-              '[' + v.name + '] ' +
-              'Tag class "' + v.tagClass + '", type "' +
-              v.type + '" expected value length "' +
-              v.value.length + '", got "' +
-              obj.value.length + '"');
+
+          // Tags are compatible (or schema did not declare tags) - dive into recursive validate.
+          var childRval = asn1.validate(objChild, schemaItem, capture, errors);
+          if(childRval) {
+            // consume this child
+            ++j;
+            rval = true;
+          } else if(schemaItem.optional) {
+            // validation failed but element is optional => skip schema item (don't consume child)
+            rval = true;
+          } else {
+            // required item failed
+            rval = false;
+            // errors should already be populated by recursive call; keep failing
+            break;
           }
         }
       }
@@ -36119,7 +34453,8 @@ asn1.validate = function(obj, v, capture, errors) {
     if(obj.type !== v.type) {
       errors.push(
         '[' + v.name + '] ' +
-        'Expected type "' + v.type + '", got "' + obj.type + '"');
+        'Expected type "' + v.type + '", got "' +
+        obj.type + '"');
     }
   }
   return rval;
@@ -42612,7 +40947,7 @@ pki.pbe.generatePkcs12Key = function(password, salt, id, iter, n, md) {
   D.fillWithByte(id, v);
 
   /* 2. Concatenate copies of the salt together to create a string S of length
-        v * ceil(s / v) bytes (the final copy of the salt may be trunacted
+        v * ceil(s / v) bytes (the final copy of the salt may be truncated
         to create S).
         Note that if the salt is the empty string, then so is S. */
   var Slen = v * Math.ceil(s / v);
@@ -43883,6 +42218,7 @@ var pfxValidator = {
           capture: 'macAlgorithm'
         }, {
           name: 'PFX.macData.mac.digestAlgorithm.parameters',
+          optional: true,
           tagClass: asn1.Class.UNIVERSAL,
           captureAsn1: 'macAlgorithmParameters'
         }]
@@ -44189,6 +42525,9 @@ p12.pkcs12FromAsn1 = function(obj, strict, password) {
     if(macValue.getBytes() !== capture.macDigest) {
       throw new Error('PKCS#12 MAC could not be verified. Invalid password?');
     }
+  } else if(Array.isArray(obj.value) && obj.value.length > 2) {
+    /* This is pfx data that should have mac and verify macDigest */
+    throw new Error('Invalid PKCS#12. macData field present but MAC was not validated.');
   }
 
   _decodeAuthenticatedSafe(pfx, data.value, strict, password);
@@ -48464,7 +46803,7 @@ var digestInfoValidator = {
       constructed: false,
       capture: 'algorithmIdentifier'
     }, {
-      // NULL paramters
+      // NULL parameters
       name: 'DigestInfo.DigestAlgorithm.parameters',
       tagClass: asn1.Class.UNIVERSAL,
       type: asn1.Type.NULL,
@@ -48498,7 +46837,7 @@ var digestInfoValidator = {
  *
  * @param md the message digest object with the hash to sign.
  *
- * @return the encoded message (ready for RSA encrytion)
+ * @return the encoded message (ready for RSA encryption)
  */
 var emsaPkcs1v15encode = function(md) {
   // get the oid for the algorithm
@@ -48680,7 +47019,7 @@ var _modPow = function(x, key, pub) {
  *
  * The parameter bt controls whether to put padding bytes before the
  * message passed in. Set bt to either true or false to disable padding
- * completely (in order to handle e.g. EMSA-PSS encoding seperately before),
+ * completely (in order to handle e.g. EMSA-PSS encoding separately before),
  * signaling whether the encryption operation is a public key operation
  * (i.e. encrypting data) or not, i.e. private key operation (data signing).
  *
@@ -49355,7 +47694,7 @@ pki.setRsaPublicKey = pki.rsa.setPublicKey = function(n, e) {
           }
           // check hash algorithm identifier
           // see PKCS1-v1-5DigestAlgorithms in RFC 8017
-          // FIXME: add support to vaidator for strict value choices
+          // FIXME: add support to validator for strict value choices
           var oid = asn1.derToOid(capture.algorithmIdentifier);
           if(!(oid === forge.oids.md2 ||
             oid === forge.oids.md5 ||
@@ -49378,7 +47717,7 @@ pki.setRsaPublicKey = pki.rsa.setPublicKey = function(n, e) {
               throw new Error(
                 'ASN.1 object does not contain a valid RSASSA-PKCS1-v1_5 ' +
                 'DigestInfo value. ' +
-                'Missing algorithm identifer NULL parameters.');
+                'Missing algorithm identifier NULL parameters.');
             }
           }
 
@@ -49819,7 +48158,7 @@ function _decodePkcs1_v1_5(em, key, pub, ml) {
 
     1. The encryption block EB cannot be parsed unambiguously.
     2. The padding string PS consists of fewer than eight octets
-      or is inconsisent with the block type BT.
+      or is inconsistent with the block type BT.
     3. The decryption process is a public-key operation and the block
       type BT is not 00 or 01, or the decryption process is a
       private-key operation and the block type is not 02.
@@ -52367,7 +50706,7 @@ tls.handleUnexpected = function(c, record) {
  */
 tls.handleHelloRequest = function(c, record, length) {
   // ignore renegotiation requests from the server during a handshake, but
-  // if handshaking, send a warning alert that renegotation is denied
+  // if handshaking, send a warning alert that renegotiation is denied
   if(!c.handshaking && c.handshakes > 0) {
     // send alert warning
     tls.queue(c, tls.createAlert(c, {
@@ -53867,7 +52206,7 @@ hsTable[tls.ConnectionEnd.client] = [
 ];
 
 // map server current expect state and handshake type to function
-// Note: CAD[CH] does not map to FB because renegotation is prohibited
+// Note: CAD[CH] does not map to FB because renegotiation is prohibited
 var H7 = tls.handleClientHello;
 var H8 = tls.handleClientKeyExchange;
 var H9 = tls.handleCertificateVerify;
@@ -56575,7 +54914,7 @@ util.ByteStringBuffer.prototype.clear = function() {
 };
 
 /**
- * Shortens this buffer by triming bytes off of the end of this buffer.
+ * Shortens this buffer by trimming bytes off of the end of this buffer.
  *
  * @param count the number of bytes to trim off.
  *
@@ -57241,7 +55580,7 @@ util.DataBuffer.prototype.clear = function() {
 };
 
 /**
- * Shortens this buffer by triming bytes off of the end of this buffer.
+ * Shortens this buffer by trimming bytes off of the end of this buffer.
  *
  * @param count the number of bytes to trim off.
  *
@@ -58214,7 +56553,7 @@ util.format = function(format) {
         parts.push('<?>');
       }
       break;
-    // FIXME: do proper formating for numbers, etc
+    // FIXME: do proper formatting for numbers, etc
     //case 'f':
     //case 'd':
     case '%':
@@ -60846,7 +59185,7 @@ function _fillMissingExtensionFields(e, options) {
  * Convert signature parameters object to ASN.1
  *
  * @param {String} oid Signature algorithm OID
- * @param params The signature parametrs object
+ * @param params The signature parameters object
  * @return ASN.1 object representing signature parameters
  */
 function _signatureParametersToAsn1(oid, params) {
@@ -65900,137 +64239,6 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-
-/***/ }),
-
-/***/ 4526:
-/***/ ((module) => {
-
-const hexRegex = /^[-+]?0x[a-fA-F0-9]+$/;
-const numRegex = /^([\-\+])?(0*)(\.[0-9]+([eE]\-?[0-9]+)?|[0-9]+(\.[0-9]+([eE]\-?[0-9]+)?)?)$/;
-// const octRegex = /0x[a-z0-9]+/;
-// const binRegex = /0x[a-z0-9]+/;
-
-
-//polyfill
-if (!Number.parseInt && window.parseInt) {
-    Number.parseInt = window.parseInt;
-}
-if (!Number.parseFloat && window.parseFloat) {
-    Number.parseFloat = window.parseFloat;
-}
-
-  
-const consider = {
-    hex :  true,
-    leadingZeros: true,
-    decimalPoint: "\.",
-    eNotation: true
-    //skipLike: /regex/
-};
-
-function toNumber(str, options = {}){
-    // const options = Object.assign({}, consider);
-    // if(opt.leadingZeros === false){
-    //     options.leadingZeros = false;
-    // }else if(opt.hex === false){
-    //     options.hex = false;
-    // }
-
-    options = Object.assign({}, consider, options );
-    if(!str || typeof str !== "string" ) return str;
-    
-    let trimmedStr  = str.trim();
-    // if(trimmedStr === "0.0") return 0;
-    // else if(trimmedStr === "+0.0") return 0;
-    // else if(trimmedStr === "-0.0") return -0;
-
-    if(options.skipLike !== undefined && options.skipLike.test(trimmedStr)) return str;
-    else if (options.hex && hexRegex.test(trimmedStr)) {
-        return Number.parseInt(trimmedStr, 16);
-    // } else if (options.parseOct && octRegex.test(str)) {
-    //     return Number.parseInt(val, 8);
-    // }else if (options.parseBin && binRegex.test(str)) {
-    //     return Number.parseInt(val, 2);
-    }else{
-        //separate negative sign, leading zeros, and rest number
-        const match = numRegex.exec(trimmedStr);
-        if(match){
-            const sign = match[1];
-            const leadingZeros = match[2];
-            let numTrimmedByZeros = trimZeros(match[3]); //complete num without leading zeros
-            //trim ending zeros for floating number
-            
-            const eNotation = match[4] || match[6];
-            if(!options.leadingZeros && leadingZeros.length > 0 && sign && trimmedStr[2] !== ".") return str; //-0123
-            else if(!options.leadingZeros && leadingZeros.length > 0 && !sign && trimmedStr[1] !== ".") return str; //0123
-            else{//no leading zeros or leading zeros are allowed
-                const num = Number(trimmedStr);
-                const numStr = "" + num;
-                if(numStr.search(/[eE]/) !== -1){ //given number is long and parsed to eNotation
-                    if(options.eNotation) return num;
-                    else return str;
-                }else if(eNotation){ //given number has enotation
-                    if(options.eNotation) return num;
-                    else return str;
-                }else if(trimmedStr.indexOf(".") !== -1){ //floating number
-                    // const decimalPart = match[5].substr(1);
-                    // const intPart = trimmedStr.substr(0,trimmedStr.indexOf("."));
-
-                    
-                    // const p = numStr.indexOf(".");
-                    // const givenIntPart = numStr.substr(0,p);
-                    // const givenDecPart = numStr.substr(p+1);
-                    if(numStr === "0" && (numTrimmedByZeros === "") ) return num; //0.0
-                    else if(numStr === numTrimmedByZeros) return num; //0.456. 0.79000
-                    else if( sign && numStr === "-"+numTrimmedByZeros) return num;
-                    else return str;
-                }
-                
-                if(leadingZeros){
-                    // if(numTrimmedByZeros === numStr){
-                    //     if(options.leadingZeros) return num;
-                    //     else return str;
-                    // }else return str;
-                    if(numTrimmedByZeros === numStr) return num;
-                    else if(sign+numTrimmedByZeros === numStr) return num;
-                    else return str;
-                }
-
-                if(trimmedStr === numStr) return num;
-                else if(trimmedStr === sign+numStr) return num;
-                // else{
-                //     //number with +/- sign
-                //     trimmedStr.test(/[-+][0-9]);
-
-                // }
-                return str;
-            }
-            // else if(!eNotation && trimmedStr && trimmedStr !== Number(trimmedStr) ) return str;
-            
-        }else{ //non-numeric string
-            return str;
-        }
-    }
-}
-
-/**
- * 
- * @param {string} numStr without leading zeros
- * @returns 
- */
-function trimZeros(numStr){
-    if(numStr && numStr.indexOf(".") !== -1){//float
-        numStr = numStr.replace(/0+$/, ""); //remove ending zeros
-        if(numStr === ".")  numStr = "0";
-        else if(numStr[0] === ".")  numStr = "0"+numStr;
-        else if(numStr[numStr.length-1] === ".")  numStr = numStr.substr(0,numStr.length-1);
-        return numStr;
-    }
-    return numStr;
-}
-module.exports = toNumber
-
 
 /***/ }),
 
@@ -71153,6 +69361,13 @@ module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("http");
 
 /***/ }),
 
+/***/ 5158:
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("http2");
+
+/***/ }),
+
 /***/ 5687:
 /***/ ((module) => {
 
@@ -71636,8 +69851,9 @@ module.exports = PartStream
  * Based heavily on the Streaming Boyer-Moore-Horspool C++ implementation
  * by Hongli Lai at: https://github.com/FooBarWidget/boyer-moore-horspool
  */
-const EventEmitter = (__nccwpck_require__(5673).EventEmitter)
-const inherits = (__nccwpck_require__(7261).inherits)
+
+const { EventEmitter } = __nccwpck_require__(5673)
+const { inherits } = __nccwpck_require__(7261)
 
 function SBMH (needle) {
   if (typeof needle === 'string') {
@@ -71649,6 +69865,7 @@ function SBMH (needle) {
   }
 
   const needleLength = needle.length
+  const needleLastCharIndex = needleLength - 1
 
   if (needleLength === 0) {
     throw new Error('The needle cannot be an empty String/Buffer.')
@@ -71661,18 +69878,18 @@ function SBMH (needle) {
   this.maxMatches = Infinity
   this.matches = 0
 
-  this._occ = new Array(256)
+  this._occ = new Uint8Array(256)
     .fill(needleLength) // Initialize occurrence table.
   this._lookbehind_size = 0
   this._needle = needle
   this._bufpos = 0
 
-  this._lookbehind = Buffer.alloc(needleLength)
+  this._lookbehind = Buffer.alloc(needleLastCharIndex)
 
   // Populate occurrence table with analysis of the needle,
   // ignoring last letter.
-  for (var i = 0; i < needleLength - 1; ++i) { // eslint-disable-line no-var
-    this._occ[needle[i]] = needleLength - 1 - i
+  for (var i = 0; i < needleLastCharIndex; ++i) { // eslint-disable-line no-var
+    this._occ[needle[i]] = needleLastCharIndex - i
   }
 }
 inherits(SBMH, EventEmitter)
@@ -71698,7 +69915,8 @@ SBMH.prototype._sbmh_feed = function (data) {
   const len = data.length
   const needle = this._needle
   const needleLength = needle.length
-  const lastNeedleChar = needle[needleLength - 1]
+  const needleLastCharIndex = needleLength - 1
+  const needleLastChar = needle[needleLastCharIndex]
 
   // Positive: points to a position in `data`
   //           pos == 3 points to data[3]
@@ -71721,24 +69939,24 @@ SBMH.prototype._sbmh_feed = function (data) {
     // or until
     //   the character to look at lies outside the haystack.
     while (pos < 0 && pos <= len - needleLength) {
-      ch = this._sbmh_lookup_char(data, pos + needleLength - 1)
+      ch = data[pos + needleLastCharIndex]
 
       if (
-        ch === lastNeedleChar &&
-        this._sbmh_memcmp(data, pos, needleLength - 1)
+        ch === needleLastChar &&
+        this._sbmh_memcmp(data, pos, needleLastCharIndex)
       ) {
         this._lookbehind_size = 0
         ++this.matches
         this.emit('info', true)
-
         return (this._bufpos = pos + needleLength)
       }
+
       pos += this._occ[ch]
     }
 
     // No match.
 
-    if (pos < 0) {
+    while (pos < 0 && !this._sbmh_memcmp(data, pos, len - pos)) {
       // There's too few data for Boyer-Moore-Horspool to run,
       // so let's use a different algorithm to skip as much as
       // we can.
@@ -71747,7 +69965,7 @@ SBMH.prototype._sbmh_feed = function (data) {
       //   looks like the beginning of the needle
       // or until
       //   pos == 0
-      while (pos < 0 && !this._sbmh_memcmp(data, pos, len - pos)) { ++pos }
+      ++pos
     }
 
     if (pos >= 0) {
@@ -71764,9 +69982,8 @@ SBMH.prototype._sbmh_feed = function (data) {
         this.emit('info', false, this._lookbehind, 0, bytesToCutOff)
       }
 
-      this._lookbehind.copy(this._lookbehind, 0, bytesToCutOff,
-        this._lookbehind_size - bytesToCutOff)
       this._lookbehind_size -= bytesToCutOff
+      this._lookbehind.copy(this._lookbehind, 0, bytesToCutOff, this._lookbehind_size)
 
       data.copy(this._lookbehind, this._lookbehind_size)
       this._lookbehind_size += len
@@ -71776,18 +69993,19 @@ SBMH.prototype._sbmh_feed = function (data) {
     }
   }
 
-  pos += (pos >= 0) * this._bufpos
-
   // Lookbehind buffer is now empty. We only need to check if the
   // needle is in the haystack.
-  if (data.indexOf(needle, pos) !== -1) {
-    pos = data.indexOf(needle, pos)
-    ++this.matches
-    if (pos > 0) { this.emit('info', true, data, this._bufpos, pos) } else { this.emit('info', true) }
+  pos = data.indexOf(needle, pos + this._bufpos)
 
+  if (pos !== -1) {
+    ++this.matches
+    if (pos === 0) { this.emit('info', true) } else { this.emit('info', true, data, this._bufpos, pos) }
     return (this._bufpos = pos + needleLength)
-  } else {
-    pos = len - needleLength
+  }
+
+  pos = len - needleLastCharIndex
+  if (pos < 0) {
+    pos = 0
   }
 
   // There was no match. If there's trailing haystack data that we cannot
@@ -71797,33 +70015,32 @@ SBMH.prototype._sbmh_feed = function (data) {
   // Whatever trailing data is left after running this algorithm is added to
   // the lookbehind buffer.
   while (
-    pos < len &&
+    pos !== len &&
     (
       data[pos] !== needle[0] ||
-      (
-        (Buffer.compare(
-          data.subarray(pos, pos + len - pos),
-          needle.subarray(0, len - pos)
-        ) !== 0)
-      )
+      Buffer.compare(
+        data.subarray(pos + 1, len),
+        needle.subarray(1, len - pos)
+      ) !== 0
     )
   ) {
     ++pos
   }
-  if (pos < len) {
-    data.copy(this._lookbehind, 0, pos, pos + (len - pos))
+
+  if (pos !== len) {
+    data.copy(this._lookbehind, 0, pos, len)
     this._lookbehind_size = len - pos
   }
 
   // Everything until pos is guaranteed not to contain needle data.
-  if (pos > 0) { this.emit('info', false, data, this._bufpos, pos < len ? pos : len) }
+  if (pos !== 0) { this.emit('info', false, data, this._bufpos, pos) }
 
   this._bufpos = len
   return len
 }
 
 SBMH.prototype._sbmh_lookup_char = function (data, pos) {
-  return (pos < 0)
+  return pos < 0
     ? this._lookbehind[this._lookbehind_size + pos]
     : data[pos]
 }
@@ -72809,6 +71026,11 @@ function parseParams (str) {
         if (inquote) {
           inquote = false
           state = STATE_KEY
+          // Skip any remaining characters until we hit a semicolon or end of string
+          // This ensures we don't include characters after the closing quote
+          while (i + 1 < len && str[i + 1] !== ';') {
+            ++i
+          }
         } else { inquote = true }
         continue
       } else { escaping = false }
@@ -73629,13 +71851,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -74335,6 +72567,12 @@ class Bucket extends index_js_1.ServiceObject {
             createMethod: storage.createBucket.bind(storage),
             methods,
         });
+        /**
+         * Indicates whether this Bucket object is a placeholder for an item
+         * that the API failed to retrieve (unreachable) due to partial failure.
+         * Consumers must check this flag before accessing other properties.
+         */
+        this.unreachable = false;
         this.name = name;
         this.storage = storage;
         this.userProject = options.userProject;
@@ -74412,7 +72650,7 @@ class Bucket extends index_js_1.ServiceObject {
      *     **Note**: For configuring a raw-formatted rule object to be passed as `action`
      *               please refer to the [examples]{@link https://cloud.google.com/storage/docs/managing-lifecycles#configexamples}.
      * @param {object} rule.condition Condition a bucket must meet before the
-     *     action occurson the bucket. Refer to followitn supported [conditions]{@link https://cloud.google.com/storage/docs/lifecycle#conditions}.
+     *     action occurs on the bucket. Refer to following supported [conditions]{@link https://cloud.google.com/storage/docs/lifecycle#conditions}.
      * @param {string} [rule.storageClass] When using the `setStorageClass`
      *     action, provide this option to dictate which storage class the object
      *     should update to.
@@ -74938,7 +73176,7 @@ class Bucket extends index_js_1.ServiceObject {
      * myBucket.createNotification('my-topic', callback);
      *
      * //-
-     * // Configure the nofiication by providing Notification metadata.
+     * // Configure the notification by providing Notification metadata.
      * //-
      * const metadata = {
      *   objectNamePrefix: 'prefix-'
@@ -75688,6 +73926,11 @@ class Bucket extends index_js_1.ServiceObject {
             callback = queryOrCallback;
         }
         query = Object.assign({}, query);
+        if (query.fields &&
+            query.autoPaginate &&
+            !query.fields.includes('nextPageToken')) {
+            query.fields = `${query.fields},nextPageToken`;
+        }
         this.request({
             uri: '/o',
             qs: query,
@@ -75700,6 +73943,10 @@ class Bucket extends index_js_1.ServiceObject {
             const itemsArray = resp.items ? resp.items : [];
             const files = itemsArray.map((file) => {
                 const options = {};
+                if (query.fields) {
+                    const fileInstance = file;
+                    return fileInstance;
+                }
                 if (query.versions) {
                     options.generation = file.generation;
                 }
@@ -75886,7 +74133,7 @@ class Bucket extends index_js_1.ServiceObject {
      * @property {boolean} [virtualHostedStyle=false] Use virtual hosted-style
      *     URLs ('https://mybucket.storage.googleapis.com/...') instead of path-style
      *     ('https://storage.googleapis.com/mybucket/...'). Virtual hosted-style URLs
-     *     should generally be preferred instaed of path-style URL.
+     *     should generally be preferred instead of path-style URL.
      *     Currently defaults to `false` for path-style, although this may change in a
      *     future major-version release.
      * @property {string} [cname] The cname for this bucket, i.e.,
@@ -75933,7 +74180,7 @@ class Bucket extends index_js_1.ServiceObject {
      * @param {boolean} [config.virtualHostedStyle=false] Use virtual hosted-style
      *     URLs ('https://mybucket.storage.googleapis.com/...') instead of path-style
      *     ('https://storage.googleapis.com/mybucket/...'). Virtual hosted-style URLs
-     *     should generally be preferred instaed of path-style URL.
+     *     should generally be preferred instead of path-style URL.
      *     Currently defaults to `false` for path-style, although this may change in a
      *     future major-version release.
      * @param {string} [config.cname] The cname for this bucket, i.e.,
@@ -76023,7 +74270,7 @@ class Bucket extends index_js_1.ServiceObject {
      * @throws {Error} if a metageneration is not provided.
      *
      * @param {number|string} metageneration The bucket's metageneration. This is
-     *     accesssible from calling {@link File#getMetadata}.
+     *     accessible from calling {@link File#getMetadata}.
      * @param {BucketLockCallback} [callback] Callback function.
      * @returns {Promise<BucketLockResponse>}
      *
@@ -76056,6 +74303,25 @@ class Bucket extends index_js_1.ServiceObject {
                 ifMetagenerationMatch: metageneration,
             },
         }, callback);
+    }
+    /**
+     * @typedef {object} RestoreOptions Options for Bucket#restore(). See an
+     *     {@link https://cloud.google.com/storage/docs/json_api/v1/buckets/restore#resource| Object resource}.
+     * @param {number} [generation] If present, selects a specific revision of this object.
+     * @param {string} [projection] Specifies the set of properties to return. If used, must be 'full' or 'noAcl'.
+     */
+    /**
+     * Restores a soft-deleted bucket
+     * @param {RestoreOptions} options Restore options.
+     * @returns {Promise<Bucket>}
+     */
+    async restore(options) {
+        const [bucket] = await this.request({
+            method: 'POST',
+            uri: '/restore',
+            qs: options,
+        });
+        return bucket;
     }
     /**
      * @typedef {array} MakeBucketPrivateResponse
@@ -77121,7 +75387,7 @@ paginator_1.paginator.extend(Bucket, 'getFiles');
  * that a callback is omitted.
  */
 (0, promisify_1.promisifyAll)(Bucket, {
-    exclude: ['cloudStorageURI', 'request', 'file', 'notification'],
+    exclude: ['cloudStorageURI', 'request', 'file', 'notification', 'restore'],
 });
 
 
@@ -77439,8 +75705,15 @@ class CRC32C {
         const crc32c = new CRC32C();
         await new Promise((resolve, reject) => {
             (0, fs_1.createReadStream)(file)
-                .on('data', (d) => crc32c.update(d))
-                .on('end', resolve)
+                .on('data', (d) => {
+                if (typeof d === 'string') {
+                    crc32c.update(Buffer.from(d));
+                }
+                else {
+                    crc32c.update(d);
+                }
+            })
+                .on('end', () => resolve())
                 .on('error', reject);
         });
         return crc32c;
@@ -77532,13 +75805,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
@@ -77907,6 +76190,8 @@ class File extends index_js_1.ServiceObject {
              * @param {string} [options.userProject] The ID of the project which will be
              *     billed for the request.
              * @param {number} [options.generation] The generation number to get
+             * @param {string} [options.restoreToken] If this is a soft-deleted object in an HNS-enabled bucket, returns the restore token which will
+             *    be necessary to restore it if there's a name conflict with another object.
              * @param {boolean} [options.softDeleted] If true, returns the soft-deleted object.
                   Object `generation` is required if `softDeleted` is set to True.
              * @param {GetFileCallback} [callback] Callback function.
@@ -78755,6 +77040,7 @@ class File extends index_js_1.ServiceObject {
             retryOptions: retryOptions,
             params: (options === null || options === void 0 ? void 0 : options.preconditionOpts) || this.instancePreconditionOpts,
             universeDomain: this.bucket.storage.universeDomain,
+            useAuthWithCustomEndpoint: this.storage.useAuthWithCustomEndpoint,
             [util_js_1.GCCL_GCS_CMD_KEY]: options[util_js_1.GCCL_GCS_CMD_KEY],
         }, callback);
         this.storage.retryOptions.autoRetry = this.instanceRetryValue;
@@ -78999,6 +77285,9 @@ class File extends index_js_1.ServiceObject {
             transformStreams.push(zlib.createGzip());
         }
         const emitStream = new util_js_2.PassThroughShim();
+        // If `writeStream` is destroyed before the `writing` event, `emitStream` will not have any listeners. This prevents an unhandled error.
+        const noop = () => { };
+        emitStream.on('error', noop);
         let hashCalculatingStream = null;
         if (crc32c || md5) {
             const crc32cInstance = options.resumeCRC32C
@@ -79031,9 +77320,20 @@ class File extends index_js_1.ServiceObject {
             else {
                 this.startResumableUpload_(fileWriteStream, options);
             }
+            // remove temporary noop listener as we now create a pipeline that handles the errors
+            emitStream.removeListener('error', noop);
             (0, stream_1.pipeline)(emitStream, ...transformStreams, fileWriteStream, async (e) => {
                 if (e) {
                     return pipelineCallback(e);
+                }
+                // If this is a partial upload, we don't expect final metadata yet.
+                if (options.isPartialUpload) {
+                    // Emit CRC32c for this completed chunk if hash validation is active.
+                    if (hashCalculatingStream === null || hashCalculatingStream === void 0 ? void 0 : hashCalculatingStream.crc32c) {
+                        writeStream.emit('crc32c', hashCalculatingStream.crc32c);
+                    }
+                    // Resolve the pipeline for this *partial chunk*.
+                    return pipelineCallback();
                 }
                 // We want to make sure we've received the metadata from the server in order
                 // to properly validate the object's integrity. Depending on the type of upload,
@@ -79155,7 +77455,7 @@ class File extends index_js_1.ServiceObject {
             options = {};
         }
         else {
-            options = optionsOrCallback;
+            options = Object.assign({}, optionsOrCallback);
         }
         let called = false;
         const callback = ((...args) => {
@@ -79165,20 +77465,28 @@ class File extends index_js_1.ServiceObject {
         });
         const destination = options.destination;
         delete options.destination;
+        if (options.encryptionKey) {
+            this.setEncryptionKey(options.encryptionKey);
+            delete options.encryptionKey;
+        }
         const fileStream = this.createReadStream(options);
         let receivedData = false;
         if (destination) {
             fileStream
                 .on('error', callback)
                 .once('data', data => {
-                // We know that the file exists the server - now we can truncate/write to a file
                 receivedData = true;
+                // We know that the file exists the server - now we can truncate/write to a file
                 const writable = fs.createWriteStream(destination);
                 writable.write(data);
                 fileStream
                     .pipe(writable)
-                    .on('error', callback)
-                    .on('finish', callback);
+                    .on('error', (err) => {
+                    callback(err, Buffer.from(''));
+                })
+                    .on('finish', () => {
+                    callback(null, data);
+                });
             })
                 .on('end', () => {
                 // In the case of an empty file no data will be received before the end event fires
@@ -79278,12 +77586,12 @@ class File extends index_js_1.ServiceObject {
         const gsMatches = [...publicUrlOrGsUrl.matchAll(GS_UTIL_URL_REGEX)];
         const httpsMatches = [...publicUrlOrGsUrl.matchAll(HTTPS_PUBLIC_URL_REGEX)];
         if (gsMatches.length > 0) {
-            const bucket = new bucket_js_1.Bucket(storageInstance, gsMatches[0][1]);
-            return new File(bucket, gsMatches[0][2], options);
+            const bucket = new bucket_js_1.Bucket(storageInstance, gsMatches[0][2]);
+            return new File(bucket, gsMatches[0][3], options);
         }
         else if (httpsMatches.length > 0) {
-            const bucket = new bucket_js_1.Bucket(storageInstance, httpsMatches[0][2]);
-            return new File(bucket, httpsMatches[0][3], options);
+            const bucket = new bucket_js_1.Bucket(storageInstance, httpsMatches[0][3]);
+            return new File(bucket, httpsMatches[0][4], options);
         }
         else {
             throw new Error('URL string must be of format gs://bucket/file or https://storage.googleapis.com/bucket/file');
@@ -79714,7 +78022,7 @@ class File extends index_js_1.ServiceObject {
      * @param {boolean} [config.virtualHostedStyle=false] Use virtual hosted-style
      *     URLs (e.g. 'https://mybucket.storage.googleapis.com/...') instead of path-style
      *     (e.g. 'https://storage.googleapis.com/mybucket/...'). Virtual hosted-style URLs
-     *     should generally be preferred instaed of path-style URL.
+     *     should generally be preferred instead of path-style URL.
      *     Currently defaults to `false` for path-style, although this may change in a
      *     future major-version release.
      * @param {string} [config.cname] The cname for this bucket, i.e.,
@@ -80122,6 +78430,160 @@ class File extends index_js_1.ServiceObject {
         return `${this.storage.apiEndpoint}/${this.bucket.name}/${encodeURIComponent(this.name)}`;
     }
     /**
+     * @typedef {array} MoveFileAtomicResponse
+     * @property {File} 0 The moved {@link File}.
+     * @property {object} 1 The full API response.
+     */
+    /**
+     * @callback MoveFileAtomicCallback
+     * @param {?Error} err Request error, if any.
+     * @param {File} movedFile The moved {@link File}.
+     * @param {object} apiResponse The full API response.
+     */
+    /**
+     * @typedef {object} MoveFileAtomicOptions Configuration options for File#moveFileAtomic(). See an
+     *     {@link https://cloud.google.com/storage/docs/json_api/v1/objects#resource| Object resource}.
+     * @property {string} [userProject] The ID of the project which will be
+     *     billed for the request.
+     * @property {object} [preconditionOpts] Precondition options.
+     * @property {number} [preconditionOpts.ifGenerationMatch] Makes the operation conditional on whether the object's current generation matches the given value.
+     */
+    /**
+     * Move this file within the same bucket.
+     * The source object must exist and be a live object.
+     * The source and destination object IDs must be different.
+     * Overwriting the destination object is allowed by default, but can be prevented
+     * using preconditions.
+     * If the destination path includes non-existent parent folders, they will be created.
+     *
+     * See {@link https://cloud.google.com/storage/docs/json_api/v1/objects/move| Objects: move API Documentation}
+     *
+     * @throws {Error} If the destination file is not provided.
+     *
+     * @param {string|File} destination Destination file name or File object within the same bucket..
+     * @param {MoveFileAtomicOptions} [options] Configuration options. See an
+     * @param {MoveFileAtomicCallback} [callback] Callback function.
+     * @returns {Promise<MoveFileAtomicResponse>}
+     *
+     * @example
+     * ```
+     * const {Storage} = require('@google-cloud/storage');
+     * const storage = new Storage();
+     *
+     * //-
+     * // Assume 'my-bucket' is a bucket.
+     * //-
+     * const bucket = storage.bucket('my-bucket');
+     * const file = bucket.file('my-image.png');
+     *
+     * //-
+     * // If you pass in a string for the destination, the file is copied to its
+     * // current bucket, under the new name provided.
+     * //-
+     * file.moveFileAtomic('moved-image.png', function(err, movedFile, apiResponse) {
+     *   // `my-bucket` now contains:
+     *   // - "moved-image.png"
+     *
+     *   // `movedFile` is an instance of a File object that refers to your new
+     *   // file.
+     * });
+     *
+     * //-
+     * // Move the file to a subdirectory, creating parent folders if necessary.
+     * //-
+     * file.moveFileAtomic('new-folder/subfolder/moved-image.png', function(err, movedFile, apiResponse) {
+     * // `my-bucket` now contains:
+     * // - "new-folder/subfolder/moved-image.png"
+     * });
+     *
+     * //-
+     * // Prevent overwriting an existing destination object using preconditions.
+     * //-
+     * file.moveFileAtomic('existing-destination.png', {
+     * preconditionOpts: {
+     * ifGenerationMatch: 0 // Fails if the destination object exists.
+     * }
+     * }, function(err, movedFile, apiResponse) {
+     * if (err) {
+     * // Handle the error (e.g., the destination object already exists).
+     * } else {
+     * // Move successful.
+     * }
+     * });
+     *
+     * //-
+     * // If the callback is omitted, we'll return a Promise.
+     * //-
+     * file.moveFileAtomic('moved-image.png).then(function(data) {
+     *   const newFile = data[0];
+     *   const apiResponse = data[1];
+     * });
+     *
+     * ```
+     * @example <caption>include:samples/files.js</caption>
+     * region_tag:storage_move_file
+     * Another example:
+     */
+    moveFileAtomic(destination, optionsOrCallback, callback) {
+        var _a, _b;
+        const noDestinationError = new Error(FileExceptionMessages.DESTINATION_NO_NAME);
+        if (!destination) {
+            throw noDestinationError;
+        }
+        let options = {};
+        if (typeof optionsOrCallback === 'function') {
+            callback = optionsOrCallback;
+        }
+        else if (optionsOrCallback) {
+            options = { ...optionsOrCallback };
+        }
+        callback = callback || index_js_1.util.noop;
+        let destName;
+        let newFile;
+        if (typeof destination === 'string') {
+            const parsedDestination = GS_URL_REGEXP.exec(destination);
+            if (parsedDestination !== null && parsedDestination.length === 3) {
+                destName = parsedDestination[2];
+            }
+            else {
+                destName = destination;
+            }
+        }
+        else if (destination instanceof File) {
+            destName = destination.name;
+            newFile = destination;
+        }
+        else {
+            throw noDestinationError;
+        }
+        newFile = newFile || this.bucket.file(destName);
+        if (!this.shouldRetryBasedOnPreconditionAndIdempotencyStrat(options === null || options === void 0 ? void 0 : options.preconditionOpts)) {
+            this.storage.retryOptions.autoRetry = false;
+        }
+        const query = {};
+        if (options.userProject !== undefined) {
+            query.userProject = options.userProject;
+            delete options.userProject;
+        }
+        if (((_a = options.preconditionOpts) === null || _a === void 0 ? void 0 : _a.ifGenerationMatch) !== undefined) {
+            query.ifGenerationMatch = (_b = options.preconditionOpts) === null || _b === void 0 ? void 0 : _b.ifGenerationMatch;
+            delete options.preconditionOpts;
+        }
+        this.request({
+            method: 'POST',
+            uri: `/moveTo/o/${encodeURIComponent(newFile.name)}`,
+            qs: query,
+            json: options,
+        }, (err, resp) => {
+            this.storage.retryOptions.autoRetry = this.instanceRetryValue;
+            if (err) {
+                callback(err, null, resp);
+                return;
+            }
+            callback(null, newFile, resp);
+        });
+    }
+    /**
      * @typedef {array} MoveResponse
      * @property {File} 0 The destination File.
      * @property {object} 1 The full API response.
@@ -80375,6 +78837,8 @@ class File extends index_js_1.ServiceObject {
      * @param {string} [userProject] The ID of the project which will be
      *     billed for the request.
      * @param {number} [generation] If present, selects a specific revision of this object.
+     * @param {string} [restoreToken] Returns an option that must be specified when getting a soft-deleted object from an HNS-enabled
+     *  bucket that has a naming and generation conflict with another object in the same bucket.
      * @param {string} [projection] Specifies the set of properties to return. If used, must be 'full' or 'noAcl'.
      * @param {string | number} [ifGenerationMatch] Request proceeds if the generation of the target resource
      *  matches the value used in the precondition.
@@ -80541,7 +79005,9 @@ class File extends index_js_1.ServiceObject {
                     }
                     return bail(err);
                 };
-                if (typeof data === 'string' || Buffer.isBuffer(data)) {
+                if (typeof data === 'string' ||
+                    Buffer.isBuffer(data) ||
+                    data instanceof Uint8Array) {
                     writable
                         .on('error', handleError)
                         .on('finish', () => resolve())
@@ -80701,7 +79167,7 @@ class File extends index_js_1.ServiceObject {
         if (!this.shouldRetryBasedOnPreconditionAndIdempotencyStrat(options.preconditionOpts)) {
             retryOptions.autoRetry = false;
         }
-        const uploadStream = resumableUpload.upload({
+        const cfg = {
             authClient: this.storage.authClient,
             apiEndpoint: this.storage.apiEndpoint,
             bucket: this.bucket.name,
@@ -80724,7 +79190,16 @@ class File extends index_js_1.ServiceObject {
             highWaterMark: options === null || options === void 0 ? void 0 : options.highWaterMark,
             universeDomain: this.bucket.storage.universeDomain,
             [util_js_1.GCCL_GCS_CMD_KEY]: options[util_js_1.GCCL_GCS_CMD_KEY],
-        });
+        };
+        let uploadStream;
+        try {
+            uploadStream = resumableUpload.upload(cfg);
+        }
+        catch (error) {
+            dup.destroy(error);
+            this.storage.retryOptions.autoRetry = this.instanceRetryValue;
+            return;
+        }
         uploadStream
             .on('response', resp => {
             dup.emit('response', resp);
@@ -80972,10 +79447,18 @@ class HashStreamValidator extends stream_1.Transform {
         var _a;
         return (_a = __classPrivateFieldGet(this, _HashStreamValidator_crc32cHash, "f")) === null || _a === void 0 ? void 0 : _a.toString();
     }
-    _flush(callback) {
-        if (__classPrivateFieldGet(this, _HashStreamValidator_md5Hash, "f")) {
+    /**
+     * Return the calculated MD5 value, if available.
+     */
+    get md5Digest() {
+        if (__classPrivateFieldGet(this, _HashStreamValidator_md5Hash, "f") && !__classPrivateFieldGet(this, _HashStreamValidator_md5Digest, "f")) {
             __classPrivateFieldSet(this, _HashStreamValidator_md5Digest, __classPrivateFieldGet(this, _HashStreamValidator_md5Hash, "f").digest('base64'), "f");
         }
+        return __classPrivateFieldGet(this, _HashStreamValidator_md5Digest, "f");
+    }
+    _flush(callback) {
+        // Triggers the getter logic to finalize and cache the MD5 digest
+        this.md5Digest;
         if (this.updateHashesOnly) {
             callback();
             return;
@@ -81719,7 +80202,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Notification = exports.Iam = exports.HmacKey = exports.File = exports.Channel = exports.Bucket = exports.Storage = exports.IdempotencyStrategy = exports.ApiError = void 0;
+exports.Notification = exports.Iam = exports.HmacKey = exports.File = exports.Channel = exports.Bucket = exports.Storage = exports.RETRYABLE_ERR_FN_DEFAULT = exports.IdempotencyStrategy = exports.ApiError = void 0;
 /**
  * The `@google-cloud/storage` package has a single named export which is the
  * {@link Storage} (ES6) class, which should be instantiated with `new`.
@@ -81768,6 +80251,7 @@ var index_js_1 = __nccwpck_require__(4052);
 Object.defineProperty(exports, "ApiError", ({ enumerable: true, get: function () { return index_js_1.ApiError; } }));
 var storage_js_1 = __nccwpck_require__(3030);
 Object.defineProperty(exports, "IdempotencyStrategy", ({ enumerable: true, get: function () { return storage_js_1.IdempotencyStrategy; } }));
+Object.defineProperty(exports, "RETRYABLE_ERR_FN_DEFAULT", ({ enumerable: true, get: function () { return storage_js_1.RETRYABLE_ERR_FN_DEFAULT; } }));
 Object.defineProperty(exports, "Storage", ({ enumerable: true, get: function () { return storage_js_1.Storage; } }));
 var bucket_js_1 = __nccwpck_require__(3973);
 Object.defineProperty(exports, "Bucket", ({ enumerable: true, get: function () { return bucket_js_1.Bucket; } }));
@@ -82124,13 +80608,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Service = exports.DEFAULT_PROJECT_ID_TOKEN = void 0;
 /*!
@@ -82183,6 +80677,7 @@ class Service {
         this.providedUserAgent = options.userAgent;
         this.universeDomain = options.universeDomain || google_auth_library_1.DEFAULT_UNIVERSE;
         this.customEndpoint = config.customEndpoint || false;
+        this.useAuthWithCustomEndpoint = config.useAuthWithCustomEndpoint;
         this.makeAuthenticatedRequest = util_js_1.util.makeAuthenticatedRequestFactory({
             ...config,
             projectIdRequired: this.projectIdRequired,
@@ -82354,13 +80849,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -82370,7 +80875,7 @@ exports.util = exports.Util = exports.PartialFailureError = exports.ApiError = e
  * @module common/util
  */
 const projectify_1 = __nccwpck_require__(3497);
-const ent = __importStar(__nccwpck_require__(1151));
+const htmlEntities = __importStar(__nccwpck_require__(1263));
 const google_auth_library_1 = __nccwpck_require__(810);
 const retry_request_1 = __importDefault(__nccwpck_require__(3515));
 const stream_1 = __nccwpck_require__(2781);
@@ -82456,7 +80961,7 @@ class ApiError extends Error {
             errors.forEach(({ message }) => messages.add(message));
         }
         else if (err.response && err.response.body) {
-            messages.add(ent.decode(err.response.body.toString()));
+            messages.add(htmlEntities.decode(err.response.body.toString()));
         }
         else if (!err.message) {
             messages.add('A failure occurred during this request.');
@@ -83332,13 +81837,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
     if (kind === "m") throw new TypeError("Private method is not writable");
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
@@ -83353,9 +81868,12 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _Upload_instances, _Upload_gcclGcsCmd, _Upload_resetLocalBuffersCache, _Upload_addLocalBufferCache;
+var _Upload_instances, _Upload_hashValidator, _Upload_clientCrc32c, _Upload_clientMd5Hash, _Upload_gcclGcsCmd, _Upload_resetLocalBuffersCache, _Upload_addLocalBufferCache, _Upload_validateChecksum, _Upload_applyChecksumHeaders;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.checkUploadStatus = exports.createURI = exports.upload = exports.Upload = exports.PROTOCOL_REGEX = void 0;
+exports.Upload = exports.PROTOCOL_REGEX = void 0;
+exports.upload = upload;
+exports.createURI = createURI;
+exports.checkUploadStatus = checkUploadStatus;
 const abort_controller_1 = __importDefault(__nccwpck_require__(1659));
 const crypto_1 = __nccwpck_require__(6113);
 const gaxios = __importStar(__nccwpck_require__(9555));
@@ -83365,9 +81883,11 @@ const async_retry_1 = __importDefault(__nccwpck_require__(3415));
 const uuid = __importStar(__nccwpck_require__(5840));
 const util_js_1 = __nccwpck_require__(9258);
 const util_js_2 = __nccwpck_require__(8064);
+const file_js_1 = __nccwpck_require__(4713);
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const package_json_helper_cjs_1 = __nccwpck_require__(8568);
+const hash_stream_validator_js_1 = __nccwpck_require__(725);
 const NOT_FOUND_STATUS_CODE = 404;
 const RESUMABLE_INCOMPLETE_STATUS_CODE = 308;
 const packageJson = (0, package_json_helper_cjs_1.getPackageJSON)();
@@ -83389,6 +81909,9 @@ class Upload extends stream_1.Writable {
          */
         this.writeBuffers = [];
         this.numChunksReadInRequest = 0;
+        _Upload_hashValidator.set(this, void 0);
+        _Upload_clientCrc32c.set(this, void 0);
+        _Upload_clientMd5Hash.set(this, void 0);
         /**
          * An array of buffers used for caching the most recent upload chunk.
          * We should not assume that the server received all bytes sent in the request.
@@ -83430,9 +81953,12 @@ class Upload extends stream_1.Writable {
                 !isDefaultUniverseDomain &&
                 !isSubDomainOfUniverse &&
                 !isSubDomainOfDefaultUniverse) {
-                // a custom, non-universe domain,
-                // use gaxios
-                this.authClient = gaxios;
+                // Check if we should use auth with custom endpoint
+                if (cfg.useAuthWithCustomEndpoint !== true) {
+                    // Only bypass auth if explicitly not requested
+                    this.authClient = gaxios;
+                }
+                // Otherwise keep the authenticated client
             }
         }
         this.baseURI = `${this.apiEndpoint}/upload/storage/v1/b`;
@@ -83454,12 +81980,32 @@ class Upload extends stream_1.Writable {
         this.chunkSize = cfg.chunkSize;
         this.retryOptions = cfg.retryOptions;
         this.isPartialUpload = (_a = cfg.isPartialUpload) !== null && _a !== void 0 ? _a : false;
+        __classPrivateFieldSet(this, _Upload_clientCrc32c, cfg.clientCrc32c, "f");
+        __classPrivateFieldSet(this, _Upload_clientMd5Hash, cfg.clientMd5Hash, "f");
+        const calculateCrc32c = !cfg.clientCrc32c && cfg.crc32c;
+        const calculateMd5 = !cfg.clientMd5Hash && cfg.md5;
+        if (calculateCrc32c || calculateMd5) {
+            __classPrivateFieldSet(this, _Upload_hashValidator, new hash_stream_validator_js_1.HashStreamValidator({
+                crc32c: calculateCrc32c,
+                md5: calculateMd5,
+                updateHashesOnly: true,
+            }), "f");
+        }
         if (cfg.key) {
-            const base64Key = Buffer.from(cfg.key).toString('base64');
-            this.encryption = {
-                key: base64Key,
-                hash: (0, crypto_1.createHash)('sha256').update(cfg.key).digest('base64'),
-            };
+            if (typeof cfg.key === 'string') {
+                const base64Key = Buffer.from(cfg.key).toString('base64');
+                this.encryption = {
+                    key: base64Key,
+                    hash: (0, crypto_1.createHash)('sha256').update(cfg.key).digest('base64'),
+                };
+            }
+            else {
+                const base64Key = cfg.key.toString('base64');
+                this.encryption = {
+                    key: base64Key,
+                    hash: (0, crypto_1.createHash)('sha256').update(cfg.key).digest('base64'),
+                };
+            }
         }
         this.predefinedAcl = cfg.predefinedAcl;
         if (cfg.private)
@@ -83522,7 +82068,17 @@ class Upload extends stream_1.Writable {
     _write(chunk, encoding, readCallback = () => { }) {
         // Backwards-compatible event
         this.emit('writing');
-        this.writeBuffers.push(typeof chunk === 'string' ? Buffer.from(chunk, encoding) : chunk);
+        const bufferChunk = typeof chunk === 'string' ? Buffer.from(chunk, encoding) : chunk;
+        if (__classPrivateFieldGet(this, _Upload_hashValidator, "f")) {
+            try {
+                __classPrivateFieldGet(this, _Upload_hashValidator, "f").write(bufferChunk);
+            }
+            catch (e) {
+                this.destroy(e);
+                return;
+            }
+        }
+        this.writeBuffers.push(bufferChunk);
         this.once('readFromChunkBuffer', readCallback);
         process.nextTick(() => this.emit('wroteToChunkBuffer'));
     }
@@ -83844,6 +82400,9 @@ class Upload extends stream_1.Writable {
             // Important: we want to know if the upstream has ended and the queue is empty before
             // unshifting data back into the queue. This way we will know if this is the last request or not.
             const isLastChunkOfUpload = !(await this.waitForNextChunk());
+            if (isLastChunkOfUpload && __classPrivateFieldGet(this, _Upload_hashValidator, "f")) {
+                __classPrivateFieldGet(this, _Upload_hashValidator, "f").end();
+            }
             // Important: put the data back in the queue for the actual upload
             this.prependLocalBufferToUpstream();
             let totalObjectSize = this.contentLength;
@@ -83860,9 +82419,17 @@ class Upload extends stream_1.Writable {
             headers['Content-Length'] = bytesToUpload;
             headers['Content-Range'] =
                 `bytes ${this.offset}-${endingByte}/${totalObjectSize}`;
+            // Apply X-Goog-Hash header ONLY on the final chunk (WriteObject call)
+            if (isLastChunkOfUpload) {
+                __classPrivateFieldGet(this, _Upload_instances, "m", _Upload_applyChecksumHeaders).call(this, headers);
+            }
         }
         else {
             headers['Content-Range'] = `bytes ${this.offset}-*/${this.contentLength}`;
+            if (__classPrivateFieldGet(this, _Upload_hashValidator, "f")) {
+                __classPrivateFieldGet(this, _Upload_hashValidator, "f").end();
+            }
+            __classPrivateFieldGet(this, _Upload_instances, "m", _Upload_applyChecksumHeaders).call(this, headers);
         }
         const reqOpts = {
             method: 'PUT',
@@ -83892,6 +82459,7 @@ class Upload extends stream_1.Writable {
     // Process the API response to look for errors that came in
     // the response body.
     async responseHandler(resp) {
+        var _a, _b;
         if (resp.data.error) {
             this.destroy(resp.data.error);
             return;
@@ -83943,7 +82511,18 @@ class Upload extends stream_1.Writable {
             }
             this.destroy(err);
         }
-        else {
+        else if (this.isSuccessfulResponse(resp.status)) {
+            const serverCrc32c = resp.data.crc32c;
+            const serverMd5 = resp.data.md5Hash;
+            if (__classPrivateFieldGet(this, _Upload_hashValidator, "f")) {
+                __classPrivateFieldGet(this, _Upload_hashValidator, "f").end();
+            }
+            const clientCrc32cToValidate = ((_a = __classPrivateFieldGet(this, _Upload_hashValidator, "f")) === null || _a === void 0 ? void 0 : _a.crc32c) || __classPrivateFieldGet(this, _Upload_clientCrc32c, "f");
+            const clientMd5HashToValidate = ((_b = __classPrivateFieldGet(this, _Upload_hashValidator, "f")) === null || _b === void 0 ? void 0 : _b.md5Digest) || __classPrivateFieldGet(this, _Upload_clientMd5Hash, "f");
+            if (__classPrivateFieldGet(this, _Upload_instances, "m", _Upload_validateChecksum).call(this, clientCrc32cToValidate, serverCrc32c, 'CRC32C') ||
+                __classPrivateFieldGet(this, _Upload_instances, "m", _Upload_validateChecksum).call(this, clientMd5HashToValidate, serverMd5, 'MD5')) {
+                return;
+            }
             // no need to keep the cache
             __classPrivateFieldGet(this, _Upload_instances, "m", _Upload_resetLocalBuffersCache).call(this);
             if (resp && resp.data) {
@@ -83952,6 +82531,12 @@ class Upload extends stream_1.Writable {
             this.emit('metadata', resp.data);
             // Allow the object (Upload) to continue naturally so the user's
             // "finish" event fires.
+            this.emit('uploadFinished');
+        }
+        else {
+            // Handles the case where shouldContinueUploadInAnotherRequest is true
+            // and the response is not successful (e.g., 308 for a partial upload).
+            // This is the expected behavior for partial uploads that have finished their chunk.
             this.emit('uploadFinished');
         }
     }
@@ -84102,7 +82687,7 @@ class Upload extends stream_1.Writable {
             else {
                 const retryDelay = this.getRetryDelay();
                 if (retryDelay <= 0) {
-                    this.destroy(new Error(`Retry total time limit exceeded - ${resp.data}`));
+                    this.destroy(new Error(`Retry total time limit exceeded - ${JSON.stringify(resp.data)}`));
                     return;
                 }
                 // Unshift the local cache back in case it's needed for the next request.
@@ -84120,7 +82705,7 @@ class Upload extends stream_1.Writable {
             this.numRetries++;
         }
         else {
-            this.destroy(new Error('Retry limit exceeded - ' + resp.data));
+            this.destroy(new Error(`Retry limit exceeded - ${JSON.stringify(resp.data)}`));
         }
     }
     /**
@@ -84159,17 +82744,48 @@ class Upload extends stream_1.Writable {
     }
 }
 exports.Upload = Upload;
-_Upload_gcclGcsCmd = new WeakMap(), _Upload_instances = new WeakSet(), _Upload_resetLocalBuffersCache = function _Upload_resetLocalBuffersCache() {
+_Upload_hashValidator = new WeakMap(), _Upload_clientCrc32c = new WeakMap(), _Upload_clientMd5Hash = new WeakMap(), _Upload_gcclGcsCmd = new WeakMap(), _Upload_instances = new WeakSet(), _Upload_resetLocalBuffersCache = function _Upload_resetLocalBuffersCache() {
     this.localWriteCache = [];
     this.localWriteCacheByteLength = 0;
 }, _Upload_addLocalBufferCache = function _Upload_addLocalBufferCache(buf) {
     this.localWriteCache.push(buf);
     this.localWriteCacheByteLength += buf.byteLength;
+}, _Upload_validateChecksum = function _Upload_validateChecksum(clientHash, serverHash, hashType) {
+    // Only validate if both client and server hashes are present.
+    if (clientHash && serverHash) {
+        if (clientHash !== serverHash) {
+            const detailMessage = `${hashType} checksum mismatch. Client calculated: ${clientHash}, Server returned: ${serverHash}`;
+            const detailError = new Error(detailMessage);
+            const error = new file_js_1.RequestError(file_js_1.FileExceptionMessages.UPLOAD_MISMATCH);
+            error.code = 'FILE_NO_UPLOAD';
+            error.errors = [detailError];
+            this.destroy(error);
+            return true;
+        }
+    }
+    return false;
+}, _Upload_applyChecksumHeaders = function _Upload_applyChecksumHeaders(headers) {
+    var _a, _b;
+    const checksums = [];
+    if ((_a = __classPrivateFieldGet(this, _Upload_hashValidator, "f")) === null || _a === void 0 ? void 0 : _a.crc32cEnabled) {
+        checksums.push(`crc32c=${__classPrivateFieldGet(this, _Upload_hashValidator, "f").crc32c}`);
+    }
+    else if (__classPrivateFieldGet(this, _Upload_clientCrc32c, "f")) {
+        checksums.push(`crc32c=${__classPrivateFieldGet(this, _Upload_clientCrc32c, "f")}`);
+    }
+    if ((_b = __classPrivateFieldGet(this, _Upload_hashValidator, "f")) === null || _b === void 0 ? void 0 : _b.md5Enabled) {
+        checksums.push(`md5=${__classPrivateFieldGet(this, _Upload_hashValidator, "f").md5Digest}`);
+    }
+    else if (__classPrivateFieldGet(this, _Upload_clientMd5Hash, "f")) {
+        checksums.push(`md5=${__classPrivateFieldGet(this, _Upload_clientMd5Hash, "f")}`);
+    }
+    if (checksums.length > 0) {
+        headers['X-Goog-Hash'] = checksums.join(',');
+    }
 };
 function upload(cfg) {
     return new Upload(cfg);
 }
-exports.upload = upload;
 function createURI(cfg, callback) {
     const up = new Upload(cfg);
     if (!callback) {
@@ -84177,7 +82793,6 @@ function createURI(cfg, callback) {
     }
     up.createURI().then(r => callback(null, r), callback);
 }
-exports.createURI = createURI;
 /**
  * Check the status of an existing resumable upload.
  *
@@ -84188,7 +82803,6 @@ function checkUploadStatus(cfg) {
     const up = new Upload(cfg);
     return up.checkUploadStatus();
 }
-exports.checkUploadStatus = checkUploadStatus;
 
 
 /***/ }),
@@ -84226,13 +82840,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SigningError = exports.URLSigner = exports.PATH_STYLED_HOST = exports.SignerExceptionMessages = void 0;
 const crypto = __importStar(__nccwpck_require__(6113));
@@ -84997,7 +83621,7 @@ class Storage extends index_js_1.Service {
             apiEndpoint = Storage.sanitizeEndpoint(EMULATOR_HOST);
             customEndpoint = true;
         }
-        if (options.apiEndpoint) {
+        if (options.apiEndpoint && options.apiEndpoint !== apiEndpoint) {
             apiEndpoint = Storage.sanitizeEndpoint(options.apiEndpoint);
             customEndpoint = true;
         }
@@ -85131,7 +83755,8 @@ class Storage extends index_js_1.Service {
      *     For more information, see {@link https://cloud.google.com/storage/docs/locations| Bucket Locations}.
      * @property {boolean} [dra=false] Specify the storage class as Durable Reduced
      *     Availability.
-     * @property {boolean} [enableObjectRetention=false] Specifiy whether or not object retention should be enabled on this bucket.
+     * @property {boolean} [enableObjectRetention=false] Specify whether or not object retention should be enabled on this bucket.
+     * @property {object} [hierarchicalNamespace.enabled=false] Specify whether or not to enable hierarchical namespace on this bucket.
      * @property {string} [location] Specify the bucket's location. If specifying
      *     a dual-region, the `customPlacementConfig` property should be set in conjunction.
      *     For more information, see {@link https://cloud.google.com/storage/docs/locations| Bucket Locations}.
@@ -85139,8 +83764,7 @@ class Storage extends index_js_1.Service {
      *     Multi-Regional.
      * @property {boolean} [nearline=false] Specify the storage class as Nearline.
      * @property {boolean} [regional=false] Specify the storage class as Regional.
-     * @property {boolean} [requesterPays=false] **Early Access Testers Only**
-     *     Force the use of the User Project metadata field to assign operational
+     * @property {boolean} [requesterPays=false] Force the use of the User Project metadata field to assign operational
      *     costs when an operation is made on a Bucket and its objects.
      * @property {string} [rpo] For dual-region buckets, controls whether turbo
      *      replication is enabled (`ASYNC_TURBO`) or disabled (`DEFAULT`).
@@ -85282,6 +83906,18 @@ class Storage extends index_js_1.Service {
             query.enableObjectRetention = body.enableObjectRetention;
             delete body.enableObjectRetention;
         }
+        if (body.predefinedAcl) {
+            query.predefinedAcl = body.predefinedAcl;
+            delete body.predefinedAcl;
+        }
+        if (body.predefinedDefaultObjectAcl) {
+            query.predefinedDefaultObjectAcl = body.predefinedDefaultObjectAcl;
+            delete body.predefinedDefaultObjectAcl;
+        }
+        if (body.projection) {
+            query.projection = body.projection;
+            delete body.projection;
+        }
         this.request({
             method: 'POST',
             uri: '/b',
@@ -85413,6 +84049,8 @@ class Storage extends index_js_1.Service {
      *     representing part of the larger set of results to view.
      * @property {string} [userProject] The ID of the project which will be billed
      *     for the request.
+     *  @param {boolean} [softDeleted] If true, returns the soft-deleted object.
+     *     Object `generation` is required if `softDeleted` is set to True.
      */
     /**
      * @typedef {array} GetBucketsResponse
@@ -85493,11 +84131,23 @@ class Storage extends index_js_1.Service {
                 return;
             }
             const itemsArray = resp.items ? resp.items : [];
+            const unreachableArray = resp.unreachable ? resp.unreachable : [];
             const buckets = itemsArray.map((bucket) => {
                 const bucketInstance = this.bucket(bucket.id);
                 bucketInstance.metadata = bucket;
                 return bucketInstance;
             });
+            if (unreachableArray.length > 0) {
+                unreachableArray.forEach((fullPath) => {
+                    const name = fullPath.split('/').pop();
+                    if (name) {
+                        const placeholder = this.bucket(name);
+                        placeholder.unreachable = true;
+                        placeholder.metadata = {};
+                        buckets.push(placeholder);
+                    }
+                });
+            }
             const nextQuery = resp.nextPageToken
                 ? Object.assign({}, options, { pageToken: resp.nextPageToken })
                 : null;
@@ -85718,13 +84368,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
     if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
@@ -85742,7 +84402,7 @@ const path = __importStar(__nccwpck_require__(1017));
 const fs_1 = __nccwpck_require__(7147);
 const crc32c_js_1 = __nccwpck_require__(5810);
 const google_auth_library_1 = __nccwpck_require__(810);
-const fast_xml_parser_1 = __nccwpck_require__(2603);
+const fast_xml_parser_1 = __nccwpck_require__(4577);
 const async_retry_1 = __importDefault(__nccwpck_require__(3415));
 const crypto_1 = __nccwpck_require__(6113);
 const util_js_1 = __nccwpck_require__(8064);
@@ -86004,6 +84664,8 @@ class TransferManager {
      * @typedef {object} UploadManyFilesOptions
      * @property {number} [concurrencyLimit] The number of concurrently executing promises
      * to use when uploading the files.
+     * @property {Function} [customDestinationBuilder] A function that will take the current path of a local file
+     * and return a string representing a custom path to be used to upload the file to GCS.
      * @property {boolean} [skipIfExists] Do not upload the file if it already exists in
      * the bucket. This will set the precondition ifGenerationMatch = 0.
      * @property {string} [prefix] A prefix to append to all of the uploaded files.
@@ -86073,9 +84735,9 @@ class TransferManager {
                 ...options.passthroughOptions,
                 [util_js_1.GCCL_GCS_CMD_KEY]: GCCL_GCS_CMD_FEATURE.UPLOAD_MANY,
             };
-            passThroughOptionsCopy.destination = filePath
-                .split(path.sep)
-                .join(path.posix.sep);
+            passThroughOptionsCopy.destination = options.customDestinationBuilder
+                ? options.customDestinationBuilder(filePath, options)
+                : filePath.split(path.sep).join(path.posix.sep);
             if (options.prefix) {
                 passThroughOptionsCopy.destination = path.posix.join(...options.prefix.split(path.sep), passThroughOptionsCopy.destination);
             }
@@ -86091,6 +84753,8 @@ class TransferManager {
      * @property {string} [stripPrefix] A prefix to remove from all of the downloaded files.
      * @property {object} [passthroughOptions] {@link DownloadOptions} Options to be passed through
      * to each individual download operation.
+     * @property {boolean} [skipIfExists] Do not download the file if it already exists in
+     * the destination.
      *
      */
     /**
@@ -86099,7 +84763,9 @@ class TransferManager {
      *
      * @param {array | string} [filesOrFolder] An array of file name strings or file objects to be downloaded. If
      * a string is provided this will be treated as a GCS prefix and all files with that prefix will be downloaded.
-     * @param {DownloadManyFilesOptions} [options] Configuration options.
+     * @param {DownloadManyFilesOptions} [options] Configuration options. Setting options.prefix or options.stripPrefix
+     * or options.passthroughOptions.destination will cause the downloaded files to be written to the file system
+     * instead of being returned as a buffer.
      * @returns {Promise<DownloadResponse[]>}
      *
      * @example
@@ -86152,13 +84818,26 @@ class TransferManager {
                 ...options.passthroughOptions,
                 [util_js_1.GCCL_GCS_CMD_KEY]: GCCL_GCS_CMD_FEATURE.DOWNLOAD_MANY,
             };
-            if (options.prefix) {
+            if (options.prefix || passThroughOptionsCopy.destination) {
                 passThroughOptionsCopy.destination = path.join(options.prefix || '', passThroughOptionsCopy.destination || '', file.name);
             }
             if (options.stripPrefix) {
                 passThroughOptionsCopy.destination = file.name.replace(regex, '');
             }
-            promises.push(limit(() => file.download(passThroughOptionsCopy)));
+            if (options.skipIfExists &&
+                (0, fs_1.existsSync)(passThroughOptionsCopy.destination || '')) {
+                continue;
+            }
+            promises.push(limit(async () => {
+                const destination = passThroughOptionsCopy.destination;
+                if (destination && destination.endsWith(path.sep)) {
+                    await fs_1.promises.mkdir(destination, { recursive: true });
+                    return Promise.resolve([
+                        Buffer.alloc(0),
+                    ]);
+                }
+                return file.download(passThroughOptionsCopy);
+            }));
         }
         return Promise.all(promises);
     }
@@ -86254,7 +84933,7 @@ class TransferManager {
      * @property {number} [concurrencyLimit] The number of concurrently executing promises
      * to use when uploading the file.
      * @property {number} [chunkSizeBytes] The size in bytes of each chunk to be uploaded.
-     * @property {string} [uploadName] Name of the file when saving to GCS. If ommitted the name is taken from the file path.
+     * @property {string} [uploadName] Name of the file when saving to GCS. If omitted the name is taken from the file path.
      * @property {number} [maxQueueSize] The number of chunks to be uploaded to hold in memory concurrently. If not specified
      * defaults to the specified concurrency limit.
      * @property {string} [uploadId] If specified attempts to resume a previous upload.
@@ -86267,14 +84946,14 @@ class TransferManager {
      *
      */
     /**
-     * Upload a large file in chunks utilizing parallel upload opertions. If the upload fails, an uploadId and
+     * Upload a large file in chunks utilizing parallel upload operations. If the upload fails, an uploadId and
      * map containing all the successfully uploaded parts will be returned to the caller. These arguments can be used to
      * resume the upload.
      *
      * @param {string} [filePath] The path of the file to be uploaded
      * @param {UploadFileInChunksOptions} [options] Configuration options.
      * @param {MultiPartHelperGenerator} [generator] A function that will return a type that implements the MPU interface. Most users will not need to use this.
-     * @returns {Promise<void>} If successful a promise resolving to void, otherwise a error containing the message, uploadid, and parts map.
+     * @returns {Promise<void>} If successful a promise resolving to void, otherwise a error containing the message, uploadId, and parts map.
      *
      * @example
      * ```
@@ -86397,17 +85076,40 @@ var __setModuleDefault = this && this.__setModuleDefault || (Object.create ? fun
 } : function (o, v) {
   o["default"] = v;
 });
-var __importStar = this && this.__importStar || function (mod) {
-  if (mod && mod.__esModule) return mod;
-  var result = {};
-  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-  __setModuleDefault(result, mod);
-  return result;
-};
+var __importStar = this && this.__importStar || function () {
+  var ownKeys = function (o) {
+    ownKeys = Object.getOwnPropertyNames || function (o) {
+      var ar = [];
+      for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+      return ar;
+    };
+    return ownKeys(o);
+  };
+  return function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+    __setModuleDefault(result, mod);
+    return result;
+  };
+}();
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.PassThroughShim = exports.getModuleFormat = exports.getDirName = exports.getUserAgentString = exports.getRuntimeTrackingString = exports.formatAsUTCISO = exports.convertObjKeysToSnakeCase = exports.unicodeJSONStringify = exports.objectKeyToLowercase = exports.qsStringify = exports.encodeURI = exports.fixedEncodeURIComponent = exports.objectEntries = exports.normalize = void 0;
+exports.PassThroughShim = void 0;
+exports.normalize = normalize;
+exports.objectEntries = objectEntries;
+exports.fixedEncodeURIComponent = fixedEncodeURIComponent;
+exports.encodeURI = encodeURI;
+exports.qsStringify = qsStringify;
+exports.objectKeyToLowercase = objectKeyToLowercase;
+exports.unicodeJSONStringify = unicodeJSONStringify;
+exports.convertObjKeysToSnakeCase = convertObjKeysToSnakeCase;
+exports.formatAsUTCISO = formatAsUTCISO;
+exports.getRuntimeTrackingString = getRuntimeTrackingString;
+exports.getUserAgentString = getUserAgentString;
+exports.getDirName = getDirName;
+exports.getModuleFormat = getModuleFormat;
 const path = __importStar(__nccwpck_require__(1017));
 const querystring = __importStar(__nccwpck_require__(3477));
 const stream_1 = __nccwpck_require__(2781);
@@ -86426,7 +85128,6 @@ function normalize(optionsOrCallback, cb) {
     callback
   };
 }
-exports.normalize = normalize;
 /**
  * Flatten an object into an Array of arrays, [[key, value], ..].
  * Implements Object.entries() for Node.js <8
@@ -86435,7 +85136,6 @@ exports.normalize = normalize;
 function objectEntries(obj) {
   return Object.keys(obj).map(key => [key, obj[key]]);
 }
-exports.objectEntries = objectEntries;
 /**
  * Encode `str` with encodeURIComponent, plus these
  * reserved characters: `! * ' ( )`.
@@ -86448,7 +85148,6 @@ exports.objectEntries = objectEntries;
 function fixedEncodeURIComponent(str) {
   return encodeURIComponent(str).replace(/[!'()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
 }
-exports.fixedEncodeURIComponent = fixedEncodeURIComponent;
 /**
  * URI encode `uri` for generating signed URLs, using fixedEncodeURIComponent.
  *
@@ -86463,7 +85162,6 @@ function encodeURI(uri, encodeSlash) {
   // %2F if encodeSlash is `true`, or '/' if `false`.
   return uri.split('/').map(fixedEncodeURIComponent).join(encodeSlash ? '%2F' : '/');
 }
-exports.encodeURI = encodeURI;
 /**
  * Serialize an object to a URL query string using util.encodeURI(uri, true).
  * @param {string} url The object to serialize.
@@ -86474,7 +85172,6 @@ function qsStringify(qs) {
     encodeURIComponent: component => encodeURI(component, true)
   });
 }
-exports.qsStringify = qsStringify;
 function objectKeyToLowercase(object) {
   const newObj = {};
   for (let key of Object.keys(object)) {
@@ -86484,7 +85181,6 @@ function objectKeyToLowercase(object) {
   }
   return newObj;
 }
-exports.objectKeyToLowercase = objectKeyToLowercase;
 /**
  * JSON encode str, with unicode \u+ representation.
  * @param {object} obj The object to encode.
@@ -86493,7 +85189,6 @@ exports.objectKeyToLowercase = objectKeyToLowercase;
 function unicodeJSONStringify(obj) {
   return JSON.stringify(obj).replace(/[\u0080-\uFFFF]/g, char => '\\u' + ('0000' + char.charCodeAt(0).toString(16)).slice(-4));
 }
-exports.unicodeJSONStringify = unicodeJSONStringify;
 /**
  * Converts the given objects keys to snake_case
  * @param {object} obj object to convert keys to snake case.
@@ -86517,14 +85212,13 @@ function convertObjKeysToSnakeCase(obj) {
   }
   return obj;
 }
-exports.convertObjKeysToSnakeCase = convertObjKeysToSnakeCase;
 /**
  * Formats the provided date object as a UTC ISO string.
  * @param {Date} dateTimeToFormat date object to be formatted.
  * @param {boolean} includeTime flag to include hours, minutes, seconds in output.
  * @param {string} dateDelimiter delimiter between date components.
  * @param {string} timeDelimiter delimiter between time components.
- * @returns {string} UTC ISO format of provided date obect.
+ * @returns {string} UTC ISO format of provided date object.
  */
 function formatAsUTCISO(dateTimeToFormat, includeTime = false, dateDelimiter = '', timeDelimiter = '') {
   const year = dateTimeToFormat.getUTCFullYear();
@@ -86539,7 +85233,6 @@ function formatAsUTCISO(dateTimeToFormat, includeTime = false, dateDelimiter = '
   }
   return resultString;
 }
-exports.formatAsUTCISO = formatAsUTCISO;
 /**
  * Examines the runtime environment and returns the appropriate tracking string.
  * @returns {string} metrics tracking string based on the current runtime environment.
@@ -86562,7 +85255,6 @@ function getRuntimeTrackingString() {
     return `gl-node/${process.versions.node}`;
   }
 }
-exports.getRuntimeTrackingString = getRuntimeTrackingString;
 /**
  * Looks at package.json and creates the user-agent string to be applied to request headers.
  * @returns {string} user agent string.
@@ -86573,7 +85265,6 @@ function getUserAgentString() {
   .replace('/', '-'); // For UA spec-compliance purposes.
   return hyphenatedPackageName + '/' + pkg.version;
 }
-exports.getUserAgentString = getUserAgentString;
 function getDirName() {
   let dirToUse = '';
   try {
@@ -86585,11 +85276,9 @@ function getDirName() {
   }
   return dirToUse;
 }
-exports.getDirName = getDirName;
 function getModuleFormat() {
   return isEsm ? 'ESM' : 'CJS';
 }
-exports.getModuleFormat = getModuleFormat;
 class PassThroughShim extends stream_1.PassThrough {
   constructor() {
     super(...arguments);
@@ -86608,7 +85297,7 @@ class PassThroughShim extends stream_1.PassThrough {
       this.emit('writing');
       this.shouldEmitWriting = false;
     }
-    // Per the nodejs documention, callback must be invoked on the next tick
+    // Per the nodejs documentation, callback must be invoked on the next tick
     process.nextTick(() => {
       super._write(chunk, encoding, callback);
     });
@@ -86629,6 +85318,261 @@ class PassThroughShim extends stream_1.PassThrough {
 }
 exports.PassThroughShim = PassThroughShim;
 
+
+/***/ }),
+
+/***/ 1263:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.encode = encode;
+exports.decodeEntity = decodeEntity;
+exports.decode = decode;
+var named_references_js_1 = __nccwpck_require__(5197);
+var numeric_unicode_map_js_1 = __nccwpck_require__(4690);
+var surrogate_pairs_js_1 = __nccwpck_require__(7955);
+var allNamedReferences = __assign(__assign({}, named_references_js_1.namedReferences), { all: named_references_js_1.namedReferences.html5 });
+var encodeRegExps = {
+    specialChars: /[<>'"&]/g,
+    nonAscii: /[<>'"&\u0080-\uD7FF\uE000-\uFFFF\uDC00-\uDFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]?/g,
+    nonAsciiPrintable: /[<>'"&\x01-\x08\x11-\x15\x17-\x1F\x7f-\uD7FF\uE000-\uFFFF\uDC00-\uDFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]?/g,
+    nonAsciiPrintableOnly: /[\x01-\x08\x11-\x15\x17-\x1F\x7f-\uD7FF\uE000-\uFFFF\uDC00-\uDFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]?/g,
+    extensive: /[\x01-\x0c\x0e-\x1f\x21-\x2c\x2e-\x2f\x3a-\x40\x5b-\x60\x7b-\x7d\x7f-\uD7FF\uE000-\uFFFF\uDC00-\uDFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]?/g
+};
+var defaultEncodeOptions = {
+    mode: 'specialChars',
+    level: 'all',
+    numeric: 'decimal'
+};
+/** Encodes all the necessary (specified by `level`) characters in the text */
+function encode(text, _a) {
+    var _b = _a === void 0 ? defaultEncodeOptions : _a, _c = _b.mode, mode = _c === void 0 ? 'specialChars' : _c, _d = _b.numeric, numeric = _d === void 0 ? 'decimal' : _d, _e = _b.level, level = _e === void 0 ? 'all' : _e;
+    if (!text) {
+        return '';
+    }
+    var encodeRegExp = encodeRegExps[mode];
+    var references = allNamedReferences[level].characters;
+    var isHex = numeric === 'hexadecimal';
+    return String.prototype.replace.call(text, encodeRegExp, function (input) {
+        var result = references[input];
+        if (!result) {
+            var code = input.length > 1 ? (0, surrogate_pairs_js_1.getCodePoint)(input, 0) : input.charCodeAt(0);
+            result = (isHex ? '&#x' + code.toString(16) : '&#' + code) + ';';
+        }
+        return result;
+    });
+}
+var defaultDecodeOptions = {
+    scope: 'body',
+    level: 'all'
+};
+var strict = /&(?:#\d+|#[xX][\da-fA-F]+|[0-9a-zA-Z]+);/g;
+var attribute = /&(?:#\d+|#[xX][\da-fA-F]+|[0-9a-zA-Z]+)[;=]?/g;
+var baseDecodeRegExps = {
+    xml: {
+        strict: strict,
+        attribute: attribute,
+        body: named_references_js_1.bodyRegExps.xml
+    },
+    html4: {
+        strict: strict,
+        attribute: attribute,
+        body: named_references_js_1.bodyRegExps.html4
+    },
+    html5: {
+        strict: strict,
+        attribute: attribute,
+        body: named_references_js_1.bodyRegExps.html5
+    }
+};
+var decodeRegExps = __assign(__assign({}, baseDecodeRegExps), { all: baseDecodeRegExps.html5 });
+var fromCharCode = String.fromCharCode;
+var outOfBoundsChar = fromCharCode(65533);
+var defaultDecodeEntityOptions = {
+    level: 'all'
+};
+function getDecodedEntity(entity, references, isAttribute, isStrict) {
+    var decodeResult = entity;
+    var decodeEntityLastChar = entity[entity.length - 1];
+    if (isAttribute && decodeEntityLastChar === '=') {
+        decodeResult = entity;
+    }
+    else if (isStrict && decodeEntityLastChar !== ';') {
+        decodeResult = entity;
+    }
+    else {
+        var decodeResultByReference = references[entity];
+        if (decodeResultByReference) {
+            decodeResult = decodeResultByReference;
+        }
+        else if (entity[0] === '&' && entity[1] === '#') {
+            var decodeSecondChar = entity[2];
+            var decodeCode = decodeSecondChar == 'x' || decodeSecondChar == 'X'
+                ? parseInt(entity.substr(3), 16)
+                : parseInt(entity.substr(2));
+            decodeResult =
+                decodeCode >= 0x10ffff
+                    ? outOfBoundsChar
+                    : decodeCode > 65535
+                        ? (0, surrogate_pairs_js_1.fromCodePoint)(decodeCode)
+                        : fromCharCode(numeric_unicode_map_js_1.numericUnicodeMap[decodeCode] || decodeCode);
+        }
+    }
+    return decodeResult;
+}
+/** Decodes a single entity */
+function decodeEntity(entity, _a) {
+    var _b = _a === void 0 ? defaultDecodeEntityOptions : _a, _c = _b.level, level = _c === void 0 ? 'all' : _c;
+    if (!entity) {
+        return '';
+    }
+    return getDecodedEntity(entity, allNamedReferences[level].entities, false, false);
+}
+/** Decodes all entities in the text */
+function decode(text, _a) {
+    var _b = _a === void 0 ? defaultDecodeOptions : _a, _c = _b.level, level = _c === void 0 ? 'all' : _c, _d = _b.scope, scope = _d === void 0 ? level === 'xml' ? 'strict' : 'body' : _d;
+    if (!text) {
+        return '';
+    }
+    var decodeRegExp = decodeRegExps[level][scope];
+    var references = allNamedReferences[level].entities;
+    var isAttribute = scope === 'attribute';
+    var isStrict = scope === 'strict';
+    return text.replace(decodeRegExp, function (entity) { return getDecodedEntity(entity, references, isAttribute, isStrict); });
+}
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 5197:
+/***/ (function(__unused_webpack_module, exports) {
+
+
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.namedReferences = exports.bodyRegExps = void 0;
+// This file is autogenerated by tools/process-named-references.ts
+var pairDivider = "~";
+var blockDivider = "~~";
+function generateNamedReferences(input, prev) {
+    var entities = {};
+    var characters = {};
+    var blocks = input.split(blockDivider);
+    var isOptionalBlock = false;
+    for (var i = 0; blocks.length > i; i++) {
+        var entries = blocks[i].split(pairDivider);
+        for (var j = 0; j < entries.length; j += 2) {
+            var entity = entries[j];
+            var character = entries[j + 1];
+            var fullEntity = '&' + entity + ';';
+            entities[fullEntity] = character;
+            if (isOptionalBlock) {
+                entities['&' + entity] = character;
+            }
+            characters[character] = fullEntity;
+        }
+        isOptionalBlock = true;
+    }
+    return prev ?
+        { entities: __assign(__assign({}, entities), prev.entities), characters: __assign(__assign({}, characters), prev.characters) } :
+        { entities: entities, characters: characters };
+}
+exports.bodyRegExps = {
+    xml: /&(?:#\d+|#[xX][\da-fA-F]+|[0-9a-zA-Z]+);?/g,
+    html4: /&notin;|&(?:nbsp|iexcl|cent|pound|curren|yen|brvbar|sect|uml|copy|ordf|laquo|not|shy|reg|macr|deg|plusmn|sup2|sup3|acute|micro|para|middot|cedil|sup1|ordm|raquo|frac14|frac12|frac34|iquest|Agrave|Aacute|Acirc|Atilde|Auml|Aring|AElig|Ccedil|Egrave|Eacute|Ecirc|Euml|Igrave|Iacute|Icirc|Iuml|ETH|Ntilde|Ograve|Oacute|Ocirc|Otilde|Ouml|times|Oslash|Ugrave|Uacute|Ucirc|Uuml|Yacute|THORN|szlig|agrave|aacute|acirc|atilde|auml|aring|aelig|ccedil|egrave|eacute|ecirc|euml|igrave|iacute|icirc|iuml|eth|ntilde|ograve|oacute|ocirc|otilde|ouml|divide|oslash|ugrave|uacute|ucirc|uuml|yacute|thorn|yuml|quot|amp|lt|gt|#\d+|#[xX][\da-fA-F]+|[0-9a-zA-Z]+);?/g,
+    html5: /&centerdot;|&copysr;|&divideontimes;|&gtcc;|&gtcir;|&gtdot;|&gtlPar;|&gtquest;|&gtrapprox;|&gtrarr;|&gtrdot;|&gtreqless;|&gtreqqless;|&gtrless;|&gtrsim;|&ltcc;|&ltcir;|&ltdot;|&lthree;|&ltimes;|&ltlarr;|&ltquest;|&ltrPar;|&ltri;|&ltrie;|&ltrif;|&notin;|&notinE;|&notindot;|&notinva;|&notinvb;|&notinvc;|&notni;|&notniva;|&notnivb;|&notnivc;|&parallel;|&timesb;|&timesbar;|&timesd;|&(?:AElig|AMP|Aacute|Acirc|Agrave|Aring|Atilde|Auml|COPY|Ccedil|ETH|Eacute|Ecirc|Egrave|Euml|GT|Iacute|Icirc|Igrave|Iuml|LT|Ntilde|Oacute|Ocirc|Ograve|Oslash|Otilde|Ouml|QUOT|REG|THORN|Uacute|Ucirc|Ugrave|Uuml|Yacute|aacute|acirc|acute|aelig|agrave|amp|aring|atilde|auml|brvbar|ccedil|cedil|cent|copy|curren|deg|divide|eacute|ecirc|egrave|eth|euml|frac12|frac14|frac34|gt|iacute|icirc|iexcl|igrave|iquest|iuml|laquo|lt|macr|micro|middot|nbsp|not|ntilde|oacute|ocirc|ograve|ordf|ordm|oslash|otilde|ouml|para|plusmn|pound|quot|raquo|reg|sect|shy|sup1|sup2|sup3|szlig|thorn|times|uacute|ucirc|ugrave|uml|uuml|yacute|yen|yuml|#\d+|#[xX][\da-fA-F]+|[0-9a-zA-Z]+);?/g
+};
+exports.namedReferences = {};
+exports.namedReferences.xml = generateNamedReferences("lt~<~gt~>~quot~\"~apos~'~amp~&");
+exports.namedReferences.html4 = generateNamedReferences("apos~'~OElig~Œ~oelig~œ~Scaron~Š~scaron~š~Yuml~Ÿ~circ~ˆ~tilde~˜~ensp~ ~emsp~ ~thinsp~ ~zwnj~‌~zwj~‍~lrm~‎~rlm~‏~ndash~–~mdash~—~lsquo~‘~rsquo~’~sbquo~‚~ldquo~“~rdquo~”~bdquo~„~dagger~†~Dagger~‡~permil~‰~lsaquo~‹~rsaquo~›~euro~€~fnof~ƒ~Alpha~Α~Beta~Β~Gamma~Γ~Delta~Δ~Epsilon~Ε~Zeta~Ζ~Eta~Η~Theta~Θ~Iota~Ι~Kappa~Κ~Lambda~Λ~Mu~Μ~Nu~Ν~Xi~Ξ~Omicron~Ο~Pi~Π~Rho~Ρ~Sigma~Σ~Tau~Τ~Upsilon~Υ~Phi~Φ~Chi~Χ~Psi~Ψ~Omega~Ω~alpha~α~beta~β~gamma~γ~delta~δ~epsilon~ε~zeta~ζ~eta~η~theta~θ~iota~ι~kappa~κ~lambda~λ~mu~μ~nu~ν~xi~ξ~omicron~ο~pi~π~rho~ρ~sigmaf~ς~sigma~σ~tau~τ~upsilon~υ~phi~φ~chi~χ~psi~ψ~omega~ω~thetasym~ϑ~upsih~ϒ~piv~ϖ~bull~•~hellip~…~prime~′~Prime~″~oline~‾~frasl~⁄~weierp~℘~image~ℑ~real~ℜ~trade~™~alefsym~ℵ~larr~←~uarr~↑~rarr~→~darr~↓~harr~↔~crarr~↵~lArr~⇐~uArr~⇑~rArr~⇒~dArr~⇓~hArr~⇔~forall~∀~part~∂~exist~∃~empty~∅~nabla~∇~isin~∈~notin~∉~ni~∋~prod~∏~sum~∑~minus~−~lowast~∗~radic~√~prop~∝~infin~∞~ang~∠~and~∧~or~∨~cap~∩~cup~∪~int~∫~there4~∴~sim~∼~cong~≅~asymp~≈~ne~≠~equiv~≡~le~≤~ge~≥~sub~⊂~sup~⊃~nsub~⊄~sube~⊆~supe~⊇~oplus~⊕~otimes~⊗~perp~⊥~sdot~⋅~lceil~⌈~rceil~⌉~lfloor~⌊~rfloor~⌋~lang~〈~rang~〉~loz~◊~spades~♠~clubs~♣~hearts~♥~diams~♦~~nbsp~ ~iexcl~¡~cent~¢~pound~£~curren~¤~yen~¥~brvbar~¦~sect~§~uml~¨~copy~©~ordf~ª~laquo~«~not~¬~shy~­~reg~®~macr~¯~deg~°~plusmn~±~sup2~²~sup3~³~acute~´~micro~µ~para~¶~middot~·~cedil~¸~sup1~¹~ordm~º~raquo~»~frac14~¼~frac12~½~frac34~¾~iquest~¿~Agrave~À~Aacute~Á~Acirc~Â~Atilde~Ã~Auml~Ä~Aring~Å~AElig~Æ~Ccedil~Ç~Egrave~È~Eacute~É~Ecirc~Ê~Euml~Ë~Igrave~Ì~Iacute~Í~Icirc~Î~Iuml~Ï~ETH~Ð~Ntilde~Ñ~Ograve~Ò~Oacute~Ó~Ocirc~Ô~Otilde~Õ~Ouml~Ö~times~×~Oslash~Ø~Ugrave~Ù~Uacute~Ú~Ucirc~Û~Uuml~Ü~Yacute~Ý~THORN~Þ~szlig~ß~agrave~à~aacute~á~acirc~â~atilde~ã~auml~ä~aring~å~aelig~æ~ccedil~ç~egrave~è~eacute~é~ecirc~ê~euml~ë~igrave~ì~iacute~í~icirc~î~iuml~ï~eth~ð~ntilde~ñ~ograve~ò~oacute~ó~ocirc~ô~otilde~õ~ouml~ö~divide~÷~oslash~ø~ugrave~ù~uacute~ú~ucirc~û~uuml~ü~yacute~ý~thorn~þ~yuml~ÿ~quot~\"~amp~&~lt~<~gt~>");
+exports.namedReferences.html5 = generateNamedReferences("Abreve~Ă~Acy~А~Afr~𝔄~Amacr~Ā~And~⩓~Aogon~Ą~Aopf~𝔸~ApplyFunction~⁡~Ascr~𝒜~Assign~≔~Backslash~∖~Barv~⫧~Barwed~⌆~Bcy~Б~Because~∵~Bernoullis~ℬ~Bfr~𝔅~Bopf~𝔹~Breve~˘~Bscr~ℬ~Bumpeq~≎~CHcy~Ч~Cacute~Ć~Cap~⋒~CapitalDifferentialD~ⅅ~Cayleys~ℭ~Ccaron~Č~Ccirc~Ĉ~Cconint~∰~Cdot~Ċ~Cedilla~¸~CenterDot~·~Cfr~ℭ~CircleDot~⊙~CircleMinus~⊖~CirclePlus~⊕~CircleTimes~⊗~ClockwiseContourIntegral~∲~CloseCurlyDoubleQuote~”~CloseCurlyQuote~’~Colon~∷~Colone~⩴~Congruent~≡~Conint~∯~ContourIntegral~∮~Copf~ℂ~Coproduct~∐~CounterClockwiseContourIntegral~∳~Cross~⨯~Cscr~𝒞~Cup~⋓~CupCap~≍~DD~ⅅ~DDotrahd~⤑~DJcy~Ђ~DScy~Ѕ~DZcy~Џ~Darr~↡~Dashv~⫤~Dcaron~Ď~Dcy~Д~Del~∇~Dfr~𝔇~DiacriticalAcute~´~DiacriticalDot~˙~DiacriticalDoubleAcute~˝~DiacriticalGrave~`~DiacriticalTilde~˜~Diamond~⋄~DifferentialD~ⅆ~Dopf~𝔻~Dot~¨~DotDot~⃜~DotEqual~≐~DoubleContourIntegral~∯~DoubleDot~¨~DoubleDownArrow~⇓~DoubleLeftArrow~⇐~DoubleLeftRightArrow~⇔~DoubleLeftTee~⫤~DoubleLongLeftArrow~⟸~DoubleLongLeftRightArrow~⟺~DoubleLongRightArrow~⟹~DoubleRightArrow~⇒~DoubleRightTee~⊨~DoubleUpArrow~⇑~DoubleUpDownArrow~⇕~DoubleVerticalBar~∥~DownArrow~↓~DownArrowBar~⤓~DownArrowUpArrow~⇵~DownBreve~̑~DownLeftRightVector~⥐~DownLeftTeeVector~⥞~DownLeftVector~↽~DownLeftVectorBar~⥖~DownRightTeeVector~⥟~DownRightVector~⇁~DownRightVectorBar~⥗~DownTee~⊤~DownTeeArrow~↧~Downarrow~⇓~Dscr~𝒟~Dstrok~Đ~ENG~Ŋ~Ecaron~Ě~Ecy~Э~Edot~Ė~Efr~𝔈~Element~∈~Emacr~Ē~EmptySmallSquare~◻~EmptyVerySmallSquare~▫~Eogon~Ę~Eopf~𝔼~Equal~⩵~EqualTilde~≂~Equilibrium~⇌~Escr~ℰ~Esim~⩳~Exists~∃~ExponentialE~ⅇ~Fcy~Ф~Ffr~𝔉~FilledSmallSquare~◼~FilledVerySmallSquare~▪~Fopf~𝔽~ForAll~∀~Fouriertrf~ℱ~Fscr~ℱ~GJcy~Ѓ~Gammad~Ϝ~Gbreve~Ğ~Gcedil~Ģ~Gcirc~Ĝ~Gcy~Г~Gdot~Ġ~Gfr~𝔊~Gg~⋙~Gopf~𝔾~GreaterEqual~≥~GreaterEqualLess~⋛~GreaterFullEqual~≧~GreaterGreater~⪢~GreaterLess~≷~GreaterSlantEqual~⩾~GreaterTilde~≳~Gscr~𝒢~Gt~≫~HARDcy~Ъ~Hacek~ˇ~Hat~^~Hcirc~Ĥ~Hfr~ℌ~HilbertSpace~ℋ~Hopf~ℍ~HorizontalLine~─~Hscr~ℋ~Hstrok~Ħ~HumpDownHump~≎~HumpEqual~≏~IEcy~Е~IJlig~Ĳ~IOcy~Ё~Icy~И~Idot~İ~Ifr~ℑ~Im~ℑ~Imacr~Ī~ImaginaryI~ⅈ~Implies~⇒~Int~∬~Integral~∫~Intersection~⋂~InvisibleComma~⁣~InvisibleTimes~⁢~Iogon~Į~Iopf~𝕀~Iscr~ℐ~Itilde~Ĩ~Iukcy~І~Jcirc~Ĵ~Jcy~Й~Jfr~𝔍~Jopf~𝕁~Jscr~𝒥~Jsercy~Ј~Jukcy~Є~KHcy~Х~KJcy~Ќ~Kcedil~Ķ~Kcy~К~Kfr~𝔎~Kopf~𝕂~Kscr~𝒦~LJcy~Љ~Lacute~Ĺ~Lang~⟪~Laplacetrf~ℒ~Larr~↞~Lcaron~Ľ~Lcedil~Ļ~Lcy~Л~LeftAngleBracket~⟨~LeftArrow~←~LeftArrowBar~⇤~LeftArrowRightArrow~⇆~LeftCeiling~⌈~LeftDoubleBracket~⟦~LeftDownTeeVector~⥡~LeftDownVector~⇃~LeftDownVectorBar~⥙~LeftFloor~⌊~LeftRightArrow~↔~LeftRightVector~⥎~LeftTee~⊣~LeftTeeArrow~↤~LeftTeeVector~⥚~LeftTriangle~⊲~LeftTriangleBar~⧏~LeftTriangleEqual~⊴~LeftUpDownVector~⥑~LeftUpTeeVector~⥠~LeftUpVector~↿~LeftUpVectorBar~⥘~LeftVector~↼~LeftVectorBar~⥒~Leftarrow~⇐~Leftrightarrow~⇔~LessEqualGreater~⋚~LessFullEqual~≦~LessGreater~≶~LessLess~⪡~LessSlantEqual~⩽~LessTilde~≲~Lfr~𝔏~Ll~⋘~Lleftarrow~⇚~Lmidot~Ŀ~LongLeftArrow~⟵~LongLeftRightArrow~⟷~LongRightArrow~⟶~Longleftarrow~⟸~Longleftrightarrow~⟺~Longrightarrow~⟹~Lopf~𝕃~LowerLeftArrow~↙~LowerRightArrow~↘~Lscr~ℒ~Lsh~↰~Lstrok~Ł~Lt~≪~Map~⤅~Mcy~М~MediumSpace~ ~Mellintrf~ℳ~Mfr~𝔐~MinusPlus~∓~Mopf~𝕄~Mscr~ℳ~NJcy~Њ~Nacute~Ń~Ncaron~Ň~Ncedil~Ņ~Ncy~Н~NegativeMediumSpace~​~NegativeThickSpace~​~NegativeThinSpace~​~NegativeVeryThinSpace~​~NestedGreaterGreater~≫~NestedLessLess~≪~NewLine~\n~Nfr~𝔑~NoBreak~⁠~NonBreakingSpace~ ~Nopf~ℕ~Not~⫬~NotCongruent~≢~NotCupCap~≭~NotDoubleVerticalBar~∦~NotElement~∉~NotEqual~≠~NotEqualTilde~≂̸~NotExists~∄~NotGreater~≯~NotGreaterEqual~≱~NotGreaterFullEqual~≧̸~NotGreaterGreater~≫̸~NotGreaterLess~≹~NotGreaterSlantEqual~⩾̸~NotGreaterTilde~≵~NotHumpDownHump~≎̸~NotHumpEqual~≏̸~NotLeftTriangle~⋪~NotLeftTriangleBar~⧏̸~NotLeftTriangleEqual~⋬~NotLess~≮~NotLessEqual~≰~NotLessGreater~≸~NotLessLess~≪̸~NotLessSlantEqual~⩽̸~NotLessTilde~≴~NotNestedGreaterGreater~⪢̸~NotNestedLessLess~⪡̸~NotPrecedes~⊀~NotPrecedesEqual~⪯̸~NotPrecedesSlantEqual~⋠~NotReverseElement~∌~NotRightTriangle~⋫~NotRightTriangleBar~⧐̸~NotRightTriangleEqual~⋭~NotSquareSubset~⊏̸~NotSquareSubsetEqual~⋢~NotSquareSuperset~⊐̸~NotSquareSupersetEqual~⋣~NotSubset~⊂⃒~NotSubsetEqual~⊈~NotSucceeds~⊁~NotSucceedsEqual~⪰̸~NotSucceedsSlantEqual~⋡~NotSucceedsTilde~≿̸~NotSuperset~⊃⃒~NotSupersetEqual~⊉~NotTilde~≁~NotTildeEqual~≄~NotTildeFullEqual~≇~NotTildeTilde~≉~NotVerticalBar~∤~Nscr~𝒩~Ocy~О~Odblac~Ő~Ofr~𝔒~Omacr~Ō~Oopf~𝕆~OpenCurlyDoubleQuote~“~OpenCurlyQuote~‘~Or~⩔~Oscr~𝒪~Otimes~⨷~OverBar~‾~OverBrace~⏞~OverBracket~⎴~OverParenthesis~⏜~PartialD~∂~Pcy~П~Pfr~𝔓~PlusMinus~±~Poincareplane~ℌ~Popf~ℙ~Pr~⪻~Precedes~≺~PrecedesEqual~⪯~PrecedesSlantEqual~≼~PrecedesTilde~≾~Product~∏~Proportion~∷~Proportional~∝~Pscr~𝒫~Qfr~𝔔~Qopf~ℚ~Qscr~𝒬~RBarr~⤐~Racute~Ŕ~Rang~⟫~Rarr~↠~Rarrtl~⤖~Rcaron~Ř~Rcedil~Ŗ~Rcy~Р~Re~ℜ~ReverseElement~∋~ReverseEquilibrium~⇋~ReverseUpEquilibrium~⥯~Rfr~ℜ~RightAngleBracket~⟩~RightArrow~→~RightArrowBar~⇥~RightArrowLeftArrow~⇄~RightCeiling~⌉~RightDoubleBracket~⟧~RightDownTeeVector~⥝~RightDownVector~⇂~RightDownVectorBar~⥕~RightFloor~⌋~RightTee~⊢~RightTeeArrow~↦~RightTeeVector~⥛~RightTriangle~⊳~RightTriangleBar~⧐~RightTriangleEqual~⊵~RightUpDownVector~⥏~RightUpTeeVector~⥜~RightUpVector~↾~RightUpVectorBar~⥔~RightVector~⇀~RightVectorBar~⥓~Rightarrow~⇒~Ropf~ℝ~RoundImplies~⥰~Rrightarrow~⇛~Rscr~ℛ~Rsh~↱~RuleDelayed~⧴~SHCHcy~Щ~SHcy~Ш~SOFTcy~Ь~Sacute~Ś~Sc~⪼~Scedil~Ş~Scirc~Ŝ~Scy~С~Sfr~𝔖~ShortDownArrow~↓~ShortLeftArrow~←~ShortRightArrow~→~ShortUpArrow~↑~SmallCircle~∘~Sopf~𝕊~Sqrt~√~Square~□~SquareIntersection~⊓~SquareSubset~⊏~SquareSubsetEqual~⊑~SquareSuperset~⊐~SquareSupersetEqual~⊒~SquareUnion~⊔~Sscr~𝒮~Star~⋆~Sub~⋐~Subset~⋐~SubsetEqual~⊆~Succeeds~≻~SucceedsEqual~⪰~SucceedsSlantEqual~≽~SucceedsTilde~≿~SuchThat~∋~Sum~∑~Sup~⋑~Superset~⊃~SupersetEqual~⊇~Supset~⋑~TRADE~™~TSHcy~Ћ~TScy~Ц~Tab~\t~Tcaron~Ť~Tcedil~Ţ~Tcy~Т~Tfr~𝔗~Therefore~∴~ThickSpace~  ~ThinSpace~ ~Tilde~∼~TildeEqual~≃~TildeFullEqual~≅~TildeTilde~≈~Topf~𝕋~TripleDot~⃛~Tscr~𝒯~Tstrok~Ŧ~Uarr~↟~Uarrocir~⥉~Ubrcy~Ў~Ubreve~Ŭ~Ucy~У~Udblac~Ű~Ufr~𝔘~Umacr~Ū~UnderBar~_~UnderBrace~⏟~UnderBracket~⎵~UnderParenthesis~⏝~Union~⋃~UnionPlus~⊎~Uogon~Ų~Uopf~𝕌~UpArrow~↑~UpArrowBar~⤒~UpArrowDownArrow~⇅~UpDownArrow~↕~UpEquilibrium~⥮~UpTee~⊥~UpTeeArrow~↥~Uparrow~⇑~Updownarrow~⇕~UpperLeftArrow~↖~UpperRightArrow~↗~Upsi~ϒ~Uring~Ů~Uscr~𝒰~Utilde~Ũ~VDash~⊫~Vbar~⫫~Vcy~В~Vdash~⊩~Vdashl~⫦~Vee~⋁~Verbar~‖~Vert~‖~VerticalBar~∣~VerticalLine~|~VerticalSeparator~❘~VerticalTilde~≀~VeryThinSpace~ ~Vfr~𝔙~Vopf~𝕍~Vscr~𝒱~Vvdash~⊪~Wcirc~Ŵ~Wedge~⋀~Wfr~𝔚~Wopf~𝕎~Wscr~𝒲~Xfr~𝔛~Xopf~𝕏~Xscr~𝒳~YAcy~Я~YIcy~Ї~YUcy~Ю~Ycirc~Ŷ~Ycy~Ы~Yfr~𝔜~Yopf~𝕐~Yscr~𝒴~ZHcy~Ж~Zacute~Ź~Zcaron~Ž~Zcy~З~Zdot~Ż~ZeroWidthSpace~​~Zfr~ℨ~Zopf~ℤ~Zscr~𝒵~abreve~ă~ac~∾~acE~∾̳~acd~∿~acy~а~af~⁡~afr~𝔞~aleph~ℵ~amacr~ā~amalg~⨿~andand~⩕~andd~⩜~andslope~⩘~andv~⩚~ange~⦤~angle~∠~angmsd~∡~angmsdaa~⦨~angmsdab~⦩~angmsdac~⦪~angmsdad~⦫~angmsdae~⦬~angmsdaf~⦭~angmsdag~⦮~angmsdah~⦯~angrt~∟~angrtvb~⊾~angrtvbd~⦝~angsph~∢~angst~Å~angzarr~⍼~aogon~ą~aopf~𝕒~ap~≈~apE~⩰~apacir~⩯~ape~≊~apid~≋~approx~≈~approxeq~≊~ascr~𝒶~ast~*~asympeq~≍~awconint~∳~awint~⨑~bNot~⫭~backcong~≌~backepsilon~϶~backprime~‵~backsim~∽~backsimeq~⋍~barvee~⊽~barwed~⌅~barwedge~⌅~bbrk~⎵~bbrktbrk~⎶~bcong~≌~bcy~б~becaus~∵~because~∵~bemptyv~⦰~bepsi~϶~bernou~ℬ~beth~ℶ~between~≬~bfr~𝔟~bigcap~⋂~bigcirc~◯~bigcup~⋃~bigodot~⨀~bigoplus~⨁~bigotimes~⨂~bigsqcup~⨆~bigstar~★~bigtriangledown~▽~bigtriangleup~△~biguplus~⨄~bigvee~⋁~bigwedge~⋀~bkarow~⤍~blacklozenge~⧫~blacksquare~▪~blacktriangle~▴~blacktriangledown~▾~blacktriangleleft~◂~blacktriangleright~▸~blank~␣~blk12~▒~blk14~░~blk34~▓~block~█~bne~=⃥~bnequiv~≡⃥~bnot~⌐~bopf~𝕓~bot~⊥~bottom~⊥~bowtie~⋈~boxDL~╗~boxDR~╔~boxDl~╖~boxDr~╓~boxH~═~boxHD~╦~boxHU~╩~boxHd~╤~boxHu~╧~boxUL~╝~boxUR~╚~boxUl~╜~boxUr~╙~boxV~║~boxVH~╬~boxVL~╣~boxVR~╠~boxVh~╫~boxVl~╢~boxVr~╟~boxbox~⧉~boxdL~╕~boxdR~╒~boxdl~┐~boxdr~┌~boxh~─~boxhD~╥~boxhU~╨~boxhd~┬~boxhu~┴~boxminus~⊟~boxplus~⊞~boxtimes~⊠~boxuL~╛~boxuR~╘~boxul~┘~boxur~└~boxv~│~boxvH~╪~boxvL~╡~boxvR~╞~boxvh~┼~boxvl~┤~boxvr~├~bprime~‵~breve~˘~bscr~𝒷~bsemi~⁏~bsim~∽~bsime~⋍~bsol~\\~bsolb~⧅~bsolhsub~⟈~bullet~•~bump~≎~bumpE~⪮~bumpe~≏~bumpeq~≏~cacute~ć~capand~⩄~capbrcup~⩉~capcap~⩋~capcup~⩇~capdot~⩀~caps~∩︀~caret~⁁~caron~ˇ~ccaps~⩍~ccaron~č~ccirc~ĉ~ccups~⩌~ccupssm~⩐~cdot~ċ~cemptyv~⦲~centerdot~·~cfr~𝔠~chcy~ч~check~✓~checkmark~✓~cir~○~cirE~⧃~circeq~≗~circlearrowleft~↺~circlearrowright~↻~circledR~®~circledS~Ⓢ~circledast~⊛~circledcirc~⊚~circleddash~⊝~cire~≗~cirfnint~⨐~cirmid~⫯~cirscir~⧂~clubsuit~♣~colon~:~colone~≔~coloneq~≔~comma~,~commat~@~comp~∁~compfn~∘~complement~∁~complexes~ℂ~congdot~⩭~conint~∮~copf~𝕔~coprod~∐~copysr~℗~cross~✗~cscr~𝒸~csub~⫏~csube~⫑~csup~⫐~csupe~⫒~ctdot~⋯~cudarrl~⤸~cudarrr~⤵~cuepr~⋞~cuesc~⋟~cularr~↶~cularrp~⤽~cupbrcap~⩈~cupcap~⩆~cupcup~⩊~cupdot~⊍~cupor~⩅~cups~∪︀~curarr~↷~curarrm~⤼~curlyeqprec~⋞~curlyeqsucc~⋟~curlyvee~⋎~curlywedge~⋏~curvearrowleft~↶~curvearrowright~↷~cuvee~⋎~cuwed~⋏~cwconint~∲~cwint~∱~cylcty~⌭~dHar~⥥~daleth~ℸ~dash~‐~dashv~⊣~dbkarow~⤏~dblac~˝~dcaron~ď~dcy~д~dd~ⅆ~ddagger~‡~ddarr~⇊~ddotseq~⩷~demptyv~⦱~dfisht~⥿~dfr~𝔡~dharl~⇃~dharr~⇂~diam~⋄~diamond~⋄~diamondsuit~♦~die~¨~digamma~ϝ~disin~⋲~div~÷~divideontimes~⋇~divonx~⋇~djcy~ђ~dlcorn~⌞~dlcrop~⌍~dollar~$~dopf~𝕕~dot~˙~doteq~≐~doteqdot~≑~dotminus~∸~dotplus~∔~dotsquare~⊡~doublebarwedge~⌆~downarrow~↓~downdownarrows~⇊~downharpoonleft~⇃~downharpoonright~⇂~drbkarow~⤐~drcorn~⌟~drcrop~⌌~dscr~𝒹~dscy~ѕ~dsol~⧶~dstrok~đ~dtdot~⋱~dtri~▿~dtrif~▾~duarr~⇵~duhar~⥯~dwangle~⦦~dzcy~џ~dzigrarr~⟿~eDDot~⩷~eDot~≑~easter~⩮~ecaron~ě~ecir~≖~ecolon~≕~ecy~э~edot~ė~ee~ⅇ~efDot~≒~efr~𝔢~eg~⪚~egs~⪖~egsdot~⪘~el~⪙~elinters~⏧~ell~ℓ~els~⪕~elsdot~⪗~emacr~ē~emptyset~∅~emptyv~∅~emsp13~ ~emsp14~ ~eng~ŋ~eogon~ę~eopf~𝕖~epar~⋕~eparsl~⧣~eplus~⩱~epsi~ε~epsiv~ϵ~eqcirc~≖~eqcolon~≕~eqsim~≂~eqslantgtr~⪖~eqslantless~⪕~equals~=~equest~≟~equivDD~⩸~eqvparsl~⧥~erDot~≓~erarr~⥱~escr~ℯ~esdot~≐~esim~≂~excl~!~expectation~ℰ~exponentiale~ⅇ~fallingdotseq~≒~fcy~ф~female~♀~ffilig~ﬃ~fflig~ﬀ~ffllig~ﬄ~ffr~𝔣~filig~ﬁ~fjlig~fj~flat~♭~fllig~ﬂ~fltns~▱~fopf~𝕗~fork~⋔~forkv~⫙~fpartint~⨍~frac13~⅓~frac15~⅕~frac16~⅙~frac18~⅛~frac23~⅔~frac25~⅖~frac35~⅗~frac38~⅜~frac45~⅘~frac56~⅚~frac58~⅝~frac78~⅞~frown~⌢~fscr~𝒻~gE~≧~gEl~⪌~gacute~ǵ~gammad~ϝ~gap~⪆~gbreve~ğ~gcirc~ĝ~gcy~г~gdot~ġ~gel~⋛~geq~≥~geqq~≧~geqslant~⩾~ges~⩾~gescc~⪩~gesdot~⪀~gesdoto~⪂~gesdotol~⪄~gesl~⋛︀~gesles~⪔~gfr~𝔤~gg~≫~ggg~⋙~gimel~ℷ~gjcy~ѓ~gl~≷~glE~⪒~gla~⪥~glj~⪤~gnE~≩~gnap~⪊~gnapprox~⪊~gne~⪈~gneq~⪈~gneqq~≩~gnsim~⋧~gopf~𝕘~grave~`~gscr~ℊ~gsim~≳~gsime~⪎~gsiml~⪐~gtcc~⪧~gtcir~⩺~gtdot~⋗~gtlPar~⦕~gtquest~⩼~gtrapprox~⪆~gtrarr~⥸~gtrdot~⋗~gtreqless~⋛~gtreqqless~⪌~gtrless~≷~gtrsim~≳~gvertneqq~≩︀~gvnE~≩︀~hairsp~ ~half~½~hamilt~ℋ~hardcy~ъ~harrcir~⥈~harrw~↭~hbar~ℏ~hcirc~ĥ~heartsuit~♥~hercon~⊹~hfr~𝔥~hksearow~⤥~hkswarow~⤦~hoarr~⇿~homtht~∻~hookleftarrow~↩~hookrightarrow~↪~hopf~𝕙~horbar~―~hscr~𝒽~hslash~ℏ~hstrok~ħ~hybull~⁃~hyphen~‐~ic~⁣~icy~и~iecy~е~iff~⇔~ifr~𝔦~ii~ⅈ~iiiint~⨌~iiint~∭~iinfin~⧜~iiota~℩~ijlig~ĳ~imacr~ī~imagline~ℐ~imagpart~ℑ~imath~ı~imof~⊷~imped~Ƶ~in~∈~incare~℅~infintie~⧝~inodot~ı~intcal~⊺~integers~ℤ~intercal~⊺~intlarhk~⨗~intprod~⨼~iocy~ё~iogon~į~iopf~𝕚~iprod~⨼~iscr~𝒾~isinE~⋹~isindot~⋵~isins~⋴~isinsv~⋳~isinv~∈~it~⁢~itilde~ĩ~iukcy~і~jcirc~ĵ~jcy~й~jfr~𝔧~jmath~ȷ~jopf~𝕛~jscr~𝒿~jsercy~ј~jukcy~є~kappav~ϰ~kcedil~ķ~kcy~к~kfr~𝔨~kgreen~ĸ~khcy~х~kjcy~ќ~kopf~𝕜~kscr~𝓀~lAarr~⇚~lAtail~⤛~lBarr~⤎~lE~≦~lEg~⪋~lHar~⥢~lacute~ĺ~laemptyv~⦴~lagran~ℒ~langd~⦑~langle~⟨~lap~⪅~larrb~⇤~larrbfs~⤟~larrfs~⤝~larrhk~↩~larrlp~↫~larrpl~⤹~larrsim~⥳~larrtl~↢~lat~⪫~latail~⤙~late~⪭~lates~⪭︀~lbarr~⤌~lbbrk~❲~lbrace~{~lbrack~[~lbrke~⦋~lbrksld~⦏~lbrkslu~⦍~lcaron~ľ~lcedil~ļ~lcub~{~lcy~л~ldca~⤶~ldquor~„~ldrdhar~⥧~ldrushar~⥋~ldsh~↲~leftarrow~←~leftarrowtail~↢~leftharpoondown~↽~leftharpoonup~↼~leftleftarrows~⇇~leftrightarrow~↔~leftrightarrows~⇆~leftrightharpoons~⇋~leftrightsquigarrow~↭~leftthreetimes~⋋~leg~⋚~leq~≤~leqq~≦~leqslant~⩽~les~⩽~lescc~⪨~lesdot~⩿~lesdoto~⪁~lesdotor~⪃~lesg~⋚︀~lesges~⪓~lessapprox~⪅~lessdot~⋖~lesseqgtr~⋚~lesseqqgtr~⪋~lessgtr~≶~lesssim~≲~lfisht~⥼~lfr~𝔩~lg~≶~lgE~⪑~lhard~↽~lharu~↼~lharul~⥪~lhblk~▄~ljcy~љ~ll~≪~llarr~⇇~llcorner~⌞~llhard~⥫~lltri~◺~lmidot~ŀ~lmoust~⎰~lmoustache~⎰~lnE~≨~lnap~⪉~lnapprox~⪉~lne~⪇~lneq~⪇~lneqq~≨~lnsim~⋦~loang~⟬~loarr~⇽~lobrk~⟦~longleftarrow~⟵~longleftrightarrow~⟷~longmapsto~⟼~longrightarrow~⟶~looparrowleft~↫~looparrowright~↬~lopar~⦅~lopf~𝕝~loplus~⨭~lotimes~⨴~lowbar~_~lozenge~◊~lozf~⧫~lpar~(~lparlt~⦓~lrarr~⇆~lrcorner~⌟~lrhar~⇋~lrhard~⥭~lrtri~⊿~lscr~𝓁~lsh~↰~lsim~≲~lsime~⪍~lsimg~⪏~lsqb~[~lsquor~‚~lstrok~ł~ltcc~⪦~ltcir~⩹~ltdot~⋖~lthree~⋋~ltimes~⋉~ltlarr~⥶~ltquest~⩻~ltrPar~⦖~ltri~◃~ltrie~⊴~ltrif~◂~lurdshar~⥊~luruhar~⥦~lvertneqq~≨︀~lvnE~≨︀~mDDot~∺~male~♂~malt~✠~maltese~✠~map~↦~mapsto~↦~mapstodown~↧~mapstoleft~↤~mapstoup~↥~marker~▮~mcomma~⨩~mcy~м~measuredangle~∡~mfr~𝔪~mho~℧~mid~∣~midast~*~midcir~⫰~minusb~⊟~minusd~∸~minusdu~⨪~mlcp~⫛~mldr~…~mnplus~∓~models~⊧~mopf~𝕞~mp~∓~mscr~𝓂~mstpos~∾~multimap~⊸~mumap~⊸~nGg~⋙̸~nGt~≫⃒~nGtv~≫̸~nLeftarrow~⇍~nLeftrightarrow~⇎~nLl~⋘̸~nLt~≪⃒~nLtv~≪̸~nRightarrow~⇏~nVDash~⊯~nVdash~⊮~nacute~ń~nang~∠⃒~nap~≉~napE~⩰̸~napid~≋̸~napos~ŉ~napprox~≉~natur~♮~natural~♮~naturals~ℕ~nbump~≎̸~nbumpe~≏̸~ncap~⩃~ncaron~ň~ncedil~ņ~ncong~≇~ncongdot~⩭̸~ncup~⩂~ncy~н~neArr~⇗~nearhk~⤤~nearr~↗~nearrow~↗~nedot~≐̸~nequiv~≢~nesear~⤨~nesim~≂̸~nexist~∄~nexists~∄~nfr~𝔫~ngE~≧̸~nge~≱~ngeq~≱~ngeqq~≧̸~ngeqslant~⩾̸~nges~⩾̸~ngsim~≵~ngt~≯~ngtr~≯~nhArr~⇎~nharr~↮~nhpar~⫲~nis~⋼~nisd~⋺~niv~∋~njcy~њ~nlArr~⇍~nlE~≦̸~nlarr~↚~nldr~‥~nle~≰~nleftarrow~↚~nleftrightarrow~↮~nleq~≰~nleqq~≦̸~nleqslant~⩽̸~nles~⩽̸~nless~≮~nlsim~≴~nlt~≮~nltri~⋪~nltrie~⋬~nmid~∤~nopf~𝕟~notinE~⋹̸~notindot~⋵̸~notinva~∉~notinvb~⋷~notinvc~⋶~notni~∌~notniva~∌~notnivb~⋾~notnivc~⋽~npar~∦~nparallel~∦~nparsl~⫽⃥~npart~∂̸~npolint~⨔~npr~⊀~nprcue~⋠~npre~⪯̸~nprec~⊀~npreceq~⪯̸~nrArr~⇏~nrarr~↛~nrarrc~⤳̸~nrarrw~↝̸~nrightarrow~↛~nrtri~⋫~nrtrie~⋭~nsc~⊁~nsccue~⋡~nsce~⪰̸~nscr~𝓃~nshortmid~∤~nshortparallel~∦~nsim~≁~nsime~≄~nsimeq~≄~nsmid~∤~nspar~∦~nsqsube~⋢~nsqsupe~⋣~nsubE~⫅̸~nsube~⊈~nsubset~⊂⃒~nsubseteq~⊈~nsubseteqq~⫅̸~nsucc~⊁~nsucceq~⪰̸~nsup~⊅~nsupE~⫆̸~nsupe~⊉~nsupset~⊃⃒~nsupseteq~⊉~nsupseteqq~⫆̸~ntgl~≹~ntlg~≸~ntriangleleft~⋪~ntrianglelefteq~⋬~ntriangleright~⋫~ntrianglerighteq~⋭~num~#~numero~№~numsp~ ~nvDash~⊭~nvHarr~⤄~nvap~≍⃒~nvdash~⊬~nvge~≥⃒~nvgt~>⃒~nvinfin~⧞~nvlArr~⤂~nvle~≤⃒~nvlt~<⃒~nvltrie~⊴⃒~nvrArr~⤃~nvrtrie~⊵⃒~nvsim~∼⃒~nwArr~⇖~nwarhk~⤣~nwarr~↖~nwarrow~↖~nwnear~⤧~oS~Ⓢ~oast~⊛~ocir~⊚~ocy~о~odash~⊝~odblac~ő~odiv~⨸~odot~⊙~odsold~⦼~ofcir~⦿~ofr~𝔬~ogon~˛~ogt~⧁~ohbar~⦵~ohm~Ω~oint~∮~olarr~↺~olcir~⦾~olcross~⦻~olt~⧀~omacr~ō~omid~⦶~ominus~⊖~oopf~𝕠~opar~⦷~operp~⦹~orarr~↻~ord~⩝~order~ℴ~orderof~ℴ~origof~⊶~oror~⩖~orslope~⩗~orv~⩛~oscr~ℴ~osol~⊘~otimesas~⨶~ovbar~⌽~par~∥~parallel~∥~parsim~⫳~parsl~⫽~pcy~п~percnt~%~period~.~pertenk~‱~pfr~𝔭~phiv~ϕ~phmmat~ℳ~phone~☎~pitchfork~⋔~planck~ℏ~planckh~ℎ~plankv~ℏ~plus~+~plusacir~⨣~plusb~⊞~pluscir~⨢~plusdo~∔~plusdu~⨥~pluse~⩲~plussim~⨦~plustwo~⨧~pm~±~pointint~⨕~popf~𝕡~pr~≺~prE~⪳~prap~⪷~prcue~≼~pre~⪯~prec~≺~precapprox~⪷~preccurlyeq~≼~preceq~⪯~precnapprox~⪹~precneqq~⪵~precnsim~⋨~precsim~≾~primes~ℙ~prnE~⪵~prnap~⪹~prnsim~⋨~profalar~⌮~profline~⌒~profsurf~⌓~propto~∝~prsim~≾~prurel~⊰~pscr~𝓅~puncsp~ ~qfr~𝔮~qint~⨌~qopf~𝕢~qprime~⁗~qscr~𝓆~quaternions~ℍ~quatint~⨖~quest~?~questeq~≟~rAarr~⇛~rAtail~⤜~rBarr~⤏~rHar~⥤~race~∽̱~racute~ŕ~raemptyv~⦳~rangd~⦒~range~⦥~rangle~⟩~rarrap~⥵~rarrb~⇥~rarrbfs~⤠~rarrc~⤳~rarrfs~⤞~rarrhk~↪~rarrlp~↬~rarrpl~⥅~rarrsim~⥴~rarrtl~↣~rarrw~↝~ratail~⤚~ratio~∶~rationals~ℚ~rbarr~⤍~rbbrk~❳~rbrace~}~rbrack~]~rbrke~⦌~rbrksld~⦎~rbrkslu~⦐~rcaron~ř~rcedil~ŗ~rcub~}~rcy~р~rdca~⤷~rdldhar~⥩~rdquor~”~rdsh~↳~realine~ℛ~realpart~ℜ~reals~ℝ~rect~▭~rfisht~⥽~rfr~𝔯~rhard~⇁~rharu~⇀~rharul~⥬~rhov~ϱ~rightarrow~→~rightarrowtail~↣~rightharpoondown~⇁~rightharpoonup~⇀~rightleftarrows~⇄~rightleftharpoons~⇌~rightrightarrows~⇉~rightsquigarrow~↝~rightthreetimes~⋌~ring~˚~risingdotseq~≓~rlarr~⇄~rlhar~⇌~rmoust~⎱~rmoustache~⎱~rnmid~⫮~roang~⟭~roarr~⇾~robrk~⟧~ropar~⦆~ropf~𝕣~roplus~⨮~rotimes~⨵~rpar~)~rpargt~⦔~rppolint~⨒~rrarr~⇉~rscr~𝓇~rsh~↱~rsqb~]~rsquor~’~rthree~⋌~rtimes~⋊~rtri~▹~rtrie~⊵~rtrif~▸~rtriltri~⧎~ruluhar~⥨~rx~℞~sacute~ś~sc~≻~scE~⪴~scap~⪸~sccue~≽~sce~⪰~scedil~ş~scirc~ŝ~scnE~⪶~scnap~⪺~scnsim~⋩~scpolint~⨓~scsim~≿~scy~с~sdotb~⊡~sdote~⩦~seArr~⇘~searhk~⤥~searr~↘~searrow~↘~semi~;~seswar~⤩~setminus~∖~setmn~∖~sext~✶~sfr~𝔰~sfrown~⌢~sharp~♯~shchcy~щ~shcy~ш~shortmid~∣~shortparallel~∥~sigmav~ς~simdot~⩪~sime~≃~simeq~≃~simg~⪞~simgE~⪠~siml~⪝~simlE~⪟~simne~≆~simplus~⨤~simrarr~⥲~slarr~←~smallsetminus~∖~smashp~⨳~smeparsl~⧤~smid~∣~smile~⌣~smt~⪪~smte~⪬~smtes~⪬︀~softcy~ь~sol~/~solb~⧄~solbar~⌿~sopf~𝕤~spadesuit~♠~spar~∥~sqcap~⊓~sqcaps~⊓︀~sqcup~⊔~sqcups~⊔︀~sqsub~⊏~sqsube~⊑~sqsubset~⊏~sqsubseteq~⊑~sqsup~⊐~sqsupe~⊒~sqsupset~⊐~sqsupseteq~⊒~squ~□~square~□~squarf~▪~squf~▪~srarr~→~sscr~𝓈~ssetmn~∖~ssmile~⌣~sstarf~⋆~star~☆~starf~★~straightepsilon~ϵ~straightphi~ϕ~strns~¯~subE~⫅~subdot~⪽~subedot~⫃~submult~⫁~subnE~⫋~subne~⊊~subplus~⪿~subrarr~⥹~subset~⊂~subseteq~⊆~subseteqq~⫅~subsetneq~⊊~subsetneqq~⫋~subsim~⫇~subsub~⫕~subsup~⫓~succ~≻~succapprox~⪸~succcurlyeq~≽~succeq~⪰~succnapprox~⪺~succneqq~⪶~succnsim~⋩~succsim~≿~sung~♪~supE~⫆~supdot~⪾~supdsub~⫘~supedot~⫄~suphsol~⟉~suphsub~⫗~suplarr~⥻~supmult~⫂~supnE~⫌~supne~⊋~supplus~⫀~supset~⊃~supseteq~⊇~supseteqq~⫆~supsetneq~⊋~supsetneqq~⫌~supsim~⫈~supsub~⫔~supsup~⫖~swArr~⇙~swarhk~⤦~swarr~↙~swarrow~↙~swnwar~⤪~target~⌖~tbrk~⎴~tcaron~ť~tcedil~ţ~tcy~т~tdot~⃛~telrec~⌕~tfr~𝔱~therefore~∴~thetav~ϑ~thickapprox~≈~thicksim~∼~thkap~≈~thksim~∼~timesb~⊠~timesbar~⨱~timesd~⨰~tint~∭~toea~⤨~top~⊤~topbot~⌶~topcir~⫱~topf~𝕥~topfork~⫚~tosa~⤩~tprime~‴~triangle~▵~triangledown~▿~triangleleft~◃~trianglelefteq~⊴~triangleq~≜~triangleright~▹~trianglerighteq~⊵~tridot~◬~trie~≜~triminus~⨺~triplus~⨹~trisb~⧍~tritime~⨻~trpezium~⏢~tscr~𝓉~tscy~ц~tshcy~ћ~tstrok~ŧ~twixt~≬~twoheadleftarrow~↞~twoheadrightarrow~↠~uHar~⥣~ubrcy~ў~ubreve~ŭ~ucy~у~udarr~⇅~udblac~ű~udhar~⥮~ufisht~⥾~ufr~𝔲~uharl~↿~uharr~↾~uhblk~▀~ulcorn~⌜~ulcorner~⌜~ulcrop~⌏~ultri~◸~umacr~ū~uogon~ų~uopf~𝕦~uparrow~↑~updownarrow~↕~upharpoonleft~↿~upharpoonright~↾~uplus~⊎~upsi~υ~upuparrows~⇈~urcorn~⌝~urcorner~⌝~urcrop~⌎~uring~ů~urtri~◹~uscr~𝓊~utdot~⋰~utilde~ũ~utri~▵~utrif~▴~uuarr~⇈~uwangle~⦧~vArr~⇕~vBar~⫨~vBarv~⫩~vDash~⊨~vangrt~⦜~varepsilon~ϵ~varkappa~ϰ~varnothing~∅~varphi~ϕ~varpi~ϖ~varpropto~∝~varr~↕~varrho~ϱ~varsigma~ς~varsubsetneq~⊊︀~varsubsetneqq~⫋︀~varsupsetneq~⊋︀~varsupsetneqq~⫌︀~vartheta~ϑ~vartriangleleft~⊲~vartriangleright~⊳~vcy~в~vdash~⊢~vee~∨~veebar~⊻~veeeq~≚~vellip~⋮~verbar~|~vert~|~vfr~𝔳~vltri~⊲~vnsub~⊂⃒~vnsup~⊃⃒~vopf~𝕧~vprop~∝~vrtri~⊳~vscr~𝓋~vsubnE~⫋︀~vsubne~⊊︀~vsupnE~⫌︀~vsupne~⊋︀~vzigzag~⦚~wcirc~ŵ~wedbar~⩟~wedge~∧~wedgeq~≙~wfr~𝔴~wopf~𝕨~wp~℘~wr~≀~wreath~≀~wscr~𝓌~xcap~⋂~xcirc~◯~xcup~⋃~xdtri~▽~xfr~𝔵~xhArr~⟺~xharr~⟷~xlArr~⟸~xlarr~⟵~xmap~⟼~xnis~⋻~xodot~⨀~xopf~𝕩~xoplus~⨁~xotime~⨂~xrArr~⟹~xrarr~⟶~xscr~𝓍~xsqcup~⨆~xuplus~⨄~xutri~△~xvee~⋁~xwedge~⋀~yacy~я~ycirc~ŷ~ycy~ы~yfr~𝔶~yicy~ї~yopf~𝕪~yscr~𝓎~yucy~ю~zacute~ź~zcaron~ž~zcy~з~zdot~ż~zeetrf~ℨ~zfr~𝔷~zhcy~ж~zigrarr~⇝~zopf~𝕫~zscr~𝓏~~AMP~&~COPY~©~GT~>~LT~<~QUOT~\"~REG~®", exports.namedReferences['html4']);
+//# sourceMappingURL=named-references.js.map
+
+/***/ }),
+
+/***/ 4690:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.numericUnicodeMap = void 0;
+exports.numericUnicodeMap = {
+    0: 65533,
+    128: 8364,
+    130: 8218,
+    131: 402,
+    132: 8222,
+    133: 8230,
+    134: 8224,
+    135: 8225,
+    136: 710,
+    137: 8240,
+    138: 352,
+    139: 8249,
+    140: 338,
+    142: 381,
+    145: 8216,
+    146: 8217,
+    147: 8220,
+    148: 8221,
+    149: 8226,
+    150: 8211,
+    151: 8212,
+    152: 732,
+    153: 8482,
+    154: 353,
+    155: 8250,
+    156: 339,
+    158: 382,
+    159: 376
+};
+//# sourceMappingURL=numeric-unicode-map.js.map
+
+/***/ }),
+
+/***/ 7955:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.highSurrogateTo = exports.highSurrogateFrom = exports.getCodePoint = exports.fromCodePoint = void 0;
+exports.fromCodePoint = String.fromCodePoint ||
+    function (astralCodePoint) {
+        return String.fromCharCode(Math.floor((astralCodePoint - 0x10000) / 0x400) + 0xd800, ((astralCodePoint - 0x10000) % 0x400) + 0xdc00);
+    };
+// @ts-expect-error - String.prototype.codePointAt might not exist in older node versions
+exports.getCodePoint = String.prototype.codePointAt
+    ? function (input, position) {
+        return input.codePointAt(position);
+    }
+    : function (input, position) {
+        return (input.charCodeAt(position) - 0xd800) * 0x400 + input.charCodeAt(position + 1) - 0xdc00 + 0x10000;
+    };
+exports.highSurrogateFrom = 0xd800;
+exports.highSurrogateTo = 0xdbff;
+//# sourceMappingURL=surrogate-pairs.js.map
 
 /***/ }),
 
@@ -86657,6 +85601,13 @@ function getPackageJSON() {
 
 exports.getPackageJSON = getPackageJSON;
 
+
+/***/ }),
+
+/***/ 4577:
+/***/ ((module) => {
+
+(()=>{"use strict";var t={d:(e,n)=>{for(var i in n)t.o(n,i)&&!t.o(e,i)&&Object.defineProperty(e,i,{enumerable:!0,get:n[i]})},o:(t,e)=>Object.prototype.hasOwnProperty.call(t,e),r:t=>{"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(t,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(t,"__esModule",{value:!0})}},e={};t.r(e),t.d(e,{XMLBuilder:()=>gt,XMLParser:()=>it,XMLValidator:()=>xt});const n=":A-Za-z_\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD",i=new RegExp("^["+n+"]["+n+"\\-.\\d\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$");function s(t,e){const n=[];let i=e.exec(t);for(;i;){const s=[];s.startIndex=e.lastIndex-i[0].length;const r=i.length;for(let t=0;t<r;t++)s.push(i[t]);n.push(s),i=e.exec(t)}return n}const r=function(t){return!(null==i.exec(t))},o={allowBooleanAttributes:!1,unpairedTags:[]};function a(t,e){e=Object.assign({},o,e);const n=[];let i=!1,s=!1;"\ufeff"===t[0]&&(t=t.substr(1));for(let r=0;r<t.length;r++)if("<"===t[r]&&"?"===t[r+1]){if(r+=2,r=u(t,r),r.err)return r}else{if("<"!==t[r]){if(l(t[r]))continue;return m("InvalidChar","char '"+t[r]+"' is not expected.",N(t,r))}{let o=r;if(r++,"!"===t[r]){r=d(t,r);continue}{let a=!1;"/"===t[r]&&(a=!0,r++);let h="";for(;r<t.length&&">"!==t[r]&&" "!==t[r]&&"\t"!==t[r]&&"\n"!==t[r]&&"\r"!==t[r];r++)h+=t[r];if(h=h.trim(),"/"===h[h.length-1]&&(h=h.substring(0,h.length-1),r--),!b(h)){let e;return e=0===h.trim().length?"Invalid space after '<'.":"Tag '"+h+"' is an invalid name.",m("InvalidTag",e,N(t,r))}const p=c(t,r);if(!1===p)return m("InvalidAttr","Attributes for '"+h+"' have open quote.",N(t,r));let f=p.value;if(r=p.index,"/"===f[f.length-1]){const n=r-f.length;f=f.substring(0,f.length-1);const s=g(f,e);if(!0!==s)return m(s.err.code,s.err.msg,N(t,n+s.err.line));i=!0}else if(a){if(!p.tagClosed)return m("InvalidTag","Closing tag '"+h+"' doesn't have proper closing.",N(t,r));if(f.trim().length>0)return m("InvalidTag","Closing tag '"+h+"' can't have attributes or invalid starting.",N(t,o));if(0===n.length)return m("InvalidTag","Closing tag '"+h+"' has not been opened.",N(t,o));{const e=n.pop();if(h!==e.tagName){let n=N(t,e.tagStartPos);return m("InvalidTag","Expected closing tag '"+e.tagName+"' (opened in line "+n.line+", col "+n.col+") instead of closing tag '"+h+"'.",N(t,o))}0==n.length&&(s=!0)}}else{const a=g(f,e);if(!0!==a)return m(a.err.code,a.err.msg,N(t,r-f.length+a.err.line));if(!0===s)return m("InvalidXml","Multiple possible root nodes found.",N(t,r));-1!==e.unpairedTags.indexOf(h)||n.push({tagName:h,tagStartPos:o}),i=!0}for(r++;r<t.length;r++)if("<"===t[r]){if("!"===t[r+1]){r++,r=d(t,r);continue}if("?"!==t[r+1])break;if(r=u(t,++r),r.err)return r}else if("&"===t[r]){const e=x(t,r);if(-1==e)return m("InvalidChar","char '&' is not expected.",N(t,r));r=e}else if(!0===s&&!l(t[r]))return m("InvalidXml","Extra text at the end",N(t,r));"<"===t[r]&&r--}}}return i?1==n.length?m("InvalidTag","Unclosed tag '"+n[0].tagName+"'.",N(t,n[0].tagStartPos)):!(n.length>0)||m("InvalidXml","Invalid '"+JSON.stringify(n.map(t=>t.tagName),null,4).replace(/\r?\n/g,"")+"' found.",{line:1,col:1}):m("InvalidXml","Start tag expected.",1)}function l(t){return" "===t||"\t"===t||"\n"===t||"\r"===t}function u(t,e){const n=e;for(;e<t.length;e++)if("?"==t[e]||" "==t[e]){const i=t.substr(n,e-n);if(e>5&&"xml"===i)return m("InvalidXml","XML declaration allowed only at the start of the document.",N(t,e));if("?"==t[e]&&">"==t[e+1]){e++;break}continue}return e}function d(t,e){if(t.length>e+5&&"-"===t[e+1]&&"-"===t[e+2]){for(e+=3;e<t.length;e++)if("-"===t[e]&&"-"===t[e+1]&&">"===t[e+2]){e+=2;break}}else if(t.length>e+8&&"D"===t[e+1]&&"O"===t[e+2]&&"C"===t[e+3]&&"T"===t[e+4]&&"Y"===t[e+5]&&"P"===t[e+6]&&"E"===t[e+7]){let n=1;for(e+=8;e<t.length;e++)if("<"===t[e])n++;else if(">"===t[e]&&(n--,0===n))break}else if(t.length>e+9&&"["===t[e+1]&&"C"===t[e+2]&&"D"===t[e+3]&&"A"===t[e+4]&&"T"===t[e+5]&&"A"===t[e+6]&&"["===t[e+7])for(e+=8;e<t.length;e++)if("]"===t[e]&&"]"===t[e+1]&&">"===t[e+2]){e+=2;break}return e}const h='"',p="'";function c(t,e){let n="",i="",s=!1;for(;e<t.length;e++){if(t[e]===h||t[e]===p)""===i?i=t[e]:i!==t[e]||(i="");else if(">"===t[e]&&""===i){s=!0;break}n+=t[e]}return""===i&&{value:n,index:e,tagClosed:s}}const f=new RegExp("(\\s*)([^\\s=]+)(\\s*=)?(\\s*(['\"])(([\\s\\S])*?)\\5)?","g");function g(t,e){const n=s(t,f),i={};for(let t=0;t<n.length;t++){if(0===n[t][1].length)return m("InvalidAttr","Attribute '"+n[t][2]+"' has no space in starting.",y(n[t]));if(void 0!==n[t][3]&&void 0===n[t][4])return m("InvalidAttr","Attribute '"+n[t][2]+"' is without value.",y(n[t]));if(void 0===n[t][3]&&!e.allowBooleanAttributes)return m("InvalidAttr","boolean attribute '"+n[t][2]+"' is not allowed.",y(n[t]));const s=n[t][2];if(!E(s))return m("InvalidAttr","Attribute '"+s+"' is an invalid name.",y(n[t]));if(Object.prototype.hasOwnProperty.call(i,s))return m("InvalidAttr","Attribute '"+s+"' is repeated.",y(n[t]));i[s]=1}return!0}function x(t,e){if(";"===t[++e])return-1;if("#"===t[e])return function(t,e){let n=/\d/;for("x"===t[e]&&(e++,n=/[\da-fA-F]/);e<t.length;e++){if(";"===t[e])return e;if(!t[e].match(n))break}return-1}(t,++e);let n=0;for(;e<t.length;e++,n++)if(!(t[e].match(/\w/)&&n<20)){if(";"===t[e])break;return-1}return e}function m(t,e,n){return{err:{code:t,msg:e,line:n.line||n,col:n.col}}}function E(t){return r(t)}function b(t){return r(t)}function N(t,e){const n=t.substring(0,e).split(/\r?\n/);return{line:n.length,col:n[n.length-1].length+1}}function y(t){return t.startIndex+t[1].length}const T={preserveOrder:!1,attributeNamePrefix:"@_",attributesGroupName:!1,textNodeName:"#text",ignoreAttributes:!0,removeNSPrefix:!1,allowBooleanAttributes:!1,parseTagValue:!0,parseAttributeValue:!1,trimValues:!0,cdataPropName:!1,numberParseOptions:{hex:!0,leadingZeros:!0,eNotation:!0},tagValueProcessor:function(t,e){return e},attributeValueProcessor:function(t,e){return e},stopNodes:[],alwaysCreateTextNode:!1,isArray:()=>!1,commentPropName:!1,unpairedTags:[],processEntities:!0,htmlEntities:!1,ignoreDeclaration:!1,ignorePiTags:!1,transformTagName:!1,transformAttributeName:!1,updateTag:function(t,e,n){return t},captureMetaData:!1,maxNestedTags:100,strictReservedNames:!0};function w(t){return"boolean"==typeof t?{enabled:t,maxEntitySize:1e4,maxExpansionDepth:10,maxTotalExpansions:1e3,maxExpandedLength:1e5,maxEntityCount:100,allowedTags:null,tagFilter:null}:"object"==typeof t&&null!==t?{enabled:!1!==t.enabled,maxEntitySize:t.maxEntitySize??1e4,maxExpansionDepth:t.maxExpansionDepth??10,maxTotalExpansions:t.maxTotalExpansions??1e3,maxExpandedLength:t.maxExpandedLength??1e5,maxEntityCount:t.maxEntityCount??100,allowedTags:t.allowedTags??null,tagFilter:t.tagFilter??null}:w(!0)}const v=function(t){const e=Object.assign({},T,t);return e.processEntities=w(e.processEntities),e};let O;O="function"!=typeof Symbol?"@@xmlMetadata":Symbol("XML Node Metadata");class I{constructor(t){this.tagname=t,this.child=[],this[":@"]=Object.create(null)}add(t,e){"__proto__"===t&&(t="#__proto__"),this.child.push({[t]:e})}addChild(t,e){"__proto__"===t.tagname&&(t.tagname="#__proto__"),t[":@"]&&Object.keys(t[":@"]).length>0?this.child.push({[t.tagname]:t.child,":@":t[":@"]}):this.child.push({[t.tagname]:t.child}),void 0!==e&&(this.child[this.child.length-1][O]={startIndex:e})}static getMetaDataSymbol(){return O}}class P{constructor(t){this.suppressValidationErr=!t,this.options=t}readDocType(t,e){const n=Object.create(null);let i=0;if("O"!==t[e+3]||"C"!==t[e+4]||"T"!==t[e+5]||"Y"!==t[e+6]||"P"!==t[e+7]||"E"!==t[e+8])throw new Error("Invalid Tag instead of DOCTYPE");{e+=9;let s=1,r=!1,o=!1,a="";for(;e<t.length;e++)if("<"!==t[e]||o)if(">"===t[e]){if(o?"-"===t[e-1]&&"-"===t[e-2]&&(o=!1,s--):s--,0===s)break}else"["===t[e]?r=!0:a+=t[e];else{if(r&&S(t,"!ENTITY",e)){let s,r;if(e+=7,[s,r,e]=this.readEntityExp(t,e+1,this.suppressValidationErr),-1===r.indexOf("&")){if(!1!==this.options.enabled&&this.options.maxEntityCount&&i>=this.options.maxEntityCount)throw new Error(`Entity count (${i+1}) exceeds maximum allowed (${this.options.maxEntityCount})`);const t=s.replace(/[.\-+*:]/g,"\\.");n[s]={regx:RegExp(`&${t};`,"g"),val:r},i++}}else if(r&&S(t,"!ELEMENT",e)){e+=8;const{index:n}=this.readElementExp(t,e+1);e=n}else if(r&&S(t,"!ATTLIST",e))e+=8;else if(r&&S(t,"!NOTATION",e)){e+=9;const{index:n}=this.readNotationExp(t,e+1,this.suppressValidationErr);e=n}else{if(!S(t,"!--",e))throw new Error("Invalid DOCTYPE");o=!0}s++,a=""}if(0!==s)throw new Error("Unclosed DOCTYPE")}return{entities:n,i:e}}readEntityExp(t,e){e=A(t,e);let n="";for(;e<t.length&&!/\s/.test(t[e])&&'"'!==t[e]&&"'"!==t[e];)n+=t[e],e++;if(C(n),e=A(t,e),!this.suppressValidationErr){if("SYSTEM"===t.substring(e,e+6).toUpperCase())throw new Error("External entities are not supported");if("%"===t[e])throw new Error("Parameter entities are not supported")}let i="";if([e,i]=this.readIdentifierVal(t,e,"entity"),!1!==this.options.enabled&&this.options.maxEntitySize&&i.length>this.options.maxEntitySize)throw new Error(`Entity "${n}" size (${i.length}) exceeds maximum allowed size (${this.options.maxEntitySize})`);return[n,i,--e]}readNotationExp(t,e){e=A(t,e);let n="";for(;e<t.length&&!/\s/.test(t[e]);)n+=t[e],e++;!this.suppressValidationErr&&C(n),e=A(t,e);const i=t.substring(e,e+6).toUpperCase();if(!this.suppressValidationErr&&"SYSTEM"!==i&&"PUBLIC"!==i)throw new Error(`Expected SYSTEM or PUBLIC, found "${i}"`);e+=i.length,e=A(t,e);let s=null,r=null;if("PUBLIC"===i)[e,s]=this.readIdentifierVal(t,e,"publicIdentifier"),'"'!==t[e=A(t,e)]&&"'"!==t[e]||([e,r]=this.readIdentifierVal(t,e,"systemIdentifier"));else if("SYSTEM"===i&&([e,r]=this.readIdentifierVal(t,e,"systemIdentifier"),!this.suppressValidationErr&&!r))throw new Error("Missing mandatory system identifier for SYSTEM notation");return{notationName:n,publicIdentifier:s,systemIdentifier:r,index:--e}}readIdentifierVal(t,e,n){let i="";const s=t[e];if('"'!==s&&"'"!==s)throw new Error(`Expected quoted string, found "${s}"`);for(e++;e<t.length&&t[e]!==s;)i+=t[e],e++;if(t[e]!==s)throw new Error(`Unterminated ${n} value`);return[++e,i]}readElementExp(t,e){e=A(t,e);let n="";for(;e<t.length&&!/\s/.test(t[e]);)n+=t[e],e++;if(!this.suppressValidationErr&&!r(n))throw new Error(`Invalid element name: "${n}"`);let i="";if("E"===t[e=A(t,e)]&&S(t,"MPTY",e))e+=4;else if("A"===t[e]&&S(t,"NY",e))e+=2;else if("("===t[e]){for(e++;e<t.length&&")"!==t[e];)i+=t[e],e++;if(")"!==t[e])throw new Error("Unterminated content model")}else if(!this.suppressValidationErr)throw new Error(`Invalid Element Expression, found "${t[e]}"`);return{elementName:n,contentModel:i.trim(),index:e}}readAttlistExp(t,e){e=A(t,e);let n="";for(;e<t.length&&!/\s/.test(t[e]);)n+=t[e],e++;C(n),e=A(t,e);let i="";for(;e<t.length&&!/\s/.test(t[e]);)i+=t[e],e++;if(!C(i))throw new Error(`Invalid attribute name: "${i}"`);e=A(t,e);let s="";if("NOTATION"===t.substring(e,e+8).toUpperCase()){if(s="NOTATION","("!==t[e=A(t,e+=8)])throw new Error(`Expected '(', found "${t[e]}"`);e++;let n=[];for(;e<t.length&&")"!==t[e];){let i="";for(;e<t.length&&"|"!==t[e]&&")"!==t[e];)i+=t[e],e++;if(i=i.trim(),!C(i))throw new Error(`Invalid notation name: "${i}"`);n.push(i),"|"===t[e]&&(e++,e=A(t,e))}if(")"!==t[e])throw new Error("Unterminated list of notations");e++,s+=" ("+n.join("|")+")"}else{for(;e<t.length&&!/\s/.test(t[e]);)s+=t[e],e++;const n=["CDATA","ID","IDREF","IDREFS","ENTITY","ENTITIES","NMTOKEN","NMTOKENS"];if(!this.suppressValidationErr&&!n.includes(s.toUpperCase()))throw new Error(`Invalid attribute type: "${s}"`)}e=A(t,e);let r="";return"#REQUIRED"===t.substring(e,e+8).toUpperCase()?(r="#REQUIRED",e+=8):"#IMPLIED"===t.substring(e,e+7).toUpperCase()?(r="#IMPLIED",e+=7):[e,r]=this.readIdentifierVal(t,e,"ATTLIST"),{elementName:n,attributeName:i,attributeType:s,defaultValue:r,index:e}}}const A=(t,e)=>{for(;e<t.length&&/\s/.test(t[e]);)e++;return e};function S(t,e,n){for(let i=0;i<e.length;i++)if(e[i]!==t[n+i+1])return!1;return!0}function C(t){if(r(t))return t;throw new Error(`Invalid entity name ${t}`)}const $=/^[-+]?0x[a-fA-F0-9]+$/,V=/^([\-\+])?(0*)([0-9]*(\.[0-9]*)?)$/,D={hex:!0,leadingZeros:!0,decimalPoint:".",eNotation:!0};const j=/^([-+])?(0*)(\d*(\.\d*)?[eE][-\+]?\d+)$/;class L{constructor(t){var e;if(this.options=t,this.currentNode=null,this.tagsNodeStack=[],this.docTypeEntities={},this.lastEntities={apos:{regex:/&(apos|#39|#x27);/g,val:"'"},gt:{regex:/&(gt|#62|#x3E);/g,val:">"},lt:{regex:/&(lt|#60|#x3C);/g,val:"<"},quot:{regex:/&(quot|#34|#x22);/g,val:'"'}},this.ampEntity={regex:/&(amp|#38|#x26);/g,val:"&"},this.htmlEntities={space:{regex:/&(nbsp|#160);/g,val:" "},cent:{regex:/&(cent|#162);/g,val:"¢"},pound:{regex:/&(pound|#163);/g,val:"£"},yen:{regex:/&(yen|#165);/g,val:"¥"},euro:{regex:/&(euro|#8364);/g,val:"€"},copyright:{regex:/&(copy|#169);/g,val:"©"},reg:{regex:/&(reg|#174);/g,val:"®"},inr:{regex:/&(inr|#8377);/g,val:"₹"},num_dec:{regex:/&#([0-9]{1,7});/g,val:(t,e)=>K(e,10,"&#")},num_hex:{regex:/&#x([0-9a-fA-F]{1,6});/g,val:(t,e)=>K(e,16,"&#x")}},this.addExternalEntities=F,this.parseXml=R,this.parseTextData=M,this.resolveNameSpace=k,this.buildAttributesMap=U,this.isItStopNode=X,this.replaceEntitiesValue=Y,this.readStopNodeData=q,this.saveTextToParentTag=G,this.addChild=B,this.ignoreAttributesFn="function"==typeof(e=this.options.ignoreAttributes)?e:Array.isArray(e)?t=>{for(const n of e){if("string"==typeof n&&t===n)return!0;if(n instanceof RegExp&&n.test(t))return!0}}:()=>!1,this.entityExpansionCount=0,this.currentExpandedLength=0,this.options.stopNodes&&this.options.stopNodes.length>0){this.stopNodesExact=new Set,this.stopNodesWildcard=new Set;for(let t=0;t<this.options.stopNodes.length;t++){const e=this.options.stopNodes[t];"string"==typeof e&&(e.startsWith("*.")?this.stopNodesWildcard.add(e.substring(2)):this.stopNodesExact.add(e))}}}}function F(t){const e=Object.keys(t);for(let n=0;n<e.length;n++){const i=e[n],s=i.replace(/[.\-+*:]/g,"\\.");this.lastEntities[i]={regex:new RegExp("&"+s+";","g"),val:t[i]}}}function M(t,e,n,i,s,r,o){if(void 0!==t&&(this.options.trimValues&&!i&&(t=t.trim()),t.length>0)){o||(t=this.replaceEntitiesValue(t,e,n));const i=this.options.tagValueProcessor(e,t,n,s,r);return null==i?t:typeof i!=typeof t||i!==t?i:this.options.trimValues||t.trim()===t?Z(t,this.options.parseTagValue,this.options.numberParseOptions):t}}function k(t){if(this.options.removeNSPrefix){const e=t.split(":"),n="/"===t.charAt(0)?"/":"";if("xmlns"===e[0])return"";2===e.length&&(t=n+e[1])}return t}const _=new RegExp("([^\\s=]+)\\s*(=\\s*(['\"])([\\s\\S]*?)\\3)?","gm");function U(t,e,n){if(!0!==this.options.ignoreAttributes&&"string"==typeof t){const i=s(t,_),r=i.length,o={};for(let t=0;t<r;t++){const s=this.resolveNameSpace(i[t][1]);if(this.ignoreAttributesFn(s,e))continue;let r=i[t][4],a=this.options.attributeNamePrefix+s;if(s.length)if(this.options.transformAttributeName&&(a=this.options.transformAttributeName(a)),"__proto__"===a&&(a="#__proto__"),void 0!==r){this.options.trimValues&&(r=r.trim()),r=this.replaceEntitiesValue(r,n,e);const t=this.options.attributeValueProcessor(s,r,e);o[a]=null==t?r:typeof t!=typeof r||t!==r?t:Z(r,this.options.parseAttributeValue,this.options.numberParseOptions)}else this.options.allowBooleanAttributes&&(o[a]=!0)}if(!Object.keys(o).length)return;if(this.options.attributesGroupName){const t={};return t[this.options.attributesGroupName]=o,t}return o}}const R=function(t){t=t.replace(/\r\n?/g,"\n");const e=new I("!xml");let n=e,i="",s="";this.entityExpansionCount=0,this.currentExpandedLength=0;const r=new P(this.options.processEntities);for(let o=0;o<t.length;o++)if("<"===t[o])if("/"===t[o+1]){const e=z(t,">",o,"Closing Tag is not closed.");let r=t.substring(o+2,e).trim();if(this.options.removeNSPrefix){const t=r.indexOf(":");-1!==t&&(r=r.substr(t+1))}this.options.transformTagName&&(r=this.options.transformTagName(r)),n&&(i=this.saveTextToParentTag(i,n,s));const a=s.substring(s.lastIndexOf(".")+1);if(r&&-1!==this.options.unpairedTags.indexOf(r))throw new Error(`Unpaired tag can not be used as closing tag: </${r}>`);let l=0;a&&-1!==this.options.unpairedTags.indexOf(a)?(l=s.lastIndexOf(".",s.lastIndexOf(".")-1),this.tagsNodeStack.pop()):l=s.lastIndexOf("."),s=s.substring(0,l),n=this.tagsNodeStack.pop(),i="",o=e}else if("?"===t[o+1]){let e=W(t,o,!1,"?>");if(!e)throw new Error("Pi Tag is not closed.");if(i=this.saveTextToParentTag(i,n,s),this.options.ignoreDeclaration&&"?xml"===e.tagName||this.options.ignorePiTags);else{const t=new I(e.tagName);t.add(this.options.textNodeName,""),e.tagName!==e.tagExp&&e.attrExpPresent&&(t[":@"]=this.buildAttributesMap(e.tagExp,s,e.tagName)),this.addChild(n,t,s,o)}o=e.closeIndex+1}else if("!--"===t.substr(o+1,3)){const e=z(t,"--\x3e",o+4,"Comment is not closed.");if(this.options.commentPropName){const r=t.substring(o+4,e-2);i=this.saveTextToParentTag(i,n,s),n.add(this.options.commentPropName,[{[this.options.textNodeName]:r}])}o=e}else if("!D"===t.substr(o+1,2)){const e=r.readDocType(t,o);this.docTypeEntities=e.entities,o=e.i}else if("!["===t.substr(o+1,2)){const e=z(t,"]]>",o,"CDATA is not closed.")-2,r=t.substring(o+9,e);i=this.saveTextToParentTag(i,n,s);let a=this.parseTextData(r,n.tagname,s,!0,!1,!0,!0);null==a&&(a=""),this.options.cdataPropName?n.add(this.options.cdataPropName,[{[this.options.textNodeName]:r}]):n.add(this.options.textNodeName,a),o=e+2}else{let r=W(t,o,this.options.removeNSPrefix),a=r.tagName;const l=r.rawTagName;let u=r.tagExp,d=r.attrExpPresent,h=r.closeIndex;if(this.options.transformTagName){const t=this.options.transformTagName(a);u===a&&(u=t),a=t}if(this.options.strictReservedNames&&(a===this.options.commentPropName||a===this.options.cdataPropName))throw new Error(`Invalid tag name: ${a}`);n&&i&&"!xml"!==n.tagname&&(i=this.saveTextToParentTag(i,n,s,!1));const p=n;p&&-1!==this.options.unpairedTags.indexOf(p.tagname)&&(n=this.tagsNodeStack.pop(),s=s.substring(0,s.lastIndexOf("."))),a!==e.tagname&&(s+=s?"."+a:a);const c=o;if(this.isItStopNode(this.stopNodesExact,this.stopNodesWildcard,s,a)){let e="";if(u.length>0&&u.lastIndexOf("/")===u.length-1)"/"===a[a.length-1]?(a=a.substr(0,a.length-1),s=s.substr(0,s.length-1),u=a):u=u.substr(0,u.length-1),o=r.closeIndex;else if(-1!==this.options.unpairedTags.indexOf(a))o=r.closeIndex;else{const n=this.readStopNodeData(t,l,h+1);if(!n)throw new Error(`Unexpected end of ${l}`);o=n.i,e=n.tagContent}const i=new I(a);a!==u&&d&&(i[":@"]=this.buildAttributesMap(u,s,a)),e&&(e=this.parseTextData(e,a,s,!0,d,!0,!0)),s=s.substr(0,s.lastIndexOf(".")),i.add(this.options.textNodeName,e),this.addChild(n,i,s,c)}else{if(u.length>0&&u.lastIndexOf("/")===u.length-1){if("/"===a[a.length-1]?(a=a.substr(0,a.length-1),s=s.substr(0,s.length-1),u=a):u=u.substr(0,u.length-1),this.options.transformTagName){const t=this.options.transformTagName(a);u===a&&(u=t),a=t}const t=new I(a);a!==u&&d&&(t[":@"]=this.buildAttributesMap(u,s,a)),this.addChild(n,t,s,c),s=s.substr(0,s.lastIndexOf("."))}else{if(-1!==this.options.unpairedTags.indexOf(a)){const t=new I(a);a!==u&&d&&(t[":@"]=this.buildAttributesMap(u,s)),this.addChild(n,t,s,c),s=s.substr(0,s.lastIndexOf(".")),o=r.closeIndex;continue}{const t=new I(a);if(this.tagsNodeStack.length>this.options.maxNestedTags)throw new Error("Maximum nested tags exceeded");this.tagsNodeStack.push(n),a!==u&&d&&(t[":@"]=this.buildAttributesMap(u,s,a)),this.addChild(n,t,s,c),n=t}}i="",o=h}}else i+=t[o];return e.child};function B(t,e,n,i){this.options.captureMetaData||(i=void 0);const s=this.options.updateTag(e.tagname,n,e[":@"]);!1===s||("string"==typeof s?(e.tagname=s,t.addChild(e,i)):t.addChild(e,i))}const Y=function(t,e,n){if(-1===t.indexOf("&"))return t;const i=this.options.processEntities;if(!i.enabled)return t;if(i.allowedTags&&!i.allowedTags.includes(e))return t;if(i.tagFilter&&!i.tagFilter(e,n))return t;for(let e in this.docTypeEntities){const n=this.docTypeEntities[e],s=t.match(n.regx);if(s){if(this.entityExpansionCount+=s.length,i.maxTotalExpansions&&this.entityExpansionCount>i.maxTotalExpansions)throw new Error(`Entity expansion limit exceeded: ${this.entityExpansionCount} > ${i.maxTotalExpansions}`);const e=t.length;if(t=t.replace(n.regx,n.val),i.maxExpandedLength&&(this.currentExpandedLength+=t.length-e,this.currentExpandedLength>i.maxExpandedLength))throw new Error(`Total expanded content size exceeded: ${this.currentExpandedLength} > ${i.maxExpandedLength}`)}}if(-1===t.indexOf("&"))return t;for(let e in this.lastEntities){const n=this.lastEntities[e];t=t.replace(n.regex,n.val)}if(-1===t.indexOf("&"))return t;if(this.options.htmlEntities)for(let e in this.htmlEntities){const n=this.htmlEntities[e];t=t.replace(n.regex,n.val)}return t.replace(this.ampEntity.regex,this.ampEntity.val)};function G(t,e,n,i){return t&&(void 0===i&&(i=0===e.child.length),void 0!==(t=this.parseTextData(t,e.tagname,n,!1,!!e[":@"]&&0!==Object.keys(e[":@"]).length,i))&&""!==t&&e.add(this.options.textNodeName,t),t=""),t}function X(t,e,n,i){return!(!e||!e.has(i))||!(!t||!t.has(n))}function z(t,e,n,i){const s=t.indexOf(e,n);if(-1===s)throw new Error(i);return s+e.length-1}function W(t,e,n,i=">"){const s=function(t,e,n=">"){let i,s="";for(let r=e;r<t.length;r++){let e=t[r];if(i)e===i&&(i="");else if('"'===e||"'"===e)i=e;else if(e===n[0]){if(!n[1])return{data:s,index:r};if(t[r+1]===n[1])return{data:s,index:r}}else"\t"===e&&(e=" ");s+=e}}(t,e+1,i);if(!s)return;let r=s.data;const o=s.index,a=r.search(/\s/);let l=r,u=!0;-1!==a&&(l=r.substring(0,a),r=r.substring(a+1).trimStart());const d=l;if(n){const t=l.indexOf(":");-1!==t&&(l=l.substr(t+1),u=l!==s.data.substr(t+1))}return{tagName:l,tagExp:r,closeIndex:o,attrExpPresent:u,rawTagName:d}}function q(t,e,n){const i=n;let s=1;for(;n<t.length;n++)if("<"===t[n])if("/"===t[n+1]){const r=z(t,">",n,`${e} is not closed`);if(t.substring(n+2,r).trim()===e&&(s--,0===s))return{tagContent:t.substring(i,n),i:r};n=r}else if("?"===t[n+1])n=z(t,"?>",n+1,"StopNode is not closed.");else if("!--"===t.substr(n+1,3))n=z(t,"--\x3e",n+3,"StopNode is not closed.");else if("!["===t.substr(n+1,2))n=z(t,"]]>",n,"StopNode is not closed.")-2;else{const i=W(t,n,">");i&&((i&&i.tagName)===e&&"/"!==i.tagExp[i.tagExp.length-1]&&s++,n=i.closeIndex)}}function Z(t,e,n){if(e&&"string"==typeof t){const e=t.trim();return"true"===e||"false"!==e&&function(t,e={}){if(e=Object.assign({},D,e),!t||"string"!=typeof t)return t;let n=t.trim();if(void 0!==e.skipLike&&e.skipLike.test(n))return t;if("0"===t)return 0;if(e.hex&&$.test(n))return function(t){if(parseInt)return parseInt(t,16);if(Number.parseInt)return Number.parseInt(t,16);if(window&&window.parseInt)return window.parseInt(t,16);throw new Error("parseInt, Number.parseInt, window.parseInt are not supported")}(n);if(n.includes("e")||n.includes("E"))return function(t,e,n){if(!n.eNotation)return t;const i=e.match(j);if(i){let s=i[1]||"";const r=-1===i[3].indexOf("e")?"E":"e",o=i[2],a=s?t[o.length+1]===r:t[o.length]===r;return o.length>1&&a?t:1!==o.length||!i[3].startsWith(`.${r}`)&&i[3][0]!==r?n.leadingZeros&&!a?(e=(i[1]||"")+i[3],Number(e)):t:Number(e)}return t}(t,n,e);{const s=V.exec(n);if(s){const r=s[1]||"",o=s[2];let a=(i=s[3])&&-1!==i.indexOf(".")?("."===(i=i.replace(/0+$/,""))?i="0":"."===i[0]?i="0"+i:"."===i[i.length-1]&&(i=i.substring(0,i.length-1)),i):i;const l=r?"."===t[o.length+1]:"."===t[o.length];if(!e.leadingZeros&&(o.length>1||1===o.length&&!l))return t;{const i=Number(n),s=String(i);if(0===i)return i;if(-1!==s.search(/[eE]/))return e.eNotation?i:t;if(-1!==n.indexOf("."))return"0"===s||s===a||s===`${r}${a}`?i:t;let l=o?a:n;return o?l===s||r+l===s?i:t:l===s||l===r+s?i:t}}return t}var i}(t,n)}return void 0!==t?t:""}function K(t,e,n){const i=Number.parseInt(t,e);return i>=0&&i<=1114111?String.fromCodePoint(i):n+t+";"}const Q=I.getMetaDataSymbol();function J(t,e){return H(t,e)}function H(t,e,n){let i;const s={};for(let r=0;r<t.length;r++){const o=t[r],a=tt(o);let l="";if(l=void 0===n?a:n+"."+a,a===e.textNodeName)void 0===i?i=o[a]:i+=""+o[a];else{if(void 0===a)continue;if(o[a]){let t=H(o[a],e,l);const n=nt(t,e);o[":@"]?et(t,o[":@"],l,e):1!==Object.keys(t).length||void 0===t[e.textNodeName]||e.alwaysCreateTextNode?0===Object.keys(t).length&&(e.alwaysCreateTextNode?t[e.textNodeName]="":t=""):t=t[e.textNodeName],void 0!==o[Q]&&"object"==typeof t&&null!==t&&(t[Q]=o[Q]),void 0!==s[a]&&Object.prototype.hasOwnProperty.call(s,a)?(Array.isArray(s[a])||(s[a]=[s[a]]),s[a].push(t)):e.isArray(a,l,n)?s[a]=[t]:s[a]=t}}}return"string"==typeof i?i.length>0&&(s[e.textNodeName]=i):void 0!==i&&(s[e.textNodeName]=i),s}function tt(t){const e=Object.keys(t);for(let t=0;t<e.length;t++){const n=e[t];if(":@"!==n)return n}}function et(t,e,n,i){if(e){const s=Object.keys(e),r=s.length;for(let o=0;o<r;o++){const r=s[o];i.isArray(r,n+"."+r,!0,!0)?t[r]=[e[r]]:t[r]=e[r]}}}function nt(t,e){const{textNodeName:n}=e,i=Object.keys(t).length;return 0===i||!(1!==i||!t[n]&&"boolean"!=typeof t[n]&&0!==t[n])}class it{constructor(t){this.externalEntities={},this.options=v(t)}parse(t,e){if("string"!=typeof t&&t.toString)t=t.toString();else if("string"!=typeof t)throw new Error("XML data is accepted in String or Bytes[] form.");if(e){!0===e&&(e={});const n=a(t,e);if(!0!==n)throw Error(`${n.err.msg}:${n.err.line}:${n.err.col}`)}const n=new L(this.options);n.addExternalEntities(this.externalEntities);const i=n.parseXml(t);return this.options.preserveOrder||void 0===i?i:J(i,this.options)}addEntity(t,e){if(-1!==e.indexOf("&"))throw new Error("Entity value can't have '&'");if(-1!==t.indexOf("&")||-1!==t.indexOf(";"))throw new Error("An entity must be set without '&' and ';'. Eg. use '#xD' for '&#xD;'");if("&"===e)throw new Error("An entity with value '&' is not permitted");this.externalEntities[t]=e}static getMetaDataSymbol(){return I.getMetaDataSymbol()}}function st(t,e){let n="";return e.format&&e.indentBy.length>0&&(n="\n"),rt(t,e,"",n)}function rt(t,e,n,i){let s="",r=!1;if(!Array.isArray(t)){if(null!=t){let n=t.toString();return n=ut(n,e),n}return""}for(let o=0;o<t.length;o++){const a=t[o],l=ot(a);if(void 0===l)continue;let u="";if(u=0===n.length?l:`${n}.${l}`,l===e.textNodeName){let t=a[l];lt(u,e)||(t=e.tagValueProcessor(l,t),t=ut(t,e)),r&&(s+=i),s+=t,r=!1;continue}if(l===e.cdataPropName){r&&(s+=i),s+=`<![CDATA[${a[l][0][e.textNodeName]}]]>`,r=!1;continue}if(l===e.commentPropName){s+=i+`\x3c!--${a[l][0][e.textNodeName]}--\x3e`,r=!0;continue}if("?"===l[0]){const t=at(a[":@"],e),n="?xml"===l?"":i;let o=a[l][0][e.textNodeName];o=0!==o.length?" "+o:"",s+=n+`<${l}${o}${t}?>`,r=!0;continue}let d=i;""!==d&&(d+=e.indentBy);const h=i+`<${l}${at(a[":@"],e)}`,p=rt(a[l],e,u,d);-1!==e.unpairedTags.indexOf(l)?e.suppressUnpairedNode?s+=h+">":s+=h+"/>":p&&0!==p.length||!e.suppressEmptyNode?p&&p.endsWith(">")?s+=h+`>${p}${i}</${l}>`:(s+=h+">",p&&""!==i&&(p.includes("/>")||p.includes("</"))?s+=i+e.indentBy+p+i:s+=p,s+=`</${l}>`):s+=h+"/>",r=!0}return s}function ot(t){const e=Object.keys(t);for(let n=0;n<e.length;n++){const i=e[n];if(Object.prototype.hasOwnProperty.call(t,i)&&":@"!==i)return i}}function at(t,e){let n="";if(t&&!e.ignoreAttributes)for(let i in t){if(!Object.prototype.hasOwnProperty.call(t,i))continue;let s=e.attributeValueProcessor(i,t[i]);s=ut(s,e),!0===s&&e.suppressBooleanAttributes?n+=` ${i.substr(e.attributeNamePrefix.length)}`:n+=` ${i.substr(e.attributeNamePrefix.length)}="${s}"`}return n}function lt(t,e){let n=(t=t.substr(0,t.length-e.textNodeName.length-1)).substr(t.lastIndexOf(".")+1);for(let i in e.stopNodes)if(e.stopNodes[i]===t||e.stopNodes[i]==="*."+n)return!0;return!1}function ut(t,e){if(t&&t.length>0&&e.processEntities)for(let n=0;n<e.entities.length;n++){const i=e.entities[n];t=t.replace(i.regex,i.val)}return t}const dt={attributeNamePrefix:"@_",attributesGroupName:!1,textNodeName:"#text",ignoreAttributes:!0,cdataPropName:!1,format:!1,indentBy:"  ",suppressEmptyNode:!1,suppressUnpairedNode:!0,suppressBooleanAttributes:!0,tagValueProcessor:function(t,e){return e},attributeValueProcessor:function(t,e){return e},preserveOrder:!1,commentPropName:!1,unpairedTags:[],entities:[{regex:new RegExp("&","g"),val:"&amp;"},{regex:new RegExp(">","g"),val:"&gt;"},{regex:new RegExp("<","g"),val:"&lt;"},{regex:new RegExp("'","g"),val:"&apos;"},{regex:new RegExp('"',"g"),val:"&quot;"}],processEntities:!0,stopNodes:[],oneListGroup:!1};function ht(t){var e;this.options=Object.assign({},dt,t),!0===this.options.ignoreAttributes||this.options.attributesGroupName?this.isAttribute=function(){return!1}:(this.ignoreAttributesFn="function"==typeof(e=this.options.ignoreAttributes)?e:Array.isArray(e)?t=>{for(const n of e){if("string"==typeof n&&t===n)return!0;if(n instanceof RegExp&&n.test(t))return!0}}:()=>!1,this.attrPrefixLen=this.options.attributeNamePrefix.length,this.isAttribute=ft),this.processTextOrObjNode=pt,this.options.format?(this.indentate=ct,this.tagEndChar=">\n",this.newLine="\n"):(this.indentate=function(){return""},this.tagEndChar=">",this.newLine="")}function pt(t,e,n,i){const s=this.j2x(t,n+1,i.concat(e));return void 0!==t[this.options.textNodeName]&&1===Object.keys(t).length?this.buildTextValNode(t[this.options.textNodeName],e,s.attrStr,n):this.buildObjectNode(s.val,e,s.attrStr,n)}function ct(t){return this.options.indentBy.repeat(t)}function ft(t){return!(!t.startsWith(this.options.attributeNamePrefix)||t===this.options.textNodeName)&&t.substr(this.attrPrefixLen)}ht.prototype.build=function(t){return this.options.preserveOrder?st(t,this.options):(Array.isArray(t)&&this.options.arrayNodeName&&this.options.arrayNodeName.length>1&&(t={[this.options.arrayNodeName]:t}),this.j2x(t,0,[]).val)},ht.prototype.j2x=function(t,e,n){let i="",s="";const r=n.join(".");for(let o in t)if(Object.prototype.hasOwnProperty.call(t,o))if(void 0===t[o])this.isAttribute(o)&&(s+="");else if(null===t[o])this.isAttribute(o)||o===this.options.cdataPropName?s+="":"?"===o[0]?s+=this.indentate(e)+"<"+o+"?"+this.tagEndChar:s+=this.indentate(e)+"<"+o+"/"+this.tagEndChar;else if(t[o]instanceof Date)s+=this.buildTextValNode(t[o],o,"",e);else if("object"!=typeof t[o]){const n=this.isAttribute(o);if(n&&!this.ignoreAttributesFn(n,r))i+=this.buildAttrPairStr(n,""+t[o]);else if(!n)if(o===this.options.textNodeName){let e=this.options.tagValueProcessor(o,""+t[o]);s+=this.replaceEntitiesValue(e)}else s+=this.buildTextValNode(t[o],o,"",e)}else if(Array.isArray(t[o])){const i=t[o].length;let r="",a="";for(let l=0;l<i;l++){const i=t[o][l];if(void 0===i);else if(null===i)"?"===o[0]?s+=this.indentate(e)+"<"+o+"?"+this.tagEndChar:s+=this.indentate(e)+"<"+o+"/"+this.tagEndChar;else if("object"==typeof i)if(this.options.oneListGroup){const t=this.j2x(i,e+1,n.concat(o));r+=t.val,this.options.attributesGroupName&&i.hasOwnProperty(this.options.attributesGroupName)&&(a+=t.attrStr)}else r+=this.processTextOrObjNode(i,o,e,n);else if(this.options.oneListGroup){let t=this.options.tagValueProcessor(o,i);t=this.replaceEntitiesValue(t),r+=t}else r+=this.buildTextValNode(i,o,"",e)}this.options.oneListGroup&&(r=this.buildObjectNode(r,o,a,e)),s+=r}else if(this.options.attributesGroupName&&o===this.options.attributesGroupName){const e=Object.keys(t[o]),n=e.length;for(let s=0;s<n;s++)i+=this.buildAttrPairStr(e[s],""+t[o][e[s]])}else s+=this.processTextOrObjNode(t[o],o,e,n);return{attrStr:i,val:s}},ht.prototype.buildAttrPairStr=function(t,e){return e=this.options.attributeValueProcessor(t,""+e),e=this.replaceEntitiesValue(e),this.options.suppressBooleanAttributes&&"true"===e?" "+t:" "+t+'="'+e+'"'},ht.prototype.buildObjectNode=function(t,e,n,i){if(""===t)return"?"===e[0]?this.indentate(i)+"<"+e+n+"?"+this.tagEndChar:this.indentate(i)+"<"+e+n+this.closeTag(e)+this.tagEndChar;{let s="</"+e+this.tagEndChar,r="";return"?"===e[0]&&(r="?",s=""),!n&&""!==n||-1!==t.indexOf("<")?!1!==this.options.commentPropName&&e===this.options.commentPropName&&0===r.length?this.indentate(i)+`\x3c!--${t}--\x3e`+this.newLine:this.indentate(i)+"<"+e+n+r+this.tagEndChar+t+this.indentate(i)+s:this.indentate(i)+"<"+e+n+r+">"+t+s}},ht.prototype.closeTag=function(t){let e="";return-1!==this.options.unpairedTags.indexOf(t)?this.options.suppressUnpairedNode||(e="/"):e=this.options.suppressEmptyNode?"/":`></${t}`,e},ht.prototype.buildTextValNode=function(t,e,n,i){if(!1!==this.options.cdataPropName&&e===this.options.cdataPropName)return this.indentate(i)+`<![CDATA[${t}]]>`+this.newLine;if(!1!==this.options.commentPropName&&e===this.options.commentPropName)return this.indentate(i)+`\x3c!--${t}--\x3e`+this.newLine;if("?"===e[0])return this.indentate(i)+"<"+e+n+"?"+this.tagEndChar;{let s=this.options.tagValueProcessor(e,t);return s=this.replaceEntitiesValue(s),""===s?this.indentate(i)+"<"+e+n+this.closeTag(e)+this.tagEndChar:this.indentate(i)+"<"+e+n+">"+s+"</"+e+this.tagEndChar}},ht.prototype.replaceEntitiesValue=function(t){if(t&&t.length>0&&this.options.processEntities)for(let e=0;e<this.options.entities.length;e++){const n=this.options.entities[e];t=t.replace(n.regex,n.val)}return t};const gt=ht,xt={validate:a};module.exports=e})();
 
 /***/ }),
 
@@ -86696,6 +85647,8 @@ var app = __nccwpck_require__(6498);
 ;// CONCATENATED MODULE: ./node_modules/firebase-admin/lib/esm/app/index.js
 
 
+const AppErrorCodes = app.AppErrorCodes;
+const FirebaseAppError = app.FirebaseAppError;
 const SDK_VERSION = app.SDK_VERSION;
 const applicationDefault = app.applicationDefault;
 const cert = app.cert;
@@ -86765,28 +85718,14 @@ const run = async () => {
 /***/ 5458:
 /***/ ((module) => {
 
-module.exports = JSON.parse('{"name":"@google-cloud/storage","description":"Cloud Storage Client Library for Node.js","version":"7.10.0","license":"Apache-2.0","author":"Google Inc.","engines":{"node":">=14"},"repository":"googleapis/nodejs-storage","main":"./build/cjs/src/index.js","types":"./build/cjs/src/index.d.ts","type":"module","exports":{".":{"import":{"types":"./build/esm/src/index.d.ts","default":"./build/esm/src/index.js"},"require":{"types":"./build/cjs/src/index.d.ts","default":"./build/cjs/src/index.js"}}},"files":["build/cjs/src","build/cjs/package.json","!build/cjs/src/**/*.map","build/esm/src","!build/esm/src/**/*.map"],"keywords":["google apis client","google api client","google apis","google api","google","google cloud platform","google cloud","cloud","google storage","storage"],"scripts":{"all-test":"npm test && npm run system-test && npm run samples-test","benchwrapper":"node bin/benchwrapper.js","check":"gts check","clean":"rm -rf build/","compile:cjs":"tsc -p ./tsconfig.cjs.json","compile:esm":"tsc -p .","compile":"npm run compile:cjs && npm run compile:esm","conformance-test":"mocha --parallel build/cjs/conformance-test/ --require build/cjs/conformance-test/globalHooks.js","docs-test":"linkinator docs","docs":"jsdoc -c .jsdoc.json","fix":"gts fix","lint":"gts check","postcompile":"cp ./src/package-json-helper.cjs ./build/cjs/src && cp ./src/package-json-helper.cjs ./build/esm/src","postcompile:cjs":"babel --plugins gapic-tools/build/src/replaceImportMetaUrl,gapic-tools/build/src/toggleESMFlagVariable build/cjs/src/util.js -o build/cjs/src/util.js && cp internal-tooling/helpers/package.cjs.json build/cjs/package.json","precompile":"rm -rf build/","preconformance-test":"npm run compile:cjs -- --sourceMap","predocs-test":"npm run docs","predocs":"npm run compile:cjs -- --sourceMap","prelint":"cd samples; npm link ../; npm install","prepare":"npm run compile","presystem-test:esm":"npm run compile:esm","presystem-test":"npm run compile -- --sourceMap","pretest":"npm run compile -- --sourceMap","samples-test":"npm link && cd samples/ && npm link ../ && npm test && cd ../","system-test:esm":"mocha build/esm/system-test --timeout 600000 --exit","system-test":"mocha build/cjs/system-test --timeout 600000 --exit","test":"c8 mocha build/cjs/test"},"dependencies":{"@google-cloud/paginator":"^5.0.0","@google-cloud/projectify":"^4.0.0","@google-cloud/promisify":"^4.0.0","abort-controller":"^3.0.0","async-retry":"^1.3.3","duplexify":"^4.1.3","ent":"^2.2.0","fast-xml-parser":"^4.3.0","gaxios":"^6.0.2","google-auth-library":"^9.6.3","mime":"^3.0.0","p-limit":"^3.0.1","retry-request":"^7.0.0","teeny-request":"^9.0.0","uuid":"^8.0.0"},"devDependencies":{"@babel/cli":"^7.22.10","@babel/core":"^7.22.11","@google-cloud/pubsub":"^4.0.0","@grpc/grpc-js":"^1.0.3","@grpc/proto-loader":"^0.7.0","@types/async-retry":"^1.4.3","@types/ent":"^2.2.1","@types/mime":"^3.0.0","@types/mocha":"^9.1.1","@types/mockery":"^1.4.29","@types/node":"^20.4.4","@types/node-fetch":"^2.1.3","@types/proxyquire":"^1.3.28","@types/request":"^2.48.4","@types/sinon":"^17.0.0","@types/tmp":"0.2.6","@types/uuid":"^8.0.0","@types/yargs":"^17.0.10","c8":"^9.0.0","form-data":"^4.0.0","gapic-tools":"^0.4.0","gts":"^5.0.0","jsdoc":"^4.0.0","jsdoc-fresh":"^3.0.0","jsdoc-region-tag":"^3.0.0","linkinator":"^4.0.0","mocha":"^9.2.2","mockery":"^2.1.0","nock":"~13.5.0","node-fetch":"^2.6.7","pack-n-play":"^2.0.0","proxyquire":"^2.1.3","sinon":"^17.0.0","tmp":"^0.2.0","typescript":"^5.1.6","yargs":"^17.3.1"}}');
-
-/***/ }),
-
-/***/ 2077:
-/***/ ((module) => {
-
-module.exports = JSON.parse('{"Aacute;":"Á","Aacute":"Á","aacute;":"á","aacute":"á","Abreve;":"Ă","abreve;":"ă","ac;":"∾","acd;":"∿","acE;":"∾̳","Acirc;":"Â","Acirc":"Â","acirc;":"â","acirc":"â","acute;":"´","acute":"´","Acy;":"А","acy;":"а","AElig;":"Æ","AElig":"Æ","aelig;":"æ","aelig":"æ","af;":"⁡","Afr;":"𝔄","afr;":"𝔞","Agrave;":"À","Agrave":"À","agrave;":"à","agrave":"à","alefsym;":"ℵ","aleph;":"ℵ","Alpha;":"Α","alpha;":"α","Amacr;":"Ā","amacr;":"ā","amalg;":"⨿","AMP;":"&","AMP":"&","amp;":"&","amp":"&","And;":"⩓","and;":"∧","andand;":"⩕","andd;":"⩜","andslope;":"⩘","andv;":"⩚","ang;":"∠","ange;":"⦤","angle;":"∠","angmsd;":"∡","angmsdaa;":"⦨","angmsdab;":"⦩","angmsdac;":"⦪","angmsdad;":"⦫","angmsdae;":"⦬","angmsdaf;":"⦭","angmsdag;":"⦮","angmsdah;":"⦯","angrt;":"∟","angrtvb;":"⊾","angrtvbd;":"⦝","angsph;":"∢","angst;":"Å","angzarr;":"⍼","Aogon;":"Ą","aogon;":"ą","Aopf;":"𝔸","aopf;":"𝕒","ap;":"≈","apacir;":"⩯","apE;":"⩰","ape;":"≊","apid;":"≋","apos;":"\'","ApplyFunction;":"⁡","approx;":"≈","approxeq;":"≊","Aring;":"Å","Aring":"Å","aring;":"å","aring":"å","Ascr;":"𝒜","ascr;":"𝒶","Assign;":"≔","ast;":"*","asymp;":"≈","asympeq;":"≍","Atilde;":"Ã","Atilde":"Ã","atilde;":"ã","atilde":"ã","Auml;":"Ä","Auml":"Ä","auml;":"ä","auml":"ä","awconint;":"∳","awint;":"⨑","backcong;":"≌","backepsilon;":"϶","backprime;":"‵","backsim;":"∽","backsimeq;":"⋍","Backslash;":"∖","Barv;":"⫧","barvee;":"⊽","Barwed;":"⌆","barwed;":"⌅","barwedge;":"⌅","bbrk;":"⎵","bbrktbrk;":"⎶","bcong;":"≌","Bcy;":"Б","bcy;":"б","bdquo;":"„","becaus;":"∵","Because;":"∵","because;":"∵","bemptyv;":"⦰","bepsi;":"϶","bernou;":"ℬ","Bernoullis;":"ℬ","Beta;":"Β","beta;":"β","beth;":"ℶ","between;":"≬","Bfr;":"𝔅","bfr;":"𝔟","bigcap;":"⋂","bigcirc;":"◯","bigcup;":"⋃","bigodot;":"⨀","bigoplus;":"⨁","bigotimes;":"⨂","bigsqcup;":"⨆","bigstar;":"★","bigtriangledown;":"▽","bigtriangleup;":"△","biguplus;":"⨄","bigvee;":"⋁","bigwedge;":"⋀","bkarow;":"⤍","blacklozenge;":"⧫","blacksquare;":"▪","blacktriangle;":"▴","blacktriangledown;":"▾","blacktriangleleft;":"◂","blacktriangleright;":"▸","blank;":"␣","blk12;":"▒","blk14;":"░","blk34;":"▓","block;":"█","bne;":"=⃥","bnequiv;":"≡⃥","bNot;":"⫭","bnot;":"⌐","Bopf;":"𝔹","bopf;":"𝕓","bot;":"⊥","bottom;":"⊥","bowtie;":"⋈","boxbox;":"⧉","boxDL;":"╗","boxDl;":"╖","boxdL;":"╕","boxdl;":"┐","boxDR;":"╔","boxDr;":"╓","boxdR;":"╒","boxdr;":"┌","boxH;":"═","boxh;":"─","boxHD;":"╦","boxHd;":"╤","boxhD;":"╥","boxhd;":"┬","boxHU;":"╩","boxHu;":"╧","boxhU;":"╨","boxhu;":"┴","boxminus;":"⊟","boxplus;":"⊞","boxtimes;":"⊠","boxUL;":"╝","boxUl;":"╜","boxuL;":"╛","boxul;":"┘","boxUR;":"╚","boxUr;":"╙","boxuR;":"╘","boxur;":"└","boxV;":"║","boxv;":"│","boxVH;":"╬","boxVh;":"╫","boxvH;":"╪","boxvh;":"┼","boxVL;":"╣","boxVl;":"╢","boxvL;":"╡","boxvl;":"┤","boxVR;":"╠","boxVr;":"╟","boxvR;":"╞","boxvr;":"├","bprime;":"‵","Breve;":"˘","breve;":"˘","brvbar;":"¦","brvbar":"¦","Bscr;":"ℬ","bscr;":"𝒷","bsemi;":"⁏","bsim;":"∽","bsime;":"⋍","bsol;":"\\\\","bsolb;":"⧅","bsolhsub;":"⟈","bull;":"•","bullet;":"•","bump;":"≎","bumpE;":"⪮","bumpe;":"≏","Bumpeq;":"≎","bumpeq;":"≏","Cacute;":"Ć","cacute;":"ć","Cap;":"⋒","cap;":"∩","capand;":"⩄","capbrcup;":"⩉","capcap;":"⩋","capcup;":"⩇","capdot;":"⩀","CapitalDifferentialD;":"ⅅ","caps;":"∩︀","caret;":"⁁","caron;":"ˇ","Cayleys;":"ℭ","ccaps;":"⩍","Ccaron;":"Č","ccaron;":"č","Ccedil;":"Ç","Ccedil":"Ç","ccedil;":"ç","ccedil":"ç","Ccirc;":"Ĉ","ccirc;":"ĉ","Cconint;":"∰","ccups;":"⩌","ccupssm;":"⩐","Cdot;":"Ċ","cdot;":"ċ","cedil;":"¸","cedil":"¸","Cedilla;":"¸","cemptyv;":"⦲","cent;":"¢","cent":"¢","CenterDot;":"·","centerdot;":"·","Cfr;":"ℭ","cfr;":"𝔠","CHcy;":"Ч","chcy;":"ч","check;":"✓","checkmark;":"✓","Chi;":"Χ","chi;":"χ","cir;":"○","circ;":"ˆ","circeq;":"≗","circlearrowleft;":"↺","circlearrowright;":"↻","circledast;":"⊛","circledcirc;":"⊚","circleddash;":"⊝","CircleDot;":"⊙","circledR;":"®","circledS;":"Ⓢ","CircleMinus;":"⊖","CirclePlus;":"⊕","CircleTimes;":"⊗","cirE;":"⧃","cire;":"≗","cirfnint;":"⨐","cirmid;":"⫯","cirscir;":"⧂","ClockwiseContourIntegral;":"∲","CloseCurlyDoubleQuote;":"”","CloseCurlyQuote;":"’","clubs;":"♣","clubsuit;":"♣","Colon;":"∷","colon;":":","Colone;":"⩴","colone;":"≔","coloneq;":"≔","comma;":",","commat;":"@","comp;":"∁","compfn;":"∘","complement;":"∁","complexes;":"ℂ","cong;":"≅","congdot;":"⩭","Congruent;":"≡","Conint;":"∯","conint;":"∮","ContourIntegral;":"∮","Copf;":"ℂ","copf;":"𝕔","coprod;":"∐","Coproduct;":"∐","COPY;":"©","COPY":"©","copy;":"©","copy":"©","copysr;":"℗","CounterClockwiseContourIntegral;":"∳","crarr;":"↵","Cross;":"⨯","cross;":"✗","Cscr;":"𝒞","cscr;":"𝒸","csub;":"⫏","csube;":"⫑","csup;":"⫐","csupe;":"⫒","ctdot;":"⋯","cudarrl;":"⤸","cudarrr;":"⤵","cuepr;":"⋞","cuesc;":"⋟","cularr;":"↶","cularrp;":"⤽","Cup;":"⋓","cup;":"∪","cupbrcap;":"⩈","CupCap;":"≍","cupcap;":"⩆","cupcup;":"⩊","cupdot;":"⊍","cupor;":"⩅","cups;":"∪︀","curarr;":"↷","curarrm;":"⤼","curlyeqprec;":"⋞","curlyeqsucc;":"⋟","curlyvee;":"⋎","curlywedge;":"⋏","curren;":"¤","curren":"¤","curvearrowleft;":"↶","curvearrowright;":"↷","cuvee;":"⋎","cuwed;":"⋏","cwconint;":"∲","cwint;":"∱","cylcty;":"⌭","Dagger;":"‡","dagger;":"†","daleth;":"ℸ","Darr;":"↡","dArr;":"⇓","darr;":"↓","dash;":"‐","Dashv;":"⫤","dashv;":"⊣","dbkarow;":"⤏","dblac;":"˝","Dcaron;":"Ď","dcaron;":"ď","Dcy;":"Д","dcy;":"д","DD;":"ⅅ","dd;":"ⅆ","ddagger;":"‡","ddarr;":"⇊","DDotrahd;":"⤑","ddotseq;":"⩷","deg;":"°","deg":"°","Del;":"∇","Delta;":"Δ","delta;":"δ","demptyv;":"⦱","dfisht;":"⥿","Dfr;":"𝔇","dfr;":"𝔡","dHar;":"⥥","dharl;":"⇃","dharr;":"⇂","DiacriticalAcute;":"´","DiacriticalDot;":"˙","DiacriticalDoubleAcute;":"˝","DiacriticalGrave;":"`","DiacriticalTilde;":"˜","diam;":"⋄","Diamond;":"⋄","diamond;":"⋄","diamondsuit;":"♦","diams;":"♦","die;":"¨","DifferentialD;":"ⅆ","digamma;":"ϝ","disin;":"⋲","div;":"÷","divide;":"÷","divide":"÷","divideontimes;":"⋇","divonx;":"⋇","DJcy;":"Ђ","djcy;":"ђ","dlcorn;":"⌞","dlcrop;":"⌍","dollar;":"$","Dopf;":"𝔻","dopf;":"𝕕","Dot;":"¨","dot;":"˙","DotDot;":"⃜","doteq;":"≐","doteqdot;":"≑","DotEqual;":"≐","dotminus;":"∸","dotplus;":"∔","dotsquare;":"⊡","doublebarwedge;":"⌆","DoubleContourIntegral;":"∯","DoubleDot;":"¨","DoubleDownArrow;":"⇓","DoubleLeftArrow;":"⇐","DoubleLeftRightArrow;":"⇔","DoubleLeftTee;":"⫤","DoubleLongLeftArrow;":"⟸","DoubleLongLeftRightArrow;":"⟺","DoubleLongRightArrow;":"⟹","DoubleRightArrow;":"⇒","DoubleRightTee;":"⊨","DoubleUpArrow;":"⇑","DoubleUpDownArrow;":"⇕","DoubleVerticalBar;":"∥","DownArrow;":"↓","Downarrow;":"⇓","downarrow;":"↓","DownArrowBar;":"⤓","DownArrowUpArrow;":"⇵","DownBreve;":"̑","downdownarrows;":"⇊","downharpoonleft;":"⇃","downharpoonright;":"⇂","DownLeftRightVector;":"⥐","DownLeftTeeVector;":"⥞","DownLeftVector;":"↽","DownLeftVectorBar;":"⥖","DownRightTeeVector;":"⥟","DownRightVector;":"⇁","DownRightVectorBar;":"⥗","DownTee;":"⊤","DownTeeArrow;":"↧","drbkarow;":"⤐","drcorn;":"⌟","drcrop;":"⌌","Dscr;":"𝒟","dscr;":"𝒹","DScy;":"Ѕ","dscy;":"ѕ","dsol;":"⧶","Dstrok;":"Đ","dstrok;":"đ","dtdot;":"⋱","dtri;":"▿","dtrif;":"▾","duarr;":"⇵","duhar;":"⥯","dwangle;":"⦦","DZcy;":"Џ","dzcy;":"џ","dzigrarr;":"⟿","Eacute;":"É","Eacute":"É","eacute;":"é","eacute":"é","easter;":"⩮","Ecaron;":"Ě","ecaron;":"ě","ecir;":"≖","Ecirc;":"Ê","Ecirc":"Ê","ecirc;":"ê","ecirc":"ê","ecolon;":"≕","Ecy;":"Э","ecy;":"э","eDDot;":"⩷","Edot;":"Ė","eDot;":"≑","edot;":"ė","ee;":"ⅇ","efDot;":"≒","Efr;":"𝔈","efr;":"𝔢","eg;":"⪚","Egrave;":"È","Egrave":"È","egrave;":"è","egrave":"è","egs;":"⪖","egsdot;":"⪘","el;":"⪙","Element;":"∈","elinters;":"⏧","ell;":"ℓ","els;":"⪕","elsdot;":"⪗","Emacr;":"Ē","emacr;":"ē","empty;":"∅","emptyset;":"∅","EmptySmallSquare;":"◻","emptyv;":"∅","EmptyVerySmallSquare;":"▫","emsp;":" ","emsp13;":" ","emsp14;":" ","ENG;":"Ŋ","eng;":"ŋ","ensp;":" ","Eogon;":"Ę","eogon;":"ę","Eopf;":"𝔼","eopf;":"𝕖","epar;":"⋕","eparsl;":"⧣","eplus;":"⩱","epsi;":"ε","Epsilon;":"Ε","epsilon;":"ε","epsiv;":"ϵ","eqcirc;":"≖","eqcolon;":"≕","eqsim;":"≂","eqslantgtr;":"⪖","eqslantless;":"⪕","Equal;":"⩵","equals;":"=","EqualTilde;":"≂","equest;":"≟","Equilibrium;":"⇌","equiv;":"≡","equivDD;":"⩸","eqvparsl;":"⧥","erarr;":"⥱","erDot;":"≓","Escr;":"ℰ","escr;":"ℯ","esdot;":"≐","Esim;":"⩳","esim;":"≂","Eta;":"Η","eta;":"η","ETH;":"Ð","ETH":"Ð","eth;":"ð","eth":"ð","Euml;":"Ë","Euml":"Ë","euml;":"ë","euml":"ë","euro;":"€","excl;":"!","exist;":"∃","Exists;":"∃","expectation;":"ℰ","ExponentialE;":"ⅇ","exponentiale;":"ⅇ","fallingdotseq;":"≒","Fcy;":"Ф","fcy;":"ф","female;":"♀","ffilig;":"ﬃ","fflig;":"ﬀ","ffllig;":"ﬄ","Ffr;":"𝔉","ffr;":"𝔣","filig;":"ﬁ","FilledSmallSquare;":"◼","FilledVerySmallSquare;":"▪","fjlig;":"fj","flat;":"♭","fllig;":"ﬂ","fltns;":"▱","fnof;":"ƒ","Fopf;":"𝔽","fopf;":"𝕗","ForAll;":"∀","forall;":"∀","fork;":"⋔","forkv;":"⫙","Fouriertrf;":"ℱ","fpartint;":"⨍","frac12;":"½","frac12":"½","frac13;":"⅓","frac14;":"¼","frac14":"¼","frac15;":"⅕","frac16;":"⅙","frac18;":"⅛","frac23;":"⅔","frac25;":"⅖","frac34;":"¾","frac34":"¾","frac35;":"⅗","frac38;":"⅜","frac45;":"⅘","frac56;":"⅚","frac58;":"⅝","frac78;":"⅞","frasl;":"⁄","frown;":"⌢","Fscr;":"ℱ","fscr;":"𝒻","gacute;":"ǵ","Gamma;":"Γ","gamma;":"γ","Gammad;":"Ϝ","gammad;":"ϝ","gap;":"⪆","Gbreve;":"Ğ","gbreve;":"ğ","Gcedil;":"Ģ","Gcirc;":"Ĝ","gcirc;":"ĝ","Gcy;":"Г","gcy;":"г","Gdot;":"Ġ","gdot;":"ġ","gE;":"≧","ge;":"≥","gEl;":"⪌","gel;":"⋛","geq;":"≥","geqq;":"≧","geqslant;":"⩾","ges;":"⩾","gescc;":"⪩","gesdot;":"⪀","gesdoto;":"⪂","gesdotol;":"⪄","gesl;":"⋛︀","gesles;":"⪔","Gfr;":"𝔊","gfr;":"𝔤","Gg;":"⋙","gg;":"≫","ggg;":"⋙","gimel;":"ℷ","GJcy;":"Ѓ","gjcy;":"ѓ","gl;":"≷","gla;":"⪥","glE;":"⪒","glj;":"⪤","gnap;":"⪊","gnapprox;":"⪊","gnE;":"≩","gne;":"⪈","gneq;":"⪈","gneqq;":"≩","gnsim;":"⋧","Gopf;":"𝔾","gopf;":"𝕘","grave;":"`","GreaterEqual;":"≥","GreaterEqualLess;":"⋛","GreaterFullEqual;":"≧","GreaterGreater;":"⪢","GreaterLess;":"≷","GreaterSlantEqual;":"⩾","GreaterTilde;":"≳","Gscr;":"𝒢","gscr;":"ℊ","gsim;":"≳","gsime;":"⪎","gsiml;":"⪐","GT;":">","GT":">","Gt;":"≫","gt;":">","gt":">","gtcc;":"⪧","gtcir;":"⩺","gtdot;":"⋗","gtlPar;":"⦕","gtquest;":"⩼","gtrapprox;":"⪆","gtrarr;":"⥸","gtrdot;":"⋗","gtreqless;":"⋛","gtreqqless;":"⪌","gtrless;":"≷","gtrsim;":"≳","gvertneqq;":"≩︀","gvnE;":"≩︀","Hacek;":"ˇ","hairsp;":" ","half;":"½","hamilt;":"ℋ","HARDcy;":"Ъ","hardcy;":"ъ","hArr;":"⇔","harr;":"↔","harrcir;":"⥈","harrw;":"↭","Hat;":"^","hbar;":"ℏ","Hcirc;":"Ĥ","hcirc;":"ĥ","hearts;":"♥","heartsuit;":"♥","hellip;":"…","hercon;":"⊹","Hfr;":"ℌ","hfr;":"𝔥","HilbertSpace;":"ℋ","hksearow;":"⤥","hkswarow;":"⤦","hoarr;":"⇿","homtht;":"∻","hookleftarrow;":"↩","hookrightarrow;":"↪","Hopf;":"ℍ","hopf;":"𝕙","horbar;":"―","HorizontalLine;":"─","Hscr;":"ℋ","hscr;":"𝒽","hslash;":"ℏ","Hstrok;":"Ħ","hstrok;":"ħ","HumpDownHump;":"≎","HumpEqual;":"≏","hybull;":"⁃","hyphen;":"‐","Iacute;":"Í","Iacute":"Í","iacute;":"í","iacute":"í","ic;":"⁣","Icirc;":"Î","Icirc":"Î","icirc;":"î","icirc":"î","Icy;":"И","icy;":"и","Idot;":"İ","IEcy;":"Е","iecy;":"е","iexcl;":"¡","iexcl":"¡","iff;":"⇔","Ifr;":"ℑ","ifr;":"𝔦","Igrave;":"Ì","Igrave":"Ì","igrave;":"ì","igrave":"ì","ii;":"ⅈ","iiiint;":"⨌","iiint;":"∭","iinfin;":"⧜","iiota;":"℩","IJlig;":"Ĳ","ijlig;":"ĳ","Im;":"ℑ","Imacr;":"Ī","imacr;":"ī","image;":"ℑ","ImaginaryI;":"ⅈ","imagline;":"ℐ","imagpart;":"ℑ","imath;":"ı","imof;":"⊷","imped;":"Ƶ","Implies;":"⇒","in;":"∈","incare;":"℅","infin;":"∞","infintie;":"⧝","inodot;":"ı","Int;":"∬","int;":"∫","intcal;":"⊺","integers;":"ℤ","Integral;":"∫","intercal;":"⊺","Intersection;":"⋂","intlarhk;":"⨗","intprod;":"⨼","InvisibleComma;":"⁣","InvisibleTimes;":"⁢","IOcy;":"Ё","iocy;":"ё","Iogon;":"Į","iogon;":"į","Iopf;":"𝕀","iopf;":"𝕚","Iota;":"Ι","iota;":"ι","iprod;":"⨼","iquest;":"¿","iquest":"¿","Iscr;":"ℐ","iscr;":"𝒾","isin;":"∈","isindot;":"⋵","isinE;":"⋹","isins;":"⋴","isinsv;":"⋳","isinv;":"∈","it;":"⁢","Itilde;":"Ĩ","itilde;":"ĩ","Iukcy;":"І","iukcy;":"і","Iuml;":"Ï","Iuml":"Ï","iuml;":"ï","iuml":"ï","Jcirc;":"Ĵ","jcirc;":"ĵ","Jcy;":"Й","jcy;":"й","Jfr;":"𝔍","jfr;":"𝔧","jmath;":"ȷ","Jopf;":"𝕁","jopf;":"𝕛","Jscr;":"𝒥","jscr;":"𝒿","Jsercy;":"Ј","jsercy;":"ј","Jukcy;":"Є","jukcy;":"є","Kappa;":"Κ","kappa;":"κ","kappav;":"ϰ","Kcedil;":"Ķ","kcedil;":"ķ","Kcy;":"К","kcy;":"к","Kfr;":"𝔎","kfr;":"𝔨","kgreen;":"ĸ","KHcy;":"Х","khcy;":"х","KJcy;":"Ќ","kjcy;":"ќ","Kopf;":"𝕂","kopf;":"𝕜","Kscr;":"𝒦","kscr;":"𝓀","lAarr;":"⇚","Lacute;":"Ĺ","lacute;":"ĺ","laemptyv;":"⦴","lagran;":"ℒ","Lambda;":"Λ","lambda;":"λ","Lang;":"⟪","lang;":"⟨","langd;":"⦑","langle;":"⟨","lap;":"⪅","Laplacetrf;":"ℒ","laquo;":"«","laquo":"«","Larr;":"↞","lArr;":"⇐","larr;":"←","larrb;":"⇤","larrbfs;":"⤟","larrfs;":"⤝","larrhk;":"↩","larrlp;":"↫","larrpl;":"⤹","larrsim;":"⥳","larrtl;":"↢","lat;":"⪫","lAtail;":"⤛","latail;":"⤙","late;":"⪭","lates;":"⪭︀","lBarr;":"⤎","lbarr;":"⤌","lbbrk;":"❲","lbrace;":"{","lbrack;":"[","lbrke;":"⦋","lbrksld;":"⦏","lbrkslu;":"⦍","Lcaron;":"Ľ","lcaron;":"ľ","Lcedil;":"Ļ","lcedil;":"ļ","lceil;":"⌈","lcub;":"{","Lcy;":"Л","lcy;":"л","ldca;":"⤶","ldquo;":"“","ldquor;":"„","ldrdhar;":"⥧","ldrushar;":"⥋","ldsh;":"↲","lE;":"≦","le;":"≤","LeftAngleBracket;":"⟨","LeftArrow;":"←","Leftarrow;":"⇐","leftarrow;":"←","LeftArrowBar;":"⇤","LeftArrowRightArrow;":"⇆","leftarrowtail;":"↢","LeftCeiling;":"⌈","LeftDoubleBracket;":"⟦","LeftDownTeeVector;":"⥡","LeftDownVector;":"⇃","LeftDownVectorBar;":"⥙","LeftFloor;":"⌊","leftharpoondown;":"↽","leftharpoonup;":"↼","leftleftarrows;":"⇇","LeftRightArrow;":"↔","Leftrightarrow;":"⇔","leftrightarrow;":"↔","leftrightarrows;":"⇆","leftrightharpoons;":"⇋","leftrightsquigarrow;":"↭","LeftRightVector;":"⥎","LeftTee;":"⊣","LeftTeeArrow;":"↤","LeftTeeVector;":"⥚","leftthreetimes;":"⋋","LeftTriangle;":"⊲","LeftTriangleBar;":"⧏","LeftTriangleEqual;":"⊴","LeftUpDownVector;":"⥑","LeftUpTeeVector;":"⥠","LeftUpVector;":"↿","LeftUpVectorBar;":"⥘","LeftVector;":"↼","LeftVectorBar;":"⥒","lEg;":"⪋","leg;":"⋚","leq;":"≤","leqq;":"≦","leqslant;":"⩽","les;":"⩽","lescc;":"⪨","lesdot;":"⩿","lesdoto;":"⪁","lesdotor;":"⪃","lesg;":"⋚︀","lesges;":"⪓","lessapprox;":"⪅","lessdot;":"⋖","lesseqgtr;":"⋚","lesseqqgtr;":"⪋","LessEqualGreater;":"⋚","LessFullEqual;":"≦","LessGreater;":"≶","lessgtr;":"≶","LessLess;":"⪡","lesssim;":"≲","LessSlantEqual;":"⩽","LessTilde;":"≲","lfisht;":"⥼","lfloor;":"⌊","Lfr;":"𝔏","lfr;":"𝔩","lg;":"≶","lgE;":"⪑","lHar;":"⥢","lhard;":"↽","lharu;":"↼","lharul;":"⥪","lhblk;":"▄","LJcy;":"Љ","ljcy;":"љ","Ll;":"⋘","ll;":"≪","llarr;":"⇇","llcorner;":"⌞","Lleftarrow;":"⇚","llhard;":"⥫","lltri;":"◺","Lmidot;":"Ŀ","lmidot;":"ŀ","lmoust;":"⎰","lmoustache;":"⎰","lnap;":"⪉","lnapprox;":"⪉","lnE;":"≨","lne;":"⪇","lneq;":"⪇","lneqq;":"≨","lnsim;":"⋦","loang;":"⟬","loarr;":"⇽","lobrk;":"⟦","LongLeftArrow;":"⟵","Longleftarrow;":"⟸","longleftarrow;":"⟵","LongLeftRightArrow;":"⟷","Longleftrightarrow;":"⟺","longleftrightarrow;":"⟷","longmapsto;":"⟼","LongRightArrow;":"⟶","Longrightarrow;":"⟹","longrightarrow;":"⟶","looparrowleft;":"↫","looparrowright;":"↬","lopar;":"⦅","Lopf;":"𝕃","lopf;":"𝕝","loplus;":"⨭","lotimes;":"⨴","lowast;":"∗","lowbar;":"_","LowerLeftArrow;":"↙","LowerRightArrow;":"↘","loz;":"◊","lozenge;":"◊","lozf;":"⧫","lpar;":"(","lparlt;":"⦓","lrarr;":"⇆","lrcorner;":"⌟","lrhar;":"⇋","lrhard;":"⥭","lrm;":"‎","lrtri;":"⊿","lsaquo;":"‹","Lscr;":"ℒ","lscr;":"𝓁","Lsh;":"↰","lsh;":"↰","lsim;":"≲","lsime;":"⪍","lsimg;":"⪏","lsqb;":"[","lsquo;":"‘","lsquor;":"‚","Lstrok;":"Ł","lstrok;":"ł","LT;":"<","LT":"<","Lt;":"≪","lt;":"<","lt":"<","ltcc;":"⪦","ltcir;":"⩹","ltdot;":"⋖","lthree;":"⋋","ltimes;":"⋉","ltlarr;":"⥶","ltquest;":"⩻","ltri;":"◃","ltrie;":"⊴","ltrif;":"◂","ltrPar;":"⦖","lurdshar;":"⥊","luruhar;":"⥦","lvertneqq;":"≨︀","lvnE;":"≨︀","macr;":"¯","macr":"¯","male;":"♂","malt;":"✠","maltese;":"✠","Map;":"⤅","map;":"↦","mapsto;":"↦","mapstodown;":"↧","mapstoleft;":"↤","mapstoup;":"↥","marker;":"▮","mcomma;":"⨩","Mcy;":"М","mcy;":"м","mdash;":"—","mDDot;":"∺","measuredangle;":"∡","MediumSpace;":" ","Mellintrf;":"ℳ","Mfr;":"𝔐","mfr;":"𝔪","mho;":"℧","micro;":"µ","micro":"µ","mid;":"∣","midast;":"*","midcir;":"⫰","middot;":"·","middot":"·","minus;":"−","minusb;":"⊟","minusd;":"∸","minusdu;":"⨪","MinusPlus;":"∓","mlcp;":"⫛","mldr;":"…","mnplus;":"∓","models;":"⊧","Mopf;":"𝕄","mopf;":"𝕞","mp;":"∓","Mscr;":"ℳ","mscr;":"𝓂","mstpos;":"∾","Mu;":"Μ","mu;":"μ","multimap;":"⊸","mumap;":"⊸","nabla;":"∇","Nacute;":"Ń","nacute;":"ń","nang;":"∠⃒","nap;":"≉","napE;":"⩰̸","napid;":"≋̸","napos;":"ŉ","napprox;":"≉","natur;":"♮","natural;":"♮","naturals;":"ℕ","nbsp;":" ","nbsp":" ","nbump;":"≎̸","nbumpe;":"≏̸","ncap;":"⩃","Ncaron;":"Ň","ncaron;":"ň","Ncedil;":"Ņ","ncedil;":"ņ","ncong;":"≇","ncongdot;":"⩭̸","ncup;":"⩂","Ncy;":"Н","ncy;":"н","ndash;":"–","ne;":"≠","nearhk;":"⤤","neArr;":"⇗","nearr;":"↗","nearrow;":"↗","nedot;":"≐̸","NegativeMediumSpace;":"​","NegativeThickSpace;":"​","NegativeThinSpace;":"​","NegativeVeryThinSpace;":"​","nequiv;":"≢","nesear;":"⤨","nesim;":"≂̸","NestedGreaterGreater;":"≫","NestedLessLess;":"≪","NewLine;":"\\n","nexist;":"∄","nexists;":"∄","Nfr;":"𝔑","nfr;":"𝔫","ngE;":"≧̸","nge;":"≱","ngeq;":"≱","ngeqq;":"≧̸","ngeqslant;":"⩾̸","nges;":"⩾̸","nGg;":"⋙̸","ngsim;":"≵","nGt;":"≫⃒","ngt;":"≯","ngtr;":"≯","nGtv;":"≫̸","nhArr;":"⇎","nharr;":"↮","nhpar;":"⫲","ni;":"∋","nis;":"⋼","nisd;":"⋺","niv;":"∋","NJcy;":"Њ","njcy;":"њ","nlArr;":"⇍","nlarr;":"↚","nldr;":"‥","nlE;":"≦̸","nle;":"≰","nLeftarrow;":"⇍","nleftarrow;":"↚","nLeftrightarrow;":"⇎","nleftrightarrow;":"↮","nleq;":"≰","nleqq;":"≦̸","nleqslant;":"⩽̸","nles;":"⩽̸","nless;":"≮","nLl;":"⋘̸","nlsim;":"≴","nLt;":"≪⃒","nlt;":"≮","nltri;":"⋪","nltrie;":"⋬","nLtv;":"≪̸","nmid;":"∤","NoBreak;":"⁠","NonBreakingSpace;":" ","Nopf;":"ℕ","nopf;":"𝕟","Not;":"⫬","not;":"¬","not":"¬","NotCongruent;":"≢","NotCupCap;":"≭","NotDoubleVerticalBar;":"∦","NotElement;":"∉","NotEqual;":"≠","NotEqualTilde;":"≂̸","NotExists;":"∄","NotGreater;":"≯","NotGreaterEqual;":"≱","NotGreaterFullEqual;":"≧̸","NotGreaterGreater;":"≫̸","NotGreaterLess;":"≹","NotGreaterSlantEqual;":"⩾̸","NotGreaterTilde;":"≵","NotHumpDownHump;":"≎̸","NotHumpEqual;":"≏̸","notin;":"∉","notindot;":"⋵̸","notinE;":"⋹̸","notinva;":"∉","notinvb;":"⋷","notinvc;":"⋶","NotLeftTriangle;":"⋪","NotLeftTriangleBar;":"⧏̸","NotLeftTriangleEqual;":"⋬","NotLess;":"≮","NotLessEqual;":"≰","NotLessGreater;":"≸","NotLessLess;":"≪̸","NotLessSlantEqual;":"⩽̸","NotLessTilde;":"≴","NotNestedGreaterGreater;":"⪢̸","NotNestedLessLess;":"⪡̸","notni;":"∌","notniva;":"∌","notnivb;":"⋾","notnivc;":"⋽","NotPrecedes;":"⊀","NotPrecedesEqual;":"⪯̸","NotPrecedesSlantEqual;":"⋠","NotReverseElement;":"∌","NotRightTriangle;":"⋫","NotRightTriangleBar;":"⧐̸","NotRightTriangleEqual;":"⋭","NotSquareSubset;":"⊏̸","NotSquareSubsetEqual;":"⋢","NotSquareSuperset;":"⊐̸","NotSquareSupersetEqual;":"⋣","NotSubset;":"⊂⃒","NotSubsetEqual;":"⊈","NotSucceeds;":"⊁","NotSucceedsEqual;":"⪰̸","NotSucceedsSlantEqual;":"⋡","NotSucceedsTilde;":"≿̸","NotSuperset;":"⊃⃒","NotSupersetEqual;":"⊉","NotTilde;":"≁","NotTildeEqual;":"≄","NotTildeFullEqual;":"≇","NotTildeTilde;":"≉","NotVerticalBar;":"∤","npar;":"∦","nparallel;":"∦","nparsl;":"⫽⃥","npart;":"∂̸","npolint;":"⨔","npr;":"⊀","nprcue;":"⋠","npre;":"⪯̸","nprec;":"⊀","npreceq;":"⪯̸","nrArr;":"⇏","nrarr;":"↛","nrarrc;":"⤳̸","nrarrw;":"↝̸","nRightarrow;":"⇏","nrightarrow;":"↛","nrtri;":"⋫","nrtrie;":"⋭","nsc;":"⊁","nsccue;":"⋡","nsce;":"⪰̸","Nscr;":"𝒩","nscr;":"𝓃","nshortmid;":"∤","nshortparallel;":"∦","nsim;":"≁","nsime;":"≄","nsimeq;":"≄","nsmid;":"∤","nspar;":"∦","nsqsube;":"⋢","nsqsupe;":"⋣","nsub;":"⊄","nsubE;":"⫅̸","nsube;":"⊈","nsubset;":"⊂⃒","nsubseteq;":"⊈","nsubseteqq;":"⫅̸","nsucc;":"⊁","nsucceq;":"⪰̸","nsup;":"⊅","nsupE;":"⫆̸","nsupe;":"⊉","nsupset;":"⊃⃒","nsupseteq;":"⊉","nsupseteqq;":"⫆̸","ntgl;":"≹","Ntilde;":"Ñ","Ntilde":"Ñ","ntilde;":"ñ","ntilde":"ñ","ntlg;":"≸","ntriangleleft;":"⋪","ntrianglelefteq;":"⋬","ntriangleright;":"⋫","ntrianglerighteq;":"⋭","Nu;":"Ν","nu;":"ν","num;":"#","numero;":"№","numsp;":" ","nvap;":"≍⃒","nVDash;":"⊯","nVdash;":"⊮","nvDash;":"⊭","nvdash;":"⊬","nvge;":"≥⃒","nvgt;":">⃒","nvHarr;":"⤄","nvinfin;":"⧞","nvlArr;":"⤂","nvle;":"≤⃒","nvlt;":"<⃒","nvltrie;":"⊴⃒","nvrArr;":"⤃","nvrtrie;":"⊵⃒","nvsim;":"∼⃒","nwarhk;":"⤣","nwArr;":"⇖","nwarr;":"↖","nwarrow;":"↖","nwnear;":"⤧","Oacute;":"Ó","Oacute":"Ó","oacute;":"ó","oacute":"ó","oast;":"⊛","ocir;":"⊚","Ocirc;":"Ô","Ocirc":"Ô","ocirc;":"ô","ocirc":"ô","Ocy;":"О","ocy;":"о","odash;":"⊝","Odblac;":"Ő","odblac;":"ő","odiv;":"⨸","odot;":"⊙","odsold;":"⦼","OElig;":"Œ","oelig;":"œ","ofcir;":"⦿","Ofr;":"𝔒","ofr;":"𝔬","ogon;":"˛","Ograve;":"Ò","Ograve":"Ò","ograve;":"ò","ograve":"ò","ogt;":"⧁","ohbar;":"⦵","ohm;":"Ω","oint;":"∮","olarr;":"↺","olcir;":"⦾","olcross;":"⦻","oline;":"‾","olt;":"⧀","Omacr;":"Ō","omacr;":"ō","Omega;":"Ω","omega;":"ω","Omicron;":"Ο","omicron;":"ο","omid;":"⦶","ominus;":"⊖","Oopf;":"𝕆","oopf;":"𝕠","opar;":"⦷","OpenCurlyDoubleQuote;":"“","OpenCurlyQuote;":"‘","operp;":"⦹","oplus;":"⊕","Or;":"⩔","or;":"∨","orarr;":"↻","ord;":"⩝","order;":"ℴ","orderof;":"ℴ","ordf;":"ª","ordf":"ª","ordm;":"º","ordm":"º","origof;":"⊶","oror;":"⩖","orslope;":"⩗","orv;":"⩛","oS;":"Ⓢ","Oscr;":"𝒪","oscr;":"ℴ","Oslash;":"Ø","Oslash":"Ø","oslash;":"ø","oslash":"ø","osol;":"⊘","Otilde;":"Õ","Otilde":"Õ","otilde;":"õ","otilde":"õ","Otimes;":"⨷","otimes;":"⊗","otimesas;":"⨶","Ouml;":"Ö","Ouml":"Ö","ouml;":"ö","ouml":"ö","ovbar;":"⌽","OverBar;":"‾","OverBrace;":"⏞","OverBracket;":"⎴","OverParenthesis;":"⏜","par;":"∥","para;":"¶","para":"¶","parallel;":"∥","parsim;":"⫳","parsl;":"⫽","part;":"∂","PartialD;":"∂","Pcy;":"П","pcy;":"п","percnt;":"%","period;":".","permil;":"‰","perp;":"⊥","pertenk;":"‱","Pfr;":"𝔓","pfr;":"𝔭","Phi;":"Φ","phi;":"φ","phiv;":"ϕ","phmmat;":"ℳ","phone;":"☎","Pi;":"Π","pi;":"π","pitchfork;":"⋔","piv;":"ϖ","planck;":"ℏ","planckh;":"ℎ","plankv;":"ℏ","plus;":"+","plusacir;":"⨣","plusb;":"⊞","pluscir;":"⨢","plusdo;":"∔","plusdu;":"⨥","pluse;":"⩲","PlusMinus;":"±","plusmn;":"±","plusmn":"±","plussim;":"⨦","plustwo;":"⨧","pm;":"±","Poincareplane;":"ℌ","pointint;":"⨕","Popf;":"ℙ","popf;":"𝕡","pound;":"£","pound":"£","Pr;":"⪻","pr;":"≺","prap;":"⪷","prcue;":"≼","prE;":"⪳","pre;":"⪯","prec;":"≺","precapprox;":"⪷","preccurlyeq;":"≼","Precedes;":"≺","PrecedesEqual;":"⪯","PrecedesSlantEqual;":"≼","PrecedesTilde;":"≾","preceq;":"⪯","precnapprox;":"⪹","precneqq;":"⪵","precnsim;":"⋨","precsim;":"≾","Prime;":"″","prime;":"′","primes;":"ℙ","prnap;":"⪹","prnE;":"⪵","prnsim;":"⋨","prod;":"∏","Product;":"∏","profalar;":"⌮","profline;":"⌒","profsurf;":"⌓","prop;":"∝","Proportion;":"∷","Proportional;":"∝","propto;":"∝","prsim;":"≾","prurel;":"⊰","Pscr;":"𝒫","pscr;":"𝓅","Psi;":"Ψ","psi;":"ψ","puncsp;":" ","Qfr;":"𝔔","qfr;":"𝔮","qint;":"⨌","Qopf;":"ℚ","qopf;":"𝕢","qprime;":"⁗","Qscr;":"𝒬","qscr;":"𝓆","quaternions;":"ℍ","quatint;":"⨖","quest;":"?","questeq;":"≟","QUOT;":"\\"","QUOT":"\\"","quot;":"\\"","quot":"\\"","rAarr;":"⇛","race;":"∽̱","Racute;":"Ŕ","racute;":"ŕ","radic;":"√","raemptyv;":"⦳","Rang;":"⟫","rang;":"⟩","rangd;":"⦒","range;":"⦥","rangle;":"⟩","raquo;":"»","raquo":"»","Rarr;":"↠","rArr;":"⇒","rarr;":"→","rarrap;":"⥵","rarrb;":"⇥","rarrbfs;":"⤠","rarrc;":"⤳","rarrfs;":"⤞","rarrhk;":"↪","rarrlp;":"↬","rarrpl;":"⥅","rarrsim;":"⥴","Rarrtl;":"⤖","rarrtl;":"↣","rarrw;":"↝","rAtail;":"⤜","ratail;":"⤚","ratio;":"∶","rationals;":"ℚ","RBarr;":"⤐","rBarr;":"⤏","rbarr;":"⤍","rbbrk;":"❳","rbrace;":"}","rbrack;":"]","rbrke;":"⦌","rbrksld;":"⦎","rbrkslu;":"⦐","Rcaron;":"Ř","rcaron;":"ř","Rcedil;":"Ŗ","rcedil;":"ŗ","rceil;":"⌉","rcub;":"}","Rcy;":"Р","rcy;":"р","rdca;":"⤷","rdldhar;":"⥩","rdquo;":"”","rdquor;":"”","rdsh;":"↳","Re;":"ℜ","real;":"ℜ","realine;":"ℛ","realpart;":"ℜ","reals;":"ℝ","rect;":"▭","REG;":"®","REG":"®","reg;":"®","reg":"®","ReverseElement;":"∋","ReverseEquilibrium;":"⇋","ReverseUpEquilibrium;":"⥯","rfisht;":"⥽","rfloor;":"⌋","Rfr;":"ℜ","rfr;":"𝔯","rHar;":"⥤","rhard;":"⇁","rharu;":"⇀","rharul;":"⥬","Rho;":"Ρ","rho;":"ρ","rhov;":"ϱ","RightAngleBracket;":"⟩","RightArrow;":"→","Rightarrow;":"⇒","rightarrow;":"→","RightArrowBar;":"⇥","RightArrowLeftArrow;":"⇄","rightarrowtail;":"↣","RightCeiling;":"⌉","RightDoubleBracket;":"⟧","RightDownTeeVector;":"⥝","RightDownVector;":"⇂","RightDownVectorBar;":"⥕","RightFloor;":"⌋","rightharpoondown;":"⇁","rightharpoonup;":"⇀","rightleftarrows;":"⇄","rightleftharpoons;":"⇌","rightrightarrows;":"⇉","rightsquigarrow;":"↝","RightTee;":"⊢","RightTeeArrow;":"↦","RightTeeVector;":"⥛","rightthreetimes;":"⋌","RightTriangle;":"⊳","RightTriangleBar;":"⧐","RightTriangleEqual;":"⊵","RightUpDownVector;":"⥏","RightUpTeeVector;":"⥜","RightUpVector;":"↾","RightUpVectorBar;":"⥔","RightVector;":"⇀","RightVectorBar;":"⥓","ring;":"˚","risingdotseq;":"≓","rlarr;":"⇄","rlhar;":"⇌","rlm;":"‏","rmoust;":"⎱","rmoustache;":"⎱","rnmid;":"⫮","roang;":"⟭","roarr;":"⇾","robrk;":"⟧","ropar;":"⦆","Ropf;":"ℝ","ropf;":"𝕣","roplus;":"⨮","rotimes;":"⨵","RoundImplies;":"⥰","rpar;":")","rpargt;":"⦔","rppolint;":"⨒","rrarr;":"⇉","Rrightarrow;":"⇛","rsaquo;":"›","Rscr;":"ℛ","rscr;":"𝓇","Rsh;":"↱","rsh;":"↱","rsqb;":"]","rsquo;":"’","rsquor;":"’","rthree;":"⋌","rtimes;":"⋊","rtri;":"▹","rtrie;":"⊵","rtrif;":"▸","rtriltri;":"⧎","RuleDelayed;":"⧴","ruluhar;":"⥨","rx;":"℞","Sacute;":"Ś","sacute;":"ś","sbquo;":"‚","Sc;":"⪼","sc;":"≻","scap;":"⪸","Scaron;":"Š","scaron;":"š","sccue;":"≽","scE;":"⪴","sce;":"⪰","Scedil;":"Ş","scedil;":"ş","Scirc;":"Ŝ","scirc;":"ŝ","scnap;":"⪺","scnE;":"⪶","scnsim;":"⋩","scpolint;":"⨓","scsim;":"≿","Scy;":"С","scy;":"с","sdot;":"⋅","sdotb;":"⊡","sdote;":"⩦","searhk;":"⤥","seArr;":"⇘","searr;":"↘","searrow;":"↘","sect;":"§","sect":"§","semi;":";","seswar;":"⤩","setminus;":"∖","setmn;":"∖","sext;":"✶","Sfr;":"𝔖","sfr;":"𝔰","sfrown;":"⌢","sharp;":"♯","SHCHcy;":"Щ","shchcy;":"щ","SHcy;":"Ш","shcy;":"ш","ShortDownArrow;":"↓","ShortLeftArrow;":"←","shortmid;":"∣","shortparallel;":"∥","ShortRightArrow;":"→","ShortUpArrow;":"↑","shy;":"­","shy":"­","Sigma;":"Σ","sigma;":"σ","sigmaf;":"ς","sigmav;":"ς","sim;":"∼","simdot;":"⩪","sime;":"≃","simeq;":"≃","simg;":"⪞","simgE;":"⪠","siml;":"⪝","simlE;":"⪟","simne;":"≆","simplus;":"⨤","simrarr;":"⥲","slarr;":"←","SmallCircle;":"∘","smallsetminus;":"∖","smashp;":"⨳","smeparsl;":"⧤","smid;":"∣","smile;":"⌣","smt;":"⪪","smte;":"⪬","smtes;":"⪬︀","SOFTcy;":"Ь","softcy;":"ь","sol;":"/","solb;":"⧄","solbar;":"⌿","Sopf;":"𝕊","sopf;":"𝕤","spades;":"♠","spadesuit;":"♠","spar;":"∥","sqcap;":"⊓","sqcaps;":"⊓︀","sqcup;":"⊔","sqcups;":"⊔︀","Sqrt;":"√","sqsub;":"⊏","sqsube;":"⊑","sqsubset;":"⊏","sqsubseteq;":"⊑","sqsup;":"⊐","sqsupe;":"⊒","sqsupset;":"⊐","sqsupseteq;":"⊒","squ;":"□","Square;":"□","square;":"□","SquareIntersection;":"⊓","SquareSubset;":"⊏","SquareSubsetEqual;":"⊑","SquareSuperset;":"⊐","SquareSupersetEqual;":"⊒","SquareUnion;":"⊔","squarf;":"▪","squf;":"▪","srarr;":"→","Sscr;":"𝒮","sscr;":"𝓈","ssetmn;":"∖","ssmile;":"⌣","sstarf;":"⋆","Star;":"⋆","star;":"☆","starf;":"★","straightepsilon;":"ϵ","straightphi;":"ϕ","strns;":"¯","Sub;":"⋐","sub;":"⊂","subdot;":"⪽","subE;":"⫅","sube;":"⊆","subedot;":"⫃","submult;":"⫁","subnE;":"⫋","subne;":"⊊","subplus;":"⪿","subrarr;":"⥹","Subset;":"⋐","subset;":"⊂","subseteq;":"⊆","subseteqq;":"⫅","SubsetEqual;":"⊆","subsetneq;":"⊊","subsetneqq;":"⫋","subsim;":"⫇","subsub;":"⫕","subsup;":"⫓","succ;":"≻","succapprox;":"⪸","succcurlyeq;":"≽","Succeeds;":"≻","SucceedsEqual;":"⪰","SucceedsSlantEqual;":"≽","SucceedsTilde;":"≿","succeq;":"⪰","succnapprox;":"⪺","succneqq;":"⪶","succnsim;":"⋩","succsim;":"≿","SuchThat;":"∋","Sum;":"∑","sum;":"∑","sung;":"♪","Sup;":"⋑","sup;":"⊃","sup1;":"¹","sup1":"¹","sup2;":"²","sup2":"²","sup3;":"³","sup3":"³","supdot;":"⪾","supdsub;":"⫘","supE;":"⫆","supe;":"⊇","supedot;":"⫄","Superset;":"⊃","SupersetEqual;":"⊇","suphsol;":"⟉","suphsub;":"⫗","suplarr;":"⥻","supmult;":"⫂","supnE;":"⫌","supne;":"⊋","supplus;":"⫀","Supset;":"⋑","supset;":"⊃","supseteq;":"⊇","supseteqq;":"⫆","supsetneq;":"⊋","supsetneqq;":"⫌","supsim;":"⫈","supsub;":"⫔","supsup;":"⫖","swarhk;":"⤦","swArr;":"⇙","swarr;":"↙","swarrow;":"↙","swnwar;":"⤪","szlig;":"ß","szlig":"ß","Tab;":"\\t","target;":"⌖","Tau;":"Τ","tau;":"τ","tbrk;":"⎴","Tcaron;":"Ť","tcaron;":"ť","Tcedil;":"Ţ","tcedil;":"ţ","Tcy;":"Т","tcy;":"т","tdot;":"⃛","telrec;":"⌕","Tfr;":"𝔗","tfr;":"𝔱","there4;":"∴","Therefore;":"∴","therefore;":"∴","Theta;":"Θ","theta;":"θ","thetasym;":"ϑ","thetav;":"ϑ","thickapprox;":"≈","thicksim;":"∼","ThickSpace;":"  ","thinsp;":" ","ThinSpace;":" ","thkap;":"≈","thksim;":"∼","THORN;":"Þ","THORN":"Þ","thorn;":"þ","thorn":"þ","Tilde;":"∼","tilde;":"˜","TildeEqual;":"≃","TildeFullEqual;":"≅","TildeTilde;":"≈","times;":"×","times":"×","timesb;":"⊠","timesbar;":"⨱","timesd;":"⨰","tint;":"∭","toea;":"⤨","top;":"⊤","topbot;":"⌶","topcir;":"⫱","Topf;":"𝕋","topf;":"𝕥","topfork;":"⫚","tosa;":"⤩","tprime;":"‴","TRADE;":"™","trade;":"™","triangle;":"▵","triangledown;":"▿","triangleleft;":"◃","trianglelefteq;":"⊴","triangleq;":"≜","triangleright;":"▹","trianglerighteq;":"⊵","tridot;":"◬","trie;":"≜","triminus;":"⨺","TripleDot;":"⃛","triplus;":"⨹","trisb;":"⧍","tritime;":"⨻","trpezium;":"⏢","Tscr;":"𝒯","tscr;":"𝓉","TScy;":"Ц","tscy;":"ц","TSHcy;":"Ћ","tshcy;":"ћ","Tstrok;":"Ŧ","tstrok;":"ŧ","twixt;":"≬","twoheadleftarrow;":"↞","twoheadrightarrow;":"↠","Uacute;":"Ú","Uacute":"Ú","uacute;":"ú","uacute":"ú","Uarr;":"↟","uArr;":"⇑","uarr;":"↑","Uarrocir;":"⥉","Ubrcy;":"Ў","ubrcy;":"ў","Ubreve;":"Ŭ","ubreve;":"ŭ","Ucirc;":"Û","Ucirc":"Û","ucirc;":"û","ucirc":"û","Ucy;":"У","ucy;":"у","udarr;":"⇅","Udblac;":"Ű","udblac;":"ű","udhar;":"⥮","ufisht;":"⥾","Ufr;":"𝔘","ufr;":"𝔲","Ugrave;":"Ù","Ugrave":"Ù","ugrave;":"ù","ugrave":"ù","uHar;":"⥣","uharl;":"↿","uharr;":"↾","uhblk;":"▀","ulcorn;":"⌜","ulcorner;":"⌜","ulcrop;":"⌏","ultri;":"◸","Umacr;":"Ū","umacr;":"ū","uml;":"¨","uml":"¨","UnderBar;":"_","UnderBrace;":"⏟","UnderBracket;":"⎵","UnderParenthesis;":"⏝","Union;":"⋃","UnionPlus;":"⊎","Uogon;":"Ų","uogon;":"ų","Uopf;":"𝕌","uopf;":"𝕦","UpArrow;":"↑","Uparrow;":"⇑","uparrow;":"↑","UpArrowBar;":"⤒","UpArrowDownArrow;":"⇅","UpDownArrow;":"↕","Updownarrow;":"⇕","updownarrow;":"↕","UpEquilibrium;":"⥮","upharpoonleft;":"↿","upharpoonright;":"↾","uplus;":"⊎","UpperLeftArrow;":"↖","UpperRightArrow;":"↗","Upsi;":"ϒ","upsi;":"υ","upsih;":"ϒ","Upsilon;":"Υ","upsilon;":"υ","UpTee;":"⊥","UpTeeArrow;":"↥","upuparrows;":"⇈","urcorn;":"⌝","urcorner;":"⌝","urcrop;":"⌎","Uring;":"Ů","uring;":"ů","urtri;":"◹","Uscr;":"𝒰","uscr;":"𝓊","utdot;":"⋰","Utilde;":"Ũ","utilde;":"ũ","utri;":"▵","utrif;":"▴","uuarr;":"⇈","Uuml;":"Ü","Uuml":"Ü","uuml;":"ü","uuml":"ü","uwangle;":"⦧","vangrt;":"⦜","varepsilon;":"ϵ","varkappa;":"ϰ","varnothing;":"∅","varphi;":"ϕ","varpi;":"ϖ","varpropto;":"∝","vArr;":"⇕","varr;":"↕","varrho;":"ϱ","varsigma;":"ς","varsubsetneq;":"⊊︀","varsubsetneqq;":"⫋︀","varsupsetneq;":"⊋︀","varsupsetneqq;":"⫌︀","vartheta;":"ϑ","vartriangleleft;":"⊲","vartriangleright;":"⊳","Vbar;":"⫫","vBar;":"⫨","vBarv;":"⫩","Vcy;":"В","vcy;":"в","VDash;":"⊫","Vdash;":"⊩","vDash;":"⊨","vdash;":"⊢","Vdashl;":"⫦","Vee;":"⋁","vee;":"∨","veebar;":"⊻","veeeq;":"≚","vellip;":"⋮","Verbar;":"‖","verbar;":"|","Vert;":"‖","vert;":"|","VerticalBar;":"∣","VerticalLine;":"|","VerticalSeparator;":"❘","VerticalTilde;":"≀","VeryThinSpace;":" ","Vfr;":"𝔙","vfr;":"𝔳","vltri;":"⊲","vnsub;":"⊂⃒","vnsup;":"⊃⃒","Vopf;":"𝕍","vopf;":"𝕧","vprop;":"∝","vrtri;":"⊳","Vscr;":"𝒱","vscr;":"𝓋","vsubnE;":"⫋︀","vsubne;":"⊊︀","vsupnE;":"⫌︀","vsupne;":"⊋︀","Vvdash;":"⊪","vzigzag;":"⦚","Wcirc;":"Ŵ","wcirc;":"ŵ","wedbar;":"⩟","Wedge;":"⋀","wedge;":"∧","wedgeq;":"≙","weierp;":"℘","Wfr;":"𝔚","wfr;":"𝔴","Wopf;":"𝕎","wopf;":"𝕨","wp;":"℘","wr;":"≀","wreath;":"≀","Wscr;":"𝒲","wscr;":"𝓌","xcap;":"⋂","xcirc;":"◯","xcup;":"⋃","xdtri;":"▽","Xfr;":"𝔛","xfr;":"𝔵","xhArr;":"⟺","xharr;":"⟷","Xi;":"Ξ","xi;":"ξ","xlArr;":"⟸","xlarr;":"⟵","xmap;":"⟼","xnis;":"⋻","xodot;":"⨀","Xopf;":"𝕏","xopf;":"𝕩","xoplus;":"⨁","xotime;":"⨂","xrArr;":"⟹","xrarr;":"⟶","Xscr;":"𝒳","xscr;":"𝓍","xsqcup;":"⨆","xuplus;":"⨄","xutri;":"△","xvee;":"⋁","xwedge;":"⋀","Yacute;":"Ý","Yacute":"Ý","yacute;":"ý","yacute":"ý","YAcy;":"Я","yacy;":"я","Ycirc;":"Ŷ","ycirc;":"ŷ","Ycy;":"Ы","ycy;":"ы","yen;":"¥","yen":"¥","Yfr;":"𝔜","yfr;":"𝔶","YIcy;":"Ї","yicy;":"ї","Yopf;":"𝕐","yopf;":"𝕪","Yscr;":"𝒴","yscr;":"𝓎","YUcy;":"Ю","yucy;":"ю","Yuml;":"Ÿ","yuml;":"ÿ","yuml":"ÿ","Zacute;":"Ź","zacute;":"ź","Zcaron;":"Ž","zcaron;":"ž","Zcy;":"З","zcy;":"з","Zdot;":"Ż","zdot;":"ż","zeetrf;":"ℨ","ZeroWidthSpace;":"​","Zeta;":"Ζ","zeta;":"ζ","Zfr;":"ℨ","zfr;":"𝔷","ZHcy;":"Ж","zhcy;":"ж","zigrarr;":"⇝","Zopf;":"ℤ","zopf;":"𝕫","Zscr;":"𝒵","zscr;":"𝓏","zwj;":"‍","zwnj;":"‌"}');
-
-/***/ }),
-
-/***/ 3123:
-/***/ ((module) => {
-
-module.exports = JSON.parse('{"9":"Tab;","10":"NewLine;","33":"excl;","34":"quot;","35":"num;","36":"dollar;","37":"percnt;","38":"amp;","39":"apos;","40":"lpar;","41":"rpar;","42":"midast;","43":"plus;","44":"comma;","46":"period;","47":"sol;","58":"colon;","59":"semi;","60":"lt;","61":"equals;","62":"gt;","63":"quest;","64":"commat;","91":"lsqb;","92":"bsol;","93":"rsqb;","94":"Hat;","95":"UnderBar;","96":"grave;","123":"lcub;","124":"VerticalLine;","125":"rcub;","160":"NonBreakingSpace;","161":"iexcl;","162":"cent;","163":"pound;","164":"curren;","165":"yen;","166":"brvbar;","167":"sect;","168":"uml;","169":"copy;","170":"ordf;","171":"laquo;","172":"not;","173":"shy;","174":"reg;","175":"strns;","176":"deg;","177":"pm;","178":"sup2;","179":"sup3;","180":"DiacriticalAcute;","181":"micro;","182":"para;","183":"middot;","184":"Cedilla;","185":"sup1;","186":"ordm;","187":"raquo;","188":"frac14;","189":"half;","190":"frac34;","191":"iquest;","192":"Agrave;","193":"Aacute;","194":"Acirc;","195":"Atilde;","196":"Auml;","197":"Aring;","198":"AElig;","199":"Ccedil;","200":"Egrave;","201":"Eacute;","202":"Ecirc;","203":"Euml;","204":"Igrave;","205":"Iacute;","206":"Icirc;","207":"Iuml;","208":"ETH;","209":"Ntilde;","210":"Ograve;","211":"Oacute;","212":"Ocirc;","213":"Otilde;","214":"Ouml;","215":"times;","216":"Oslash;","217":"Ugrave;","218":"Uacute;","219":"Ucirc;","220":"Uuml;","221":"Yacute;","222":"THORN;","223":"szlig;","224":"agrave;","225":"aacute;","226":"acirc;","227":"atilde;","228":"auml;","229":"aring;","230":"aelig;","231":"ccedil;","232":"egrave;","233":"eacute;","234":"ecirc;","235":"euml;","236":"igrave;","237":"iacute;","238":"icirc;","239":"iuml;","240":"eth;","241":"ntilde;","242":"ograve;","243":"oacute;","244":"ocirc;","245":"otilde;","246":"ouml;","247":"divide;","248":"oslash;","249":"ugrave;","250":"uacute;","251":"ucirc;","252":"uuml;","253":"yacute;","254":"thorn;","255":"yuml;","256":"Amacr;","257":"amacr;","258":"Abreve;","259":"abreve;","260":"Aogon;","261":"aogon;","262":"Cacute;","263":"cacute;","264":"Ccirc;","265":"ccirc;","266":"Cdot;","267":"cdot;","268":"Ccaron;","269":"ccaron;","270":"Dcaron;","271":"dcaron;","272":"Dstrok;","273":"dstrok;","274":"Emacr;","275":"emacr;","278":"Edot;","279":"edot;","280":"Eogon;","281":"eogon;","282":"Ecaron;","283":"ecaron;","284":"Gcirc;","285":"gcirc;","286":"Gbreve;","287":"gbreve;","288":"Gdot;","289":"gdot;","290":"Gcedil;","292":"Hcirc;","293":"hcirc;","294":"Hstrok;","295":"hstrok;","296":"Itilde;","297":"itilde;","298":"Imacr;","299":"imacr;","302":"Iogon;","303":"iogon;","304":"Idot;","305":"inodot;","306":"IJlig;","307":"ijlig;","308":"Jcirc;","309":"jcirc;","310":"Kcedil;","311":"kcedil;","312":"kgreen;","313":"Lacute;","314":"lacute;","315":"Lcedil;","316":"lcedil;","317":"Lcaron;","318":"lcaron;","319":"Lmidot;","320":"lmidot;","321":"Lstrok;","322":"lstrok;","323":"Nacute;","324":"nacute;","325":"Ncedil;","326":"ncedil;","327":"Ncaron;","328":"ncaron;","329":"napos;","330":"ENG;","331":"eng;","332":"Omacr;","333":"omacr;","336":"Odblac;","337":"odblac;","338":"OElig;","339":"oelig;","340":"Racute;","341":"racute;","342":"Rcedil;","343":"rcedil;","344":"Rcaron;","345":"rcaron;","346":"Sacute;","347":"sacute;","348":"Scirc;","349":"scirc;","350":"Scedil;","351":"scedil;","352":"Scaron;","353":"scaron;","354":"Tcedil;","355":"tcedil;","356":"Tcaron;","357":"tcaron;","358":"Tstrok;","359":"tstrok;","360":"Utilde;","361":"utilde;","362":"Umacr;","363":"umacr;","364":"Ubreve;","365":"ubreve;","366":"Uring;","367":"uring;","368":"Udblac;","369":"udblac;","370":"Uogon;","371":"uogon;","372":"Wcirc;","373":"wcirc;","374":"Ycirc;","375":"ycirc;","376":"Yuml;","377":"Zacute;","378":"zacute;","379":"Zdot;","380":"zdot;","381":"Zcaron;","382":"zcaron;","402":"fnof;","437":"imped;","501":"gacute;","567":"jmath;","710":"circ;","711":"Hacek;","728":"breve;","729":"dot;","730":"ring;","731":"ogon;","732":"tilde;","733":"DiacriticalDoubleAcute;","785":"DownBreve;","913":"Alpha;","914":"Beta;","915":"Gamma;","916":"Delta;","917":"Epsilon;","918":"Zeta;","919":"Eta;","920":"Theta;","921":"Iota;","922":"Kappa;","923":"Lambda;","924":"Mu;","925":"Nu;","926":"Xi;","927":"Omicron;","928":"Pi;","929":"Rho;","931":"Sigma;","932":"Tau;","933":"Upsilon;","934":"Phi;","935":"Chi;","936":"Psi;","937":"Omega;","945":"alpha;","946":"beta;","947":"gamma;","948":"delta;","949":"epsilon;","950":"zeta;","951":"eta;","952":"theta;","953":"iota;","954":"kappa;","955":"lambda;","956":"mu;","957":"nu;","958":"xi;","959":"omicron;","960":"pi;","961":"rho;","962":"varsigma;","963":"sigma;","964":"tau;","965":"upsilon;","966":"phi;","967":"chi;","968":"psi;","969":"omega;","977":"vartheta;","978":"upsih;","981":"varphi;","982":"varpi;","988":"Gammad;","989":"gammad;","1008":"varkappa;","1009":"varrho;","1013":"varepsilon;","1014":"bepsi;","1025":"IOcy;","1026":"DJcy;","1027":"GJcy;","1028":"Jukcy;","1029":"DScy;","1030":"Iukcy;","1031":"YIcy;","1032":"Jsercy;","1033":"LJcy;","1034":"NJcy;","1035":"TSHcy;","1036":"KJcy;","1038":"Ubrcy;","1039":"DZcy;","1040":"Acy;","1041":"Bcy;","1042":"Vcy;","1043":"Gcy;","1044":"Dcy;","1045":"IEcy;","1046":"ZHcy;","1047":"Zcy;","1048":"Icy;","1049":"Jcy;","1050":"Kcy;","1051":"Lcy;","1052":"Mcy;","1053":"Ncy;","1054":"Ocy;","1055":"Pcy;","1056":"Rcy;","1057":"Scy;","1058":"Tcy;","1059":"Ucy;","1060":"Fcy;","1061":"KHcy;","1062":"TScy;","1063":"CHcy;","1064":"SHcy;","1065":"SHCHcy;","1066":"HARDcy;","1067":"Ycy;","1068":"SOFTcy;","1069":"Ecy;","1070":"YUcy;","1071":"YAcy;","1072":"acy;","1073":"bcy;","1074":"vcy;","1075":"gcy;","1076":"dcy;","1077":"iecy;","1078":"zhcy;","1079":"zcy;","1080":"icy;","1081":"jcy;","1082":"kcy;","1083":"lcy;","1084":"mcy;","1085":"ncy;","1086":"ocy;","1087":"pcy;","1088":"rcy;","1089":"scy;","1090":"tcy;","1091":"ucy;","1092":"fcy;","1093":"khcy;","1094":"tscy;","1095":"chcy;","1096":"shcy;","1097":"shchcy;","1098":"hardcy;","1099":"ycy;","1100":"softcy;","1101":"ecy;","1102":"yucy;","1103":"yacy;","1105":"iocy;","1106":"djcy;","1107":"gjcy;","1108":"jukcy;","1109":"dscy;","1110":"iukcy;","1111":"yicy;","1112":"jsercy;","1113":"ljcy;","1114":"njcy;","1115":"tshcy;","1116":"kjcy;","1118":"ubrcy;","1119":"dzcy;","8194":"ensp;","8195":"emsp;","8196":"emsp13;","8197":"emsp14;","8199":"numsp;","8200":"puncsp;","8201":"ThinSpace;","8202":"VeryThinSpace;","8203":"ZeroWidthSpace;","8204":"zwnj;","8205":"zwj;","8206":"lrm;","8207":"rlm;","8208":"hyphen;","8211":"ndash;","8212":"mdash;","8213":"horbar;","8214":"Vert;","8216":"OpenCurlyQuote;","8217":"rsquor;","8218":"sbquo;","8220":"OpenCurlyDoubleQuote;","8221":"rdquor;","8222":"ldquor;","8224":"dagger;","8225":"ddagger;","8226":"bullet;","8229":"nldr;","8230":"mldr;","8240":"permil;","8241":"pertenk;","8242":"prime;","8243":"Prime;","8244":"tprime;","8245":"bprime;","8249":"lsaquo;","8250":"rsaquo;","8254":"OverBar;","8257":"caret;","8259":"hybull;","8260":"frasl;","8271":"bsemi;","8279":"qprime;","8287":"MediumSpace;","8288":"NoBreak;","8289":"ApplyFunction;","8290":"it;","8291":"InvisibleComma;","8364":"euro;","8411":"TripleDot;","8412":"DotDot;","8450":"Copf;","8453":"incare;","8458":"gscr;","8459":"Hscr;","8460":"Poincareplane;","8461":"quaternions;","8462":"planckh;","8463":"plankv;","8464":"Iscr;","8465":"imagpart;","8466":"Lscr;","8467":"ell;","8469":"Nopf;","8470":"numero;","8471":"copysr;","8472":"wp;","8473":"primes;","8474":"rationals;","8475":"Rscr;","8476":"Rfr;","8477":"Ropf;","8478":"rx;","8482":"trade;","8484":"Zopf;","8487":"mho;","8488":"Zfr;","8489":"iiota;","8492":"Bscr;","8493":"Cfr;","8495":"escr;","8496":"expectation;","8497":"Fscr;","8499":"phmmat;","8500":"oscr;","8501":"aleph;","8502":"beth;","8503":"gimel;","8504":"daleth;","8517":"DD;","8518":"DifferentialD;","8519":"exponentiale;","8520":"ImaginaryI;","8531":"frac13;","8532":"frac23;","8533":"frac15;","8534":"frac25;","8535":"frac35;","8536":"frac45;","8537":"frac16;","8538":"frac56;","8539":"frac18;","8540":"frac38;","8541":"frac58;","8542":"frac78;","8592":"slarr;","8593":"uparrow;","8594":"srarr;","8595":"ShortDownArrow;","8596":"leftrightarrow;","8597":"varr;","8598":"UpperLeftArrow;","8599":"UpperRightArrow;","8600":"searrow;","8601":"swarrow;","8602":"nleftarrow;","8603":"nrightarrow;","8605":"rightsquigarrow;","8606":"twoheadleftarrow;","8607":"Uarr;","8608":"twoheadrightarrow;","8609":"Darr;","8610":"leftarrowtail;","8611":"rightarrowtail;","8612":"mapstoleft;","8613":"UpTeeArrow;","8614":"RightTeeArrow;","8615":"mapstodown;","8617":"larrhk;","8618":"rarrhk;","8619":"looparrowleft;","8620":"rarrlp;","8621":"leftrightsquigarrow;","8622":"nleftrightarrow;","8624":"lsh;","8625":"rsh;","8626":"ldsh;","8627":"rdsh;","8629":"crarr;","8630":"curvearrowleft;","8631":"curvearrowright;","8634":"olarr;","8635":"orarr;","8636":"lharu;","8637":"lhard;","8638":"upharpoonright;","8639":"upharpoonleft;","8640":"RightVector;","8641":"rightharpoondown;","8642":"RightDownVector;","8643":"LeftDownVector;","8644":"rlarr;","8645":"UpArrowDownArrow;","8646":"lrarr;","8647":"llarr;","8648":"uuarr;","8649":"rrarr;","8650":"downdownarrows;","8651":"ReverseEquilibrium;","8652":"rlhar;","8653":"nLeftarrow;","8654":"nLeftrightarrow;","8655":"nRightarrow;","8656":"Leftarrow;","8657":"Uparrow;","8658":"Rightarrow;","8659":"Downarrow;","8660":"Leftrightarrow;","8661":"vArr;","8662":"nwArr;","8663":"neArr;","8664":"seArr;","8665":"swArr;","8666":"Lleftarrow;","8667":"Rrightarrow;","8669":"zigrarr;","8676":"LeftArrowBar;","8677":"RightArrowBar;","8693":"duarr;","8701":"loarr;","8702":"roarr;","8703":"hoarr;","8704":"forall;","8705":"complement;","8706":"PartialD;","8707":"Exists;","8708":"NotExists;","8709":"varnothing;","8711":"nabla;","8712":"isinv;","8713":"notinva;","8715":"SuchThat;","8716":"NotReverseElement;","8719":"Product;","8720":"Coproduct;","8721":"sum;","8722":"minus;","8723":"mp;","8724":"plusdo;","8726":"ssetmn;","8727":"lowast;","8728":"SmallCircle;","8730":"Sqrt;","8733":"vprop;","8734":"infin;","8735":"angrt;","8736":"angle;","8737":"measuredangle;","8738":"angsph;","8739":"VerticalBar;","8740":"nsmid;","8741":"spar;","8742":"nspar;","8743":"wedge;","8744":"vee;","8745":"cap;","8746":"cup;","8747":"Integral;","8748":"Int;","8749":"tint;","8750":"oint;","8751":"DoubleContourIntegral;","8752":"Cconint;","8753":"cwint;","8754":"cwconint;","8755":"CounterClockwiseContourIntegral;","8756":"therefore;","8757":"because;","8758":"ratio;","8759":"Proportion;","8760":"minusd;","8762":"mDDot;","8763":"homtht;","8764":"Tilde;","8765":"bsim;","8766":"mstpos;","8767":"acd;","8768":"wreath;","8769":"nsim;","8770":"esim;","8771":"TildeEqual;","8772":"nsimeq;","8773":"TildeFullEqual;","8774":"simne;","8775":"NotTildeFullEqual;","8776":"TildeTilde;","8777":"NotTildeTilde;","8778":"approxeq;","8779":"apid;","8780":"bcong;","8781":"CupCap;","8782":"HumpDownHump;","8783":"HumpEqual;","8784":"esdot;","8785":"eDot;","8786":"fallingdotseq;","8787":"risingdotseq;","8788":"coloneq;","8789":"eqcolon;","8790":"eqcirc;","8791":"cire;","8793":"wedgeq;","8794":"veeeq;","8796":"trie;","8799":"questeq;","8800":"NotEqual;","8801":"equiv;","8802":"NotCongruent;","8804":"leq;","8805":"GreaterEqual;","8806":"LessFullEqual;","8807":"GreaterFullEqual;","8808":"lneqq;","8809":"gneqq;","8810":"NestedLessLess;","8811":"NestedGreaterGreater;","8812":"twixt;","8813":"NotCupCap;","8814":"NotLess;","8815":"NotGreater;","8816":"NotLessEqual;","8817":"NotGreaterEqual;","8818":"lsim;","8819":"gtrsim;","8820":"NotLessTilde;","8821":"NotGreaterTilde;","8822":"lg;","8823":"gtrless;","8824":"ntlg;","8825":"ntgl;","8826":"Precedes;","8827":"Succeeds;","8828":"PrecedesSlantEqual;","8829":"SucceedsSlantEqual;","8830":"prsim;","8831":"succsim;","8832":"nprec;","8833":"nsucc;","8834":"subset;","8835":"supset;","8836":"nsub;","8837":"nsup;","8838":"SubsetEqual;","8839":"supseteq;","8840":"nsubseteq;","8841":"nsupseteq;","8842":"subsetneq;","8843":"supsetneq;","8845":"cupdot;","8846":"uplus;","8847":"SquareSubset;","8848":"SquareSuperset;","8849":"SquareSubsetEqual;","8850":"SquareSupersetEqual;","8851":"SquareIntersection;","8852":"SquareUnion;","8853":"oplus;","8854":"ominus;","8855":"otimes;","8856":"osol;","8857":"odot;","8858":"ocir;","8859":"oast;","8861":"odash;","8862":"plusb;","8863":"minusb;","8864":"timesb;","8865":"sdotb;","8866":"vdash;","8867":"LeftTee;","8868":"top;","8869":"UpTee;","8871":"models;","8872":"vDash;","8873":"Vdash;","8874":"Vvdash;","8875":"VDash;","8876":"nvdash;","8877":"nvDash;","8878":"nVdash;","8879":"nVDash;","8880":"prurel;","8882":"vltri;","8883":"vrtri;","8884":"trianglelefteq;","8885":"trianglerighteq;","8886":"origof;","8887":"imof;","8888":"mumap;","8889":"hercon;","8890":"intercal;","8891":"veebar;","8893":"barvee;","8894":"angrtvb;","8895":"lrtri;","8896":"xwedge;","8897":"xvee;","8898":"xcap;","8899":"xcup;","8900":"diamond;","8901":"sdot;","8902":"Star;","8903":"divonx;","8904":"bowtie;","8905":"ltimes;","8906":"rtimes;","8907":"lthree;","8908":"rthree;","8909":"bsime;","8910":"cuvee;","8911":"cuwed;","8912":"Subset;","8913":"Supset;","8914":"Cap;","8915":"Cup;","8916":"pitchfork;","8917":"epar;","8918":"ltdot;","8919":"gtrdot;","8920":"Ll;","8921":"ggg;","8922":"LessEqualGreater;","8923":"gtreqless;","8926":"curlyeqprec;","8927":"curlyeqsucc;","8928":"nprcue;","8929":"nsccue;","8930":"nsqsube;","8931":"nsqsupe;","8934":"lnsim;","8935":"gnsim;","8936":"prnsim;","8937":"succnsim;","8938":"ntriangleleft;","8939":"ntriangleright;","8940":"ntrianglelefteq;","8941":"ntrianglerighteq;","8942":"vellip;","8943":"ctdot;","8944":"utdot;","8945":"dtdot;","8946":"disin;","8947":"isinsv;","8948":"isins;","8949":"isindot;","8950":"notinvc;","8951":"notinvb;","8953":"isinE;","8954":"nisd;","8955":"xnis;","8956":"nis;","8957":"notnivc;","8958":"notnivb;","8965":"barwedge;","8966":"doublebarwedge;","8968":"LeftCeiling;","8969":"RightCeiling;","8970":"lfloor;","8971":"RightFloor;","8972":"drcrop;","8973":"dlcrop;","8974":"urcrop;","8975":"ulcrop;","8976":"bnot;","8978":"profline;","8979":"profsurf;","8981":"telrec;","8982":"target;","8988":"ulcorner;","8989":"urcorner;","8990":"llcorner;","8991":"lrcorner;","8994":"sfrown;","8995":"ssmile;","9005":"cylcty;","9006":"profalar;","9014":"topbot;","9021":"ovbar;","9023":"solbar;","9084":"angzarr;","9136":"lmoustache;","9137":"rmoustache;","9140":"tbrk;","9141":"UnderBracket;","9142":"bbrktbrk;","9180":"OverParenthesis;","9181":"UnderParenthesis;","9182":"OverBrace;","9183":"UnderBrace;","9186":"trpezium;","9191":"elinters;","9251":"blank;","9416":"oS;","9472":"HorizontalLine;","9474":"boxv;","9484":"boxdr;","9488":"boxdl;","9492":"boxur;","9496":"boxul;","9500":"boxvr;","9508":"boxvl;","9516":"boxhd;","9524":"boxhu;","9532":"boxvh;","9552":"boxH;","9553":"boxV;","9554":"boxdR;","9555":"boxDr;","9556":"boxDR;","9557":"boxdL;","9558":"boxDl;","9559":"boxDL;","9560":"boxuR;","9561":"boxUr;","9562":"boxUR;","9563":"boxuL;","9564":"boxUl;","9565":"boxUL;","9566":"boxvR;","9567":"boxVr;","9568":"boxVR;","9569":"boxvL;","9570":"boxVl;","9571":"boxVL;","9572":"boxHd;","9573":"boxhD;","9574":"boxHD;","9575":"boxHu;","9576":"boxhU;","9577":"boxHU;","9578":"boxvH;","9579":"boxVh;","9580":"boxVH;","9600":"uhblk;","9604":"lhblk;","9608":"block;","9617":"blk14;","9618":"blk12;","9619":"blk34;","9633":"square;","9642":"squf;","9643":"EmptyVerySmallSquare;","9645":"rect;","9646":"marker;","9649":"fltns;","9651":"xutri;","9652":"utrif;","9653":"utri;","9656":"rtrif;","9657":"triangleright;","9661":"xdtri;","9662":"dtrif;","9663":"triangledown;","9666":"ltrif;","9667":"triangleleft;","9674":"lozenge;","9675":"cir;","9708":"tridot;","9711":"xcirc;","9720":"ultri;","9721":"urtri;","9722":"lltri;","9723":"EmptySmallSquare;","9724":"FilledSmallSquare;","9733":"starf;","9734":"star;","9742":"phone;","9792":"female;","9794":"male;","9824":"spadesuit;","9827":"clubsuit;","9829":"heartsuit;","9830":"diams;","9834":"sung;","9837":"flat;","9838":"natural;","9839":"sharp;","10003":"checkmark;","10007":"cross;","10016":"maltese;","10038":"sext;","10072":"VerticalSeparator;","10098":"lbbrk;","10099":"rbbrk;","10184":"bsolhsub;","10185":"suphsol;","10214":"lobrk;","10215":"robrk;","10216":"LeftAngleBracket;","10217":"RightAngleBracket;","10218":"Lang;","10219":"Rang;","10220":"loang;","10221":"roang;","10229":"xlarr;","10230":"xrarr;","10231":"xharr;","10232":"xlArr;","10233":"xrArr;","10234":"xhArr;","10236":"xmap;","10239":"dzigrarr;","10498":"nvlArr;","10499":"nvrArr;","10500":"nvHarr;","10501":"Map;","10508":"lbarr;","10509":"rbarr;","10510":"lBarr;","10511":"rBarr;","10512":"RBarr;","10513":"DDotrahd;","10514":"UpArrowBar;","10515":"DownArrowBar;","10518":"Rarrtl;","10521":"latail;","10522":"ratail;","10523":"lAtail;","10524":"rAtail;","10525":"larrfs;","10526":"rarrfs;","10527":"larrbfs;","10528":"rarrbfs;","10531":"nwarhk;","10532":"nearhk;","10533":"searhk;","10534":"swarhk;","10535":"nwnear;","10536":"toea;","10537":"tosa;","10538":"swnwar;","10547":"rarrc;","10549":"cudarrr;","10550":"ldca;","10551":"rdca;","10552":"cudarrl;","10553":"larrpl;","10556":"curarrm;","10557":"cularrp;","10565":"rarrpl;","10568":"harrcir;","10569":"Uarrocir;","10570":"lurdshar;","10571":"ldrushar;","10574":"LeftRightVector;","10575":"RightUpDownVector;","10576":"DownLeftRightVector;","10577":"LeftUpDownVector;","10578":"LeftVectorBar;","10579":"RightVectorBar;","10580":"RightUpVectorBar;","10581":"RightDownVectorBar;","10582":"DownLeftVectorBar;","10583":"DownRightVectorBar;","10584":"LeftUpVectorBar;","10585":"LeftDownVectorBar;","10586":"LeftTeeVector;","10587":"RightTeeVector;","10588":"RightUpTeeVector;","10589":"RightDownTeeVector;","10590":"DownLeftTeeVector;","10591":"DownRightTeeVector;","10592":"LeftUpTeeVector;","10593":"LeftDownTeeVector;","10594":"lHar;","10595":"uHar;","10596":"rHar;","10597":"dHar;","10598":"luruhar;","10599":"ldrdhar;","10600":"ruluhar;","10601":"rdldhar;","10602":"lharul;","10603":"llhard;","10604":"rharul;","10605":"lrhard;","10606":"UpEquilibrium;","10607":"ReverseUpEquilibrium;","10608":"RoundImplies;","10609":"erarr;","10610":"simrarr;","10611":"larrsim;","10612":"rarrsim;","10613":"rarrap;","10614":"ltlarr;","10616":"gtrarr;","10617":"subrarr;","10619":"suplarr;","10620":"lfisht;","10621":"rfisht;","10622":"ufisht;","10623":"dfisht;","10629":"lopar;","10630":"ropar;","10635":"lbrke;","10636":"rbrke;","10637":"lbrkslu;","10638":"rbrksld;","10639":"lbrksld;","10640":"rbrkslu;","10641":"langd;","10642":"rangd;","10643":"lparlt;","10644":"rpargt;","10645":"gtlPar;","10646":"ltrPar;","10650":"vzigzag;","10652":"vangrt;","10653":"angrtvbd;","10660":"ange;","10661":"range;","10662":"dwangle;","10663":"uwangle;","10664":"angmsdaa;","10665":"angmsdab;","10666":"angmsdac;","10667":"angmsdad;","10668":"angmsdae;","10669":"angmsdaf;","10670":"angmsdag;","10671":"angmsdah;","10672":"bemptyv;","10673":"demptyv;","10674":"cemptyv;","10675":"raemptyv;","10676":"laemptyv;","10677":"ohbar;","10678":"omid;","10679":"opar;","10681":"operp;","10683":"olcross;","10684":"odsold;","10686":"olcir;","10687":"ofcir;","10688":"olt;","10689":"ogt;","10690":"cirscir;","10691":"cirE;","10692":"solb;","10693":"bsolb;","10697":"boxbox;","10701":"trisb;","10702":"rtriltri;","10703":"LeftTriangleBar;","10704":"RightTriangleBar;","10716":"iinfin;","10717":"infintie;","10718":"nvinfin;","10723":"eparsl;","10724":"smeparsl;","10725":"eqvparsl;","10731":"lozf;","10740":"RuleDelayed;","10742":"dsol;","10752":"xodot;","10753":"xoplus;","10754":"xotime;","10756":"xuplus;","10758":"xsqcup;","10764":"qint;","10765":"fpartint;","10768":"cirfnint;","10769":"awint;","10770":"rppolint;","10771":"scpolint;","10772":"npolint;","10773":"pointint;","10774":"quatint;","10775":"intlarhk;","10786":"pluscir;","10787":"plusacir;","10788":"simplus;","10789":"plusdu;","10790":"plussim;","10791":"plustwo;","10793":"mcomma;","10794":"minusdu;","10797":"loplus;","10798":"roplus;","10799":"Cross;","10800":"timesd;","10801":"timesbar;","10803":"smashp;","10804":"lotimes;","10805":"rotimes;","10806":"otimesas;","10807":"Otimes;","10808":"odiv;","10809":"triplus;","10810":"triminus;","10811":"tritime;","10812":"iprod;","10815":"amalg;","10816":"capdot;","10818":"ncup;","10819":"ncap;","10820":"capand;","10821":"cupor;","10822":"cupcap;","10823":"capcup;","10824":"cupbrcap;","10825":"capbrcup;","10826":"cupcup;","10827":"capcap;","10828":"ccups;","10829":"ccaps;","10832":"ccupssm;","10835":"And;","10836":"Or;","10837":"andand;","10838":"oror;","10839":"orslope;","10840":"andslope;","10842":"andv;","10843":"orv;","10844":"andd;","10845":"ord;","10847":"wedbar;","10854":"sdote;","10858":"simdot;","10861":"congdot;","10862":"easter;","10863":"apacir;","10864":"apE;","10865":"eplus;","10866":"pluse;","10867":"Esim;","10868":"Colone;","10869":"Equal;","10871":"eDDot;","10872":"equivDD;","10873":"ltcir;","10874":"gtcir;","10875":"ltquest;","10876":"gtquest;","10877":"LessSlantEqual;","10878":"GreaterSlantEqual;","10879":"lesdot;","10880":"gesdot;","10881":"lesdoto;","10882":"gesdoto;","10883":"lesdotor;","10884":"gesdotol;","10885":"lessapprox;","10886":"gtrapprox;","10887":"lneq;","10888":"gneq;","10889":"lnapprox;","10890":"gnapprox;","10891":"lesseqqgtr;","10892":"gtreqqless;","10893":"lsime;","10894":"gsime;","10895":"lsimg;","10896":"gsiml;","10897":"lgE;","10898":"glE;","10899":"lesges;","10900":"gesles;","10901":"eqslantless;","10902":"eqslantgtr;","10903":"elsdot;","10904":"egsdot;","10905":"el;","10906":"eg;","10909":"siml;","10910":"simg;","10911":"simlE;","10912":"simgE;","10913":"LessLess;","10914":"GreaterGreater;","10916":"glj;","10917":"gla;","10918":"ltcc;","10919":"gtcc;","10920":"lescc;","10921":"gescc;","10922":"smt;","10923":"lat;","10924":"smte;","10925":"late;","10926":"bumpE;","10927":"preceq;","10928":"succeq;","10931":"prE;","10932":"scE;","10933":"prnE;","10934":"succneqq;","10935":"precapprox;","10936":"succapprox;","10937":"prnap;","10938":"succnapprox;","10939":"Pr;","10940":"Sc;","10941":"subdot;","10942":"supdot;","10943":"subplus;","10944":"supplus;","10945":"submult;","10946":"supmult;","10947":"subedot;","10948":"supedot;","10949":"subseteqq;","10950":"supseteqq;","10951":"subsim;","10952":"supsim;","10955":"subsetneqq;","10956":"supsetneqq;","10959":"csub;","10960":"csup;","10961":"csube;","10962":"csupe;","10963":"subsup;","10964":"supsub;","10965":"subsub;","10966":"supsup;","10967":"suphsub;","10968":"supdsub;","10969":"forkv;","10970":"topfork;","10971":"mlcp;","10980":"DoubleLeftTee;","10982":"Vdashl;","10983":"Barv;","10984":"vBar;","10985":"vBarv;","10987":"Vbar;","10988":"Not;","10989":"bNot;","10990":"rnmid;","10991":"cirmid;","10992":"midcir;","10993":"topcir;","10994":"nhpar;","10995":"parsim;","11005":"parsl;","64256":"fflig;","64257":"filig;","64258":"fllig;","64259":"ffilig;","64260":"ffllig;"}');
+module.exports = JSON.parse('{"name":"@google-cloud/storage","description":"Cloud Storage Client Library for Node.js","version":"7.19.0","license":"Apache-2.0","author":"Google Inc.","engines":{"node":">=14"},"repository":"googleapis/nodejs-storage","main":"./build/cjs/src/index.js","types":"./build/cjs/src/index.d.ts","type":"module","exports":{".":{"import":{"types":"./build/esm/src/index.d.ts","default":"./build/esm/src/index.js"},"require":{"types":"./build/cjs/src/index.d.ts","default":"./build/cjs/src/index.js"}}},"files":["build/cjs/src","build/cjs/package.json","!build/cjs/src/**/*.map","build/esm/src","!build/esm/src/**/*.map"],"keywords":["google apis client","google api client","google apis","google api","google","google cloud platform","google cloud","cloud","google storage","storage"],"scripts":{"all-test":"npm test && npm run system-test && npm run samples-test","benchwrapper":"node bin/benchwrapper.js","check":"gts check","clean":"rm -rf build/","compile:cjs":"tsc -p ./tsconfig.cjs.json","compile:esm":"tsc -p .","compile":"npm run compile:cjs && npm run compile:esm","conformance-test":"mocha --parallel build/cjs/conformance-test/ --require build/cjs/conformance-test/globalHooks.js","docs-test":"linkinator docs","docs":"jsdoc -c .jsdoc.json","fix":"gts fix","lint":"gts check","postcompile":"cp ./src/package-json-helper.cjs ./build/cjs/src && cp ./src/package-json-helper.cjs ./build/esm/src","postcompile:cjs":"babel --plugins gapic-tools/build/src/replaceImportMetaUrl,gapic-tools/build/src/toggleESMFlagVariable build/cjs/src/util.js -o build/cjs/src/util.js && cp internal-tooling/helpers/package.cjs.json build/cjs/package.json","precompile":"rm -rf build/","preconformance-test":"npm run compile:cjs -- --sourceMap","predocs-test":"npm run docs","predocs":"npm run compile:cjs -- --sourceMap","prelint":"cd samples; npm link ../; npm install","prepare":"npm run compile","presystem-test:esm":"npm run compile:esm","presystem-test":"npm run compile -- --sourceMap","pretest":"npm run compile -- --sourceMap","samples-test":"npm link && cd samples/ && npm link ../ && npm test && cd ../","system-test:esm":"mocha build/esm/system-test --timeout 600000 --exit","system-test":"mocha build/cjs/system-test --timeout 600000 --exit","test":"c8 mocha build/cjs/test"},"dependencies":{"@google-cloud/paginator":"^5.0.0","@google-cloud/projectify":"^4.0.0","@google-cloud/promisify":"<4.1.0","abort-controller":"^3.0.0","async-retry":"^1.3.3","duplexify":"^4.1.3","fast-xml-parser":"^5.3.4","gaxios":"^6.0.2","google-auth-library":"^9.6.3","html-entities":"^2.5.2","mime":"^3.0.0","p-limit":"^3.0.1","retry-request":"^7.0.0","teeny-request":"^9.0.0","uuid":"^8.0.0"},"devDependencies":{"@babel/cli":"^7.22.10","@babel/core":"^7.22.11","@google-cloud/pubsub":"^4.0.0","@grpc/grpc-js":"^1.0.3","@grpc/proto-loader":"^0.8.0","@types/async-retry":"^1.4.3","@types/duplexify":"^3.6.4","@types/mime":"^3.0.0","@types/mocha":"^9.1.1","@types/mockery":"^1.4.29","@types/node":"^24.0.0","@types/node-fetch":"^2.1.3","@types/proxyquire":"^1.3.28","@types/request":"^2.48.4","@types/sinon":"^17.0.0","@types/tmp":"0.2.6","@types/uuid":"^8.0.0","@types/yargs":"^17.0.10","c8":"^9.0.0","form-data":"^4.0.4","gapic-tools":"^0.4.0","gts":"^5.0.0","jsdoc":"^4.0.4","jsdoc-fresh":"^5.0.0","jsdoc-region-tag":"^4.0.0","linkinator":"^3.0.0","mocha":"^9.2.2","mockery":"^2.1.0","nock":"~13.5.0","node-fetch":"^2.6.7","pack-n-play":"^2.0.0","proxyquire":"^2.1.3","sinon":"^18.0.0","nise":"6.0.0","path-to-regexp":"6.3.0","tmp":"^0.2.0","typescript":"^5.1.6","yargs":"^17.3.1"}}');
 
 /***/ }),
 
 /***/ 9986:
 /***/ ((module) => {
 
-module.exports = JSON.parse('{"name":"firebase-admin","version":"12.1.0","description":"Firebase admin SDK for Node.js","author":"Firebase <firebase-support@google.com> (https://firebase.google.com/)","license":"Apache-2.0","homepage":"https://firebase.google.com/","engines":{"node":">=14"},"scripts":{"build":"gulp build","build:tests":"gulp compile_test","prepare":"npm run build && npm run esm-wrap","lint":"run-p lint:src lint:test","test":"run-s lint test:unit","integration":"run-s build test:integration","test:unit":"mocha test/unit/*.spec.ts --require ts-node/register","test:integration":"mocha test/integration/*.ts --slow 5000 --timeout 20000 --require ts-node/register","test:coverage":"nyc npm run test:unit","lint:src":"eslint src/ --ext .ts","lint:test":"eslint test/ --ext .ts","apidocs":"run-s api-extractor:local api-documenter","api-extractor":"node generate-reports.js","api-extractor:local":"npm run build && node generate-reports.js --local","esm-wrap":"node generate-esm-wrapper.js","api-documenter":"run-s api-documenter:markdown api-documenter:toc api-documenter:post","api-documenter:markdown":"api-documenter-fire markdown --input temp --output docgen/markdown -s --project admin","api-documenter:toc":"api-documenter-fire toc --input temp --output docgen/markdown -p /docs/reference/admin/node -s","api-documenter:post":"node docgen/post-process.js"},"nyc":{"extension":[".ts"],"include":["src"],"exclude":["**/*.d.ts"],"all":true},"keywords":["admin","database","Firebase","realtime","authentication"],"repository":{"type":"git","url":"https://github.com/firebase/firebase-admin-node"},"main":"lib/index.js","files":["lib/","LICENSE","README.md","package.json"],"types":"./lib/index.d.ts","typesVersions":{"*":{"app":["lib/app"],"app-check":["lib/app-check"],"auth":["lib/auth"],"eventarc":["lib/eventarc"],"extensions":["lib/extensions"],"database":["lib/database"],"firestore":["lib/firestore"],"functions":["lib/functions"],"installations":["lib/installations"],"instance-id":["lib/instance-id"],"machine-learning":["lib/machine-learning"],"messaging":["lib/messaging"],"project-management":["lib/project-management"],"remote-config":["lib/remote-config"],"security-rules":["lib/security-rules"],"storage":["lib/storage"]}},"exports":{".":"./lib/index.js","./app":{"types":"./lib/app/index.d.ts","require":"./lib/app/index.js","import":"./lib/esm/app/index.js"},"./app-check":{"types":"./lib/app-check/index.d.ts","require":"./lib/app-check/index.js","import":"./lib/esm/app-check/index.js"},"./auth":{"types":"./lib/auth/index.d.ts","require":"./lib/auth/index.js","import":"./lib/esm/auth/index.js"},"./database":{"types":"./lib/database/index.d.ts","require":"./lib/database/index.js","import":"./lib/esm/database/index.js"},"./eventarc":{"types":"./lib/eventarc/index.d.ts","require":"./lib/eventarc/index.js","import":"./lib/esm/eventarc/index.js"},"./extensions":{"types":"./lib/extensions/index.d.ts","require":"./lib/extensions/index.js","import":"./lib/esm/extensions/index.js"},"./firestore":{"types":"./lib/firestore/index.d.ts","require":"./lib/firestore/index.js","import":"./lib/esm/firestore/index.js"},"./functions":{"types":"./lib/functions/index.d.ts","require":"./lib/functions/index.js","import":"./lib/esm/functions/index.js"},"./installations":{"types":"./lib/installations/index.d.ts","require":"./lib/installations/index.js","import":"./lib/esm/installations/index.js"},"./instance-id":{"types":"./lib/instance-id/index.d.ts","require":"./lib/instance-id/index.js","import":"./lib/esm/instance-id/index.js"},"./machine-learning":{"types":"./lib/machine-learning/index.d.ts","require":"./lib/machine-learning/index.js","import":"./lib/esm/machine-learning/index.js"},"./messaging":{"types":"./lib/messaging/index.d.ts","require":"./lib/messaging/index.js","import":"./lib/esm/messaging/index.js"},"./project-management":{"types":"./lib/project-management/index.d.ts","require":"./lib/project-management/index.js","import":"./lib/esm/project-management/index.js"},"./remote-config":{"types":"./lib/remote-config/index.d.ts","require":"./lib/remote-config/index.js","import":"./lib/esm/remote-config/index.js"},"./security-rules":{"types":"./lib/security-rules/index.d.ts","require":"./lib/security-rules/index.js","import":"./lib/esm/security-rules/index.js"},"./storage":{"types":"./lib/storage/index.d.ts","require":"./lib/storage/index.js","import":"./lib/esm/storage/index.js"}},"dependencies":{"@fastify/busboy":"^2.1.0","@firebase/database-compat":"^1.0.2","@firebase/database-types":"^1.0.0","@types/node":"^20.10.3","farmhash":"^3.3.0","jsonwebtoken":"^9.0.0","jwks-rsa":"^3.0.1","long":"^5.2.3","node-forge":"^1.3.1","uuid":"^9.0.0"},"optionalDependencies":{"@google-cloud/firestore":"^7.1.0","@google-cloud/storage":"^7.7.0"},"devDependencies":{"@firebase/api-documenter":"^0.4.0","@firebase/app-compat":"^0.2.1","@firebase/auth-compat":"^0.4.1","@firebase/auth-types":"^0.12.0","@microsoft/api-extractor":"^7.11.2","@types/bcrypt":"^5.0.0","@types/chai":"^4.0.0","@types/chai-as-promised":"^7.1.0","@types/firebase-token-generator":"^2.0.28","@types/jsonwebtoken":"8.5.1","@types/lodash":"^4.14.104","@types/minimist":"^1.2.2","@types/mocha":"^10.0.0","@types/nock":"^11.1.0","@types/request":"^2.47.0","@types/request-promise":"^4.1.41","@types/sinon":"^17.0.2","@types/sinon-chai":"^3.0.0","@types/uuid":"^9.0.1","@typescript-eslint/eslint-plugin":"^5.62.0","@typescript-eslint/parser":"^5.62.0","bcrypt":"^5.0.0","chai":"^4.2.0","chai-as-promised":"^7.0.0","chai-exclude":"^2.1.0","chalk":"^4.1.1","child-process-promise":"^2.2.1","del":"^6.0.0","eslint":"^8.12.0","firebase-token-generator":"^2.0.0","gulp":"^5.0.0","gulp-filter":"^7.0.0","gulp-header":"^2.0.9","gulp-typescript":"^5.0.1","http-message-parser":"^0.0.34","lodash":"^4.17.15","minimist":"^1.2.6","mocha":"^10.0.0","mz":"^2.7.0","nock":"^13.0.0","npm-run-all":"^4.1.5","nyc":"^15.1.0","request":"^2.75.0","request-promise":"^4.1.1","run-sequence":"^2.2.1","sinon":"^17.0.1","sinon-chai":"^3.0.0","ts-node":"^10.2.0","typescript":"5.1.6","yargs":"^17.0.1"}}');
+module.exports = JSON.parse('{"name":"firebase-admin","version":"12.7.0","description":"Firebase admin SDK for Node.js","author":"Firebase <firebase-support@google.com> (https://firebase.google.com/)","license":"Apache-2.0","homepage":"https://firebase.google.com/","engines":{"node":">=14"},"scripts":{"build":"gulp build","build:tests":"gulp compile_test","prepare":"npm run build && npm run esm-wrap","lint":"run-p lint:src lint:test","test":"run-s lint test:unit","integration":"run-s build test:integration","test:unit":"mocha test/unit/*.spec.ts --require ts-node/register","test:integration":"mocha test/integration/*.ts --slow 5000 --timeout 20000 --require ts-node/register","test:coverage":"nyc npm run test:unit","lint:src":"eslint src/ --ext .ts","lint:test":"eslint test/ --ext .ts","apidocs":"run-s api-extractor:local api-documenter","api-extractor":"node generate-reports.js","api-extractor:local":"npm run build && node generate-reports.js --local","esm-wrap":"node generate-esm-wrapper.js","api-documenter":"run-s api-documenter:markdown api-documenter:toc api-documenter:post","api-documenter:markdown":"api-documenter-fire markdown --input temp --output docgen/markdown -s --project admin","api-documenter:toc":"api-documenter-fire toc --input temp --output docgen/markdown -p /docs/reference/admin/node -s","api-documenter:post":"node docgen/post-process.js"},"nyc":{"extension":[".ts"],"include":["src"],"exclude":["**/*.d.ts"],"all":true},"keywords":["admin","database","Firebase","realtime","authentication"],"repository":{"type":"git","url":"https://github.com/firebase/firebase-admin-node"},"main":"lib/index.js","files":["lib/","LICENSE","README.md","package.json"],"types":"./lib/index.d.ts","typesVersions":{"*":{"app":["lib/app"],"app-check":["lib/app-check"],"auth":["lib/auth"],"eventarc":["lib/eventarc"],"extensions":["lib/extensions"],"database":["lib/database"],"data-connect":["lib/data-connect"],"firestore":["lib/firestore"],"functions":["lib/functions"],"installations":["lib/installations"],"instance-id":["lib/instance-id"],"machine-learning":["lib/machine-learning"],"messaging":["lib/messaging"],"project-management":["lib/project-management"],"remote-config":["lib/remote-config"],"security-rules":["lib/security-rules"],"storage":["lib/storage"]}},"exports":{".":"./lib/index.js","./app":{"types":"./lib/app/index.d.ts","require":"./lib/app/index.js","import":"./lib/esm/app/index.js"},"./app-check":{"types":"./lib/app-check/index.d.ts","require":"./lib/app-check/index.js","import":"./lib/esm/app-check/index.js"},"./auth":{"types":"./lib/auth/index.d.ts","require":"./lib/auth/index.js","import":"./lib/esm/auth/index.js"},"./database":{"types":"./lib/database/index.d.ts","require":"./lib/database/index.js","import":"./lib/esm/database/index.js"},"./data-connect":{"types":"./lib/data-connect/index.d.ts","require":"./lib/data-connect/index.js","import":"./lib/esm/data-connect/index.js"},"./eventarc":{"types":"./lib/eventarc/index.d.ts","require":"./lib/eventarc/index.js","import":"./lib/esm/eventarc/index.js"},"./extensions":{"types":"./lib/extensions/index.d.ts","require":"./lib/extensions/index.js","import":"./lib/esm/extensions/index.js"},"./firestore":{"types":"./lib/firestore/index.d.ts","require":"./lib/firestore/index.js","import":"./lib/esm/firestore/index.js"},"./functions":{"types":"./lib/functions/index.d.ts","require":"./lib/functions/index.js","import":"./lib/esm/functions/index.js"},"./installations":{"types":"./lib/installations/index.d.ts","require":"./lib/installations/index.js","import":"./lib/esm/installations/index.js"},"./instance-id":{"types":"./lib/instance-id/index.d.ts","require":"./lib/instance-id/index.js","import":"./lib/esm/instance-id/index.js"},"./machine-learning":{"types":"./lib/machine-learning/index.d.ts","require":"./lib/machine-learning/index.js","import":"./lib/esm/machine-learning/index.js"},"./messaging":{"types":"./lib/messaging/index.d.ts","require":"./lib/messaging/index.js","import":"./lib/esm/messaging/index.js"},"./project-management":{"types":"./lib/project-management/index.d.ts","require":"./lib/project-management/index.js","import":"./lib/esm/project-management/index.js"},"./remote-config":{"types":"./lib/remote-config/index.d.ts","require":"./lib/remote-config/index.js","import":"./lib/esm/remote-config/index.js"},"./security-rules":{"types":"./lib/security-rules/index.d.ts","require":"./lib/security-rules/index.js","import":"./lib/esm/security-rules/index.js"},"./storage":{"types":"./lib/storage/index.d.ts","require":"./lib/storage/index.js","import":"./lib/esm/storage/index.js"}},"dependencies":{"@fastify/busboy":"^3.0.0","@firebase/database-compat":"1.0.8","@firebase/database-types":"1.0.5","@types/node":"^22.0.1","farmhash-modern":"^1.1.0","jsonwebtoken":"^9.0.0","jwks-rsa":"^3.1.0","node-forge":"^1.3.1","uuid":"^10.0.0"},"optionalDependencies":{"@google-cloud/firestore":"^7.7.0","@google-cloud/storage":"^7.7.0"},"devDependencies":{"@firebase/api-documenter":"^0.4.0","@firebase/app-compat":"^0.2.1","@firebase/auth-compat":"^0.4.1","@firebase/auth-types":"^0.12.0","@microsoft/api-extractor":"^7.11.2","@types/bcrypt":"^5.0.0","@types/chai":"^4.0.0","@types/chai-as-promised":"^7.1.0","@types/firebase-token-generator":"^2.0.28","@types/jsonwebtoken":"8.5.1","@types/lodash":"^4.14.104","@types/minimist":"^1.2.2","@types/mocha":"^10.0.0","@types/nock":"^11.1.0","@types/request":"^2.47.0","@types/request-promise":"^4.1.41","@types/sinon":"^17.0.2","@types/sinon-chai":"^3.0.0","@types/uuid":"^10.0.0","@typescript-eslint/eslint-plugin":"^5.62.0","@typescript-eslint/parser":"^5.62.0","bcrypt":"^5.0.0","chai":"^4.2.0","chai-as-promised":"^7.0.0","chai-exclude":"^2.1.0","chalk":"^4.1.1","child-process-promise":"^2.2.1","del":"^6.0.0","eslint":"^8.12.0","firebase-token-generator":"^2.0.0","gulp":"^5.0.0","gulp-filter":"^7.0.0","gulp-header":"^2.0.9","gulp-typescript":"^5.0.1","http-message-parser":"^0.0.34","lodash":"^4.17.15","minimist":"^1.2.6","mocha":"^10.0.0","mz":"^2.7.0","nock":"^13.0.0","npm-run-all":"^4.1.5","nyc":"^17.0.0","request":"^2.75.0","request-promise":"^4.1.1","run-sequence":"^2.2.1","sinon":"^18.0.0","sinon-chai":"^3.0.0","ts-node":"^10.2.0","typescript":"5.1.6","yargs":"^17.0.1"}}');
 
 /***/ }),
 
